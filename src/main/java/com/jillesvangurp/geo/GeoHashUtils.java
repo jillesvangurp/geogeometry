@@ -45,7 +45,7 @@ public class GeoHashUtils {
 
 	/**
 	 * Encodes a coordinate into a geo hash.
-	 * @see http://en.wikipedia.org/wiki/Geohash
+	 * @see "http://en.wikipedia.org/wiki/Geohash"
 	 * @param latitude
 	 * @param longitude
 	 * @return geo hash for the coordinate
