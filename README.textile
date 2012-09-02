@@ -1,0 +1,39 @@
+h1. Introduction
+
+GeoTools is a small project where I've gathered some code that I've used in the past for working with coordinates and geohashes.
+
+h1. Features
+
+* Calculate distance between two coordinates using the haversine algorithm.
+* Expanded version of Apache's GeoHashUtils with 
+** new methods for calculating geohashes north, south, west, and east of the original geohash
+** method for calculating the north and south latitude and the east and west longitude of a geohash
+** a contains method for checking if a coordinate is contained in a geohash
+
+h1. Installation
+
+It's a maven project. So, checking it out and doing a mvn clean install should do the trick.
+
+Alternatively, you may use my github maven repository, which is where I deploy releases for some of my projects. In order to use this, you have to configure your settings.xml as explained here: https://github.com/jillesvangurp/mvnrepo
+
+Then you can add the following dependency:
+
+<pre>
+<code>
+<dependency>
+    <groupId>com.github.jillesvangurp</groupId>
+    <artifactId>geohash</artifactId>
+    <version>1.0</version>
+</dependency>
+</code>
+</pre>
+
+Alternatively, you can exercise your rights under the license and simply copy and adapt. The "license":https://github.com/jillesvangurp/xmltools/blob/master/LICENSE allows you to do this and I have no problems with this.
+
+Should anyone like this licensed differently, please contact me.
+
+If anyone wants to fix stuff just send me a pull request.
+
+h1. Changelog
+
+* 1.0 - first release of GeoTools

@@ -1,0 +1,162 @@
+<!-- Copyright (c) 2012, Jilles van Gurp Permission is hereby granted, free 
+    of charge, to any person obtaining a copy of this software and associated 
+    documentation files (the "Software"), to deal in the Software without restriction, 
+    including without limitation the rights to use, copy, modify, merge, publish, 
+    distribute, sublicense, and/or sell copies of the Software, and to permit 
+    persons to whom the Software is furnished to do so, subject to the following 
+    conditions: The above copyright notice and this permission notice shall be 
+    included in all copies or substantial portions of the Software. THE SOFTWARE 
+    IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+    BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+    PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+    BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+    THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. / -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.jillesvangurp</groupId>
+    <artifactId>geotools</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>GeoTools</name>
+    <description>Misc tools for working with wgs 84 coordinates and geohashes</description>
+
+    <url>http://www.jillesvangurp.com</url>
+
+    <licenses>
+        <license>
+            <name>MIT license</name>
+            <url>https://github.com/jillesvangurp/geotools/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>git://github.com/jillesvangurp/geotools.git</url>
+        <connection>scm:git:git@github.com:jillesvangurp/geotools.git</connection>
+        <developerConnection>scm:git:git://github.com/jillesvangurp/geotools.git</developerConnection>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>repo</id>
+            <url>https://github.com/jillesvangurp/mvnrepo/raw/master/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshot-repo</id>
+            <url>https://github.com/jillesvangurp/mvnrepo/raw/master/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+    
+    <developers>
+        <developer>
+            <id>jillesvangurp</id>
+            <name>Jilles van Gurp</name>
+            <url>http://www.jillesvangurp.com</url>
+            <timezone>gmt+1</timezone>
+            <roles>
+                <role>Main Developer</role>
+            </roles>
+        </developer>
+    </developers>
+    <organization>
+        <name>www.jillesvangurp.com</name>
+        <url>http://jillesvangurp.com</url>
+    </organization>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <verbose>true</verbose>
+                    <fork>true</fork>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>documentation</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>gathersource</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>signartifacts</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.0.1</version>
+            <type>jar</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
