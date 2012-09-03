@@ -40,12 +40,12 @@ public class GeoGeometryTest {
 	};
 
 	public void shouldCheckContainmentForPolygonCorrectly() {
-		assertThat("origin should be in there", polygonContains(polygon, 0, 0));
-		assertThat("should be outside", !polygonContains(polygon, 20, 20));
-		assertThat("should be inside", polygonContains(polygon, 0.5, 0.5));
-		assertThat("should be inside", polygonContains(polygon, 0.5, -0.5));
-		assertThat("should be inside", polygonContains(polygon, -0.5, 0.5));
-		assertThat("should be inside", polygonContains(polygon, -0.5, -0.5));
+		assertThat("origin should be in there", polygonContains(0, 0, polygon));
+		assertThat("should be outside", !polygonContains(20, 20, polygon));
+		assertThat("should be inside", polygonContains(0.5, 0.5, polygon));
+		assertThat("should be inside", polygonContains(0.5, -0.5, polygon));
+		assertThat("should be inside", polygonContains(-0.5, 0.5, polygon));
+		assertThat("should be inside", polygonContains(-0.5, -0.5, polygon));
 	}
 
 	public void shouldBboxContainPoint() {
@@ -76,5 +76,4 @@ public class GeoGeometryTest {
 		double d  = distance(52.530564,13.394964, 52.530564,13.410821);
 		assertThat("should be a bit more than 1072m", d - 1072 >0 && d-1073 <0);
 	}
-
 }

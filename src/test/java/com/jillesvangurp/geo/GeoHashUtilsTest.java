@@ -37,6 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.number.OrderingComparison.lessThan;
 
 import java.util.BitSet;
+import java.util.Set;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -158,7 +159,7 @@ public class GeoHashUtilsTest {
 		}
 	}
 
-	public void shouldCalculateSubHashes() {
+	public void shouldCalculateSubHashesForHash() {
 		String hash = "u33dbfc";
 		String[] subHashes = GeoHashUtils.subHashes(hash);
 		assertThat(subHashes.length, is(32));
@@ -175,9 +176,21 @@ public class GeoHashUtilsTest {
 		}
 	}
 
-    static double getPrecision(double x, double precision) {
-        double base = Math.pow(10,- precision);
-        double diff = x % base;
-        return x - diff;
-    }
+	double[][] polygon = new double[][] {
+			{ -1, 1 },
+			{ 2, 2 },
+			{ 3, -1 },
+			{ -2, -4 }
+		};
+
+	public void shouldCalculateHashesForPolygon() {
+		int min=10;
+		Set<String> geoHashesForPolygon = GeoHashUtils.getGeoHashesForPolygon(8,polygon);
+		for(String h: geoHashesForPolygon) {
+			min=Math.min(min,h.length());
+		}
+		System.out.println(geoHashesForPolygon.size());
+		assertThat("there should be some hashes with length=3",min, is(3));
+		assertThat("huge area, should generate lots of hashes", geoHashesForPolygon.size() > 1000);
+	}
 }

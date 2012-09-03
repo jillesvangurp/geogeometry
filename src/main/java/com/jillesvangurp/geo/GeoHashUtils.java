@@ -21,7 +21,10 @@ package com.jillesvangurp.geo;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * This class was adapted from Apache Lucene's GeoHashUtils. Please note that
@@ -48,6 +51,7 @@ public class GeoHashUtils {
 
 	/**
 	 * Encodes a coordinate into a geo hash.
+	 *
 	 * @see "http://en.wikipedia.org/wiki/Geohash"
 	 * @param latitude
 	 * @param longitude
@@ -98,7 +102,8 @@ public class GeoHashUtils {
 
 	/**
 	 * @param geohash
-	 * @return a coordinate representing the center of the geohash as a double array of [latitude,longitude]
+	 * @return a coordinate representing the center of the geohash as a double
+	 *         array of [latitude,longitude]
 	 */
 	public static double[] decode(String geohash) {
 		double[] lat_interval = { -90.0, 90.0 };
@@ -136,7 +141,8 @@ public class GeoHashUtils {
 
 	/**
 	 * @param geohash
-	 * @return double array representing the bounding box for the geohash of [nort latitude, south latitude, east longitude, west longitude]
+	 * @return double array representing the bounding box for the geohash of
+	 *         [nort latitude, south latitude, east longitude, west longitude]
 	 */
 	public static double[] decode_bbox(String geohash) {
 		double[] lat_interval = { -90.0, 90.0 };
@@ -173,7 +179,8 @@ public class GeoHashUtils {
 	}
 
 	/**
-	 * @return the geo hash of the same length directly north of the bounding box.
+	 * @return the geo hash of the same length directly north of the bounding
+	 *         box.
 	 */
 	public static String north(String geoHash) {
 		double[] bbox = decode_bbox(geoHash);
@@ -184,7 +191,8 @@ public class GeoHashUtils {
 	}
 
 	/**
-	 * @return the geo hash of the same length directly south of the bounding box.
+	 * @return the geo hash of the same length directly south of the bounding
+	 *         box.
 	 */
 	public static String south(String geoHash) {
 		double[] bbox = decode_bbox(geoHash);
@@ -195,7 +203,8 @@ public class GeoHashUtils {
 	}
 
 	/**
-	 * @return the geo hash of the same length directly west of the bounding box.
+	 * @return the geo hash of the same length directly west of the bounding
+	 *         box.
 	 */
 	public static String west(String geoHash) {
 		double[] bbox = decode_bbox(geoHash);
@@ -206,7 +215,8 @@ public class GeoHashUtils {
 	}
 
 	/**
-	 * @return the geo hash of the same length directly east of the bounding box.
+	 * @return the geo hash of the same length directly east of the bounding
+	 *         box.
 	 */
 	public static String east(String geoHash) {
 		double[] bbox = decode_bbox(geoHash);
@@ -225,7 +235,8 @@ public class GeoHashUtils {
 	 */
 	public static boolean contains(String geoHash, double latitude,
 			double longitude) {
-		return GeoGeometry.bboxContains(decode_bbox(geoHash), latitude, longitude);
+		return GeoGeometry.bboxContains(decode_bbox(geoHash), latitude,
+				longitude);
 	}
 
 	/**
@@ -234,11 +245,11 @@ public class GeoHashUtils {
 	 */
 	public static BitSet toBitSet(String geoHash) {
 		BitSet bitSet = new BitSet();
-		int b=0;
+		int b = 0;
 		for (int i = 0; i < geoHash.length(); i++) {
 			int currentCharacter = BASE32_DECODE_MAP.get(geoHash.charAt(i));
 			for (int z = 0; z < BITS.length; z++) {
-				if((currentCharacter & BITS[z]) != 0) {
+				if ((currentCharacter & BITS[z]) != 0) {
 					bitSet.set(b);
 				}
 				b++;
@@ -254,25 +265,26 @@ public class GeoHashUtils {
 	 */
 	public static String fromBitSet(BitSet bitSet) {
 		StringBuilder encoded = new StringBuilder();
-		int ch=0;
-		int b=1;
-		if(bitSet.length() ==0) {
+		int ch = 0;
+		int b = 1;
+		if (bitSet.length() == 0) {
 			return "0";
 		}
-		for(; b <= bitSet.length(); b++) {
-			if(bitSet.get(b-1)) {
-				ch += BITS[(b-1)%BITS.length];
+		for (; b <= bitSet.length(); b++) {
+			if (bitSet.get(b - 1)) {
+				ch += BITS[(b - 1) % BITS.length];
 			}
 
-			if(b%BITS.length==0 && b!=1) {
+			if (b % BITS.length == 0 && b != 1) {
 				encoded.append(BASE32_CHARS[ch]);
-				ch=0;
+				ch = 0;
 			}
 		}
-		// b will have incremented despite failing the check in the for loop; so compensate
-		if((b-1)%BITS.length!=0) {
+		// b will have incremented despite failing the check in the for loop; so
+		// compensate
+		if ((b - 1) % BITS.length != 0) {
 			encoded.append(BASE32_CHARS[ch]);
-			ch=0;
+			ch = 0;
 		}
 		return encoded.toString();
 	}
@@ -280,7 +292,8 @@ public class GeoHashUtils {
 	/**
 	 * Return the 32 geo hashes this geohash can be divided into.
 	 *
-	 * They are returned alpabetically sorted but in the real world they follow this pattern:
+	 * They are returned alpabetically sorted but in the real world they follow
+	 * this pattern:
 	 *
 	 * <pre>
 	 * u33dbfc0 u33dbfc2 | u33dbfc8 u33dbfcb
@@ -295,10 +308,9 @@ public class GeoHashUtils {
 	 * u33dbfcn u33dbfcq | u33dbfcw u33dbfcy
 	 * u33dbfcp u33dbfcr | u33dbfcx u33dbfcz
 	 * </pre>
-	 * the first 4 share the north east 1/8th
-	 * the first 8 share the north east 1/4th
-	 * the first 16 share the north 1/2
-	 * and so on.
+	 *
+	 * the first 4 share the north east 1/8th the first 8 share the north east
+	 * 1/4th the first 16 share the north 1/2 and so on.
 	 *
 	 * They are ordered as follows:
 	 *
@@ -313,8 +325,8 @@ public class GeoHashUtils {
 	 * 21 23 29 31
 	 * </pre>
 	 *
-	 * Some useful properties:
-	 * Anything ending with
+	 * Some useful properties: Anything ending with
+	 *
 	 * <pre>
 	 * 0-g = N
 	 * h-z = S
@@ -328,11 +340,187 @@ public class GeoHashUtils {
 	 * @param geoHash
 	 * @return String array with the geo hashes.
 	 */
+	public static String[] subHashesNW(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			if (c >= '0' && c <= '7') {
+				list.add(geoHash + c);
+			}
+		}
+		return list.toArray(new String[0]);
+	}
+
+
+	/**
+	 * @param geoHash
+	 * @return the 16 northern sub hashes of the geo hash
+	 */
+	public static String[] subHashesN(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			if (c >= '0' && c <= 'g') {
+				list.add(geoHash + c);
+			}
+		}
+		return list.toArray(new String[0]);
+	}
+
+	/**
+	 * @param geoHash
+	 * @return the 16 southern sub hashes of the geo hash
+	 */
+	public static String[] subHashesS(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			if (c >= 'h' && c <= 'z') {
+				list.add(geoHash + c);
+			}
+		}
+		return list.toArray(new String[0]);
+	}
+
+	/**
+	 * @param geoHash
+	 * @return the 8 north-west sub hashes of the geo hash
+	 */
+	public static String[] subHashesNE(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			if (c >= '8' && c <= 'g') {
+				list.add(geoHash + c);
+			}
+		}
+		return list.toArray(new String[0]);
+	}
+
+	/**
+	 * @param geoHash
+	 * @return the 8 north-east sub hashes of the geo hash
+	 */
+	public static String[] subHashesSW(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			if (c >= 'h' && c <= 'r') {
+				list.add(geoHash + c);
+			}
+		}
+		return list.toArray(new String[0]);
+	}
+
+	/**
+	 * @param geoHash
+	 * @return the 8 south-west sub hashes of the geo hash
+	 */
+	public static String[] subHashesSE(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			if (c >= 's' && c <= 'z') {
+				list.add(geoHash + c);
+			}
+		}
+		return list.toArray(new String[0]);
+	}
+
+	/**
+	 * @param geoHash
+	 * @return the 8 south-east sub hashes of the geo hash
+	 */
 	public static String[] subHashes(String geoHash) {
 		ArrayList<String> list = new ArrayList<>();
 		for (char c : BASE32_CHARS) {
-			list.add(geoHash+c);
+			list.add(geoHash + c);
 		}
 		return list.toArray(new String[0]);
+	}
+
+	/**
+	 * Cover the polygon with geo hashes. This is useful for indexing mainly.
+	 * @param maxLength maximum length of the geoHash; the more you specify, the more expensive it gets
+	 * @param polygonPoints polygonPoints points that make up the polygon as arrays of [latitude,longitude]
+	 * @return a set of geo hashes that cover the polygon area.
+	 */
+	public static Set<String> getGeoHashesForPolygon(int maxLength, double[]...polygonPoints) {
+		if(maxLength < 2 || maxLength > 10) {
+			throw new IllegalArgumentException("maxLength should be between 1 and 10");
+		}
+
+		double[] bbox = GeoGeometry.getBbox(polygonPoints);
+		// first lets figure out an appropriate geohash length
+		double diagonal = GeoGeometry.distance(bbox[0],bbox[2], bbox[1], bbox[3]);
+		int hashLength;
+		if(diagonal<50) {
+			hashLength=8;
+		} else if(diagonal<200) {
+			hashLength=7;
+		} else if(diagonal<1500) {
+			hashLength=6;
+		} else if(diagonal<10000) {
+			hashLength=5;
+		} else if(diagonal<50000) {
+			hashLength=4;
+		} else if(diagonal<200000) {
+			hashLength=3;
+		} else {
+			hashLength=2;
+		}
+
+		Set<String> partiallyContained = new HashSet<>();
+		// now lets generate all geohashes for the containing bounding box
+		// lets start at the top left:
+		String rowHash = encode(bbox[0], bbox[2]).substring(0, hashLength);
+		double[] rowBox = decode_bbox(rowHash);
+		while(rowBox[0]<bbox[1]) {
+			String columnHash = rowHash;
+			double[] columnBox = rowBox;
+			while(columnBox[2]<bbox[3]) {
+				partiallyContained.add(columnHash);
+				columnHash = east(columnHash);
+				columnBox = decode_bbox(columnHash);
+			}
+			// move to the next row
+			rowHash = south(rowHash);
+			rowBox = decode_bbox(rowHash);
+		}
+
+		Set<String> fullyContained = new TreeSet<>();
+
+		int detail = hashLength;
+		// we're not aiming for perfect detail here in terms of 'pixelation', 6 extra chars in the geohash ought to be enough and going beyond 9 doesn't serve much purpose.
+		while(detail < maxLength) {
+			partiallyContained = splitAndFilter(bbox, fullyContained, partiallyContained);
+			detail++;
+		}
+
+		// add the remaining hashes that we didn't split
+		fullyContained.addAll(partiallyContained);
+
+		return fullyContained;
+	}
+
+	private static Set<String> splitAndFilter(double[] bbox,
+			Set<String> fullyContained, Set<String> partiallyContained) {
+		Set<String> stillPartial = new HashSet<>();
+		// now we need to break up the partially contained hashes
+		for (String hash : partiallyContained) {
+			for (String h : subHashes(hash)) {
+				double[] hashBbox = decode_bbox(h);
+				boolean nw = GeoGeometry.bboxContains(bbox, hashBbox[0],
+						hashBbox[2]);
+				boolean ne = GeoGeometry.bboxContains(bbox, hashBbox[0],
+						hashBbox[3]);
+				boolean sw = GeoGeometry.bboxContains(bbox, hashBbox[1],
+						hashBbox[2]);
+				boolean se = GeoGeometry.bboxContains(bbox, hashBbox[1],
+						hashBbox[3]);
+				if (nw && ne && sw && se) {
+					fullyContained.add(h);
+				} else if (nw || ne || sw || se) {
+					stillPartial.add(h);
+				} else {
+					// ignore it
+				}
+			}
+		}
+		return stillPartial;
 	}
 }

@@ -31,20 +31,20 @@ import static java.lang.Math.toRadians;
 public class GeoGeometry {
 
 	/**
-	 * @param polygon a 2D double array of [[latitude,longitude]]
+	 * @param polygonPoints points that make up the polygon as arrays of [latitude,longitude]
 	 * @return bounding box that contains the polygon as a double array of [minLat,maxLat,minLon,maxLon}
 	 */
-	public static double[] getBbox(double[][] polygon) {
+	public static double[] getBbox(double[]...polygonPoints) {
 		double minLat=Integer.MAX_VALUE;
 		double minLon=Integer.MAX_VALUE;
 		double maxLat=Integer.MIN_VALUE;
 		double maxLon=Integer.MIN_VALUE;
 
-		for(int i=0; i<polygon.length;i++) {
-			minLat = min(minLat, polygon[i][0]);
-			minLon = min(minLon, polygon[i][1]);
-			maxLat = max(maxLat, polygon[i][0]);
-			maxLon = max(maxLon, polygon[i][1]);
+		for(int i=0; i<polygonPoints.length;i++) {
+			minLat = min(minLat, polygonPoints[i][0]);
+			minLon = min(minLon, polygonPoints[i][1]);
+			maxLat = max(maxLat, polygonPoints[i][0]);
+			maxLon = max(maxLon, polygonPoints[i][1]);
 		}
 
 		return new double[] {minLat,maxLat,minLon,maxLon};
@@ -61,19 +61,18 @@ public class GeoGeometry {
 	}
 
 	/**
-	 * @param polygon a 2D double array of [[latitude,longitude]]
 	 * @param latitude
 	 * @param longitude
+	 * @param polygonPoints polygonPoints points that make up the polygon as arrays of [latitude,longitude]
 	 * @return true if the polygon contains the coordinate
 	 */
-	public static boolean polygonContains(double[][] polygon, double latitude, double longitude) {
+	public static boolean polygonContains(double latitude, double longitude, double[]...polygonPoints) {
 
-		if (polygon.length <= 2) {
-			// that would be a line
-			return false;
+		if (polygonPoints.length <= 2) {
+			throw new IllegalArgumentException("a polygon must have at least three points");
 		}
 
-		double[] bbox = getBbox(polygon);
+		double[] bbox = getBbox(polygonPoints);
 		if(!bboxContains(bbox, latitude, longitude)) {
 			// outside the containing bbox
 			return false;
@@ -81,14 +80,14 @@ public class GeoGeometry {
 
 		int hits = 0;
 
-		double lastLatitude = polygon[polygon.length - 1][0];
-		double lastLongitude = polygon[polygon.length - 1][1];
+		double lastLatitude = polygonPoints[polygonPoints.length - 1][0];
+		double lastLongitude = polygonPoints[polygonPoints.length - 1][1];
 		double currentLatitude, currentLongitude;
 
 		// Walk the edges of the polygon
-		for (int i = 0; i < polygon.length; lastLatitude = currentLatitude, lastLongitude = currentLongitude, i++) {
-			currentLatitude = polygon[i][0];
-			currentLongitude = polygon[i][1];
+		for (int i = 0; i < polygonPoints.length; lastLatitude = currentLatitude, lastLongitude = currentLongitude, i++) {
+			currentLatitude = polygonPoints[i][0];
+			currentLongitude = polygonPoints[i][1];
 
 			if (currentLongitude == lastLongitude) {
 				continue;
@@ -198,4 +197,24 @@ public class GeoGeometry {
 		return distance(firstCoordinate[0], firstCoordinate[1], secondCoordinate[0], secondCoordinate[1]);
 	}
 
+	/**
+	 * Simple/naive method for calculating the center of a polygon based on
+	 * averaging the latitude and longitude. Better algorithms exist but this
+	 * may be good enough for most purposes.
+	 *
+	 * Note, for some polygons, this may actually be located outside the
+	 * polygon.
+	 *
+	 * @param polygonPoints polygonPoints points that make up the polygon as arrays of [latitude,longitude]
+	 * @return the average latitude and longitude.
+	 */
+	public double[] getPolygonCenter(double[]...polygonPoints) {
+		double cumLat = 0;
+		double cumLon = 0;
+		for (double[] coordinate : polygonPoints) {
+			cumLat += coordinate[0];
+			cumLon += coordinate[1];
+		}
+		return new double[] { cumLat / polygonPoints.length, cumLon / polygonPoints.length };
+	}
 }
