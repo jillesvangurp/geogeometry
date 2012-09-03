@@ -18,6 +18,8 @@
  */
 package com.jillesvangurp.geo;
 
+import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +34,12 @@ public class GeoHashUtils {
 
 	private static int PRECISION = 12;
 	private static int[] BITS = { 16, 8, 4, 2, 1 };
+	// note: no a,i,l, and o
 	private static char[] BASE32_CHARS = { '0', '1', '2', '3', '4', '5', '6',
 			'7', '8', '9', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm',
 			'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
-	private final static Map<Character, Integer> BASE32_DECODE_MAP = new HashMap<Character, Integer>();
+	final static Map<Character, Integer> BASE32_DECODE_MAP = new HashMap<Character, Integer>();
 	static {
 		for (int i = 0; i < BASE32_CHARS.length; i++) {
 			BASE32_DECODE_MAP.put(BASE32_CHARS[i], i);
@@ -51,8 +54,8 @@ public class GeoHashUtils {
 	 * @return geo hash for the coordinate
 	 */
 	public static String encode(double latitude, double longitude) {
-		double[] lat_interval = { -90.0, 90.0 };
-		double[] lon_interval = { -180.0, 180.0 };
+		double[] latInterval = { -90.0, 90.0 };
+		double[] lonInterval = { -180.0, 180.0 };
 
 		StringBuilder geohash = new StringBuilder();
 		boolean is_even = true;
@@ -61,21 +64,21 @@ public class GeoHashUtils {
 		while (geohash.length() < PRECISION) {
 			double mid = 0.0;
 			if (is_even) {
-				mid = (lon_interval[0] + lon_interval[1]) / 2;
+				mid = (lonInterval[0] + lonInterval[1]) / 2;
 				if (longitude > mid) {
 					ch |= BITS[bit];
-					lon_interval[0] = mid;
+					lonInterval[0] = mid;
 				} else {
-					lon_interval[1] = mid;
+					lonInterval[1] = mid;
 				}
 
 			} else {
-				mid = (lat_interval[0] + lat_interval[1]) / 2;
+				mid = (latInterval[0] + latInterval[1]) / 2;
 				if (latitude > mid) {
 					ch |= BITS[bit];
-					lat_interval[0] = mid;
+					latInterval[0] = mid;
 				} else {
-					lat_interval[1] = mid;
+					latInterval[1] = mid;
 				}
 			}
 
@@ -95,23 +98,40 @@ public class GeoHashUtils {
 
 	/**
 	 * @param geohash
-	 * @return a coordinate as a double array of [latitude,longitude]
+	 * @return a coordinate representing the center of the geohash as a double array of [latitude,longitude]
 	 */
 	public static double[] decode(String geohash) {
-		double[] ge = decode_exactly(geohash);
-		double lat, lon, lat_err, lon_err;
-		lat = ge[0];
-		lon = ge[1];
-		lat_err = ge[2];
-		lon_err = ge[3];
+		double[] lat_interval = { -90.0, 90.0 };
+		double[] lon_interval = { -180.0, 180.0 };
 
-		double lat_precision = Math.max(1, Math.round(-Math.log10(lat_err))) - 1;
-		double lon_precision = Math.max(1, Math.round(-Math.log10(lon_err))) - 1;
+		boolean is_even = true;
+		double latitude, longitude;
+		for (int i = 0; i < geohash.length(); i++) {
+			int currentChar = BASE32_DECODE_MAP.get(geohash.charAt(i));
+			for (int z = 0; z < BITS.length; z++) {
+				int mask = BITS[z];
+				if (is_even) {
+					if ((currentChar & mask) != 0) {
+						lon_interval[0] = (lon_interval[0] + lon_interval[1]) / 2;
+					} else {
+						lon_interval[1] = (lon_interval[0] + lon_interval[1]) / 2;
+					}
 
-		lat = getPrecision(lat, lat_precision);
-		lon = getPrecision(lon, lon_precision);
+				} else {
+					if ((currentChar & mask) != 0) {
+						lat_interval[0] = (lat_interval[0] + lat_interval[1]) / 2;
+					} else {
+						lat_interval[1] = (lat_interval[0] + lat_interval[1]) / 2;
+					}
+				}
+				is_even = is_even ? false : true;
+			}
 
-		return new double[] { lat, lon };
+		}
+		latitude = (lat_interval[0] + lat_interval[1]) / 2;
+		longitude = (lon_interval[0] + lon_interval[1]) / 2;
+
+		return new double[] { latitude, longitude };
 	}
 
 	/**
@@ -125,12 +145,12 @@ public class GeoHashUtils {
 		boolean is_even = true;
 		for (int i = 0; i < geohash.length(); i++) {
 
-			int cd = BASE32_DECODE_MAP.get(geohash.charAt(i));
+			int currentCharacter = BASE32_DECODE_MAP.get(geohash.charAt(i));
 
 			for (int z = 0; z < BITS.length; z++) {
 				int mask = BITS[z];
 				if (is_even) {
-					if ((cd & mask) != 0) {
+					if ((currentCharacter & mask) != 0) {
 						lon_interval[0] = (lon_interval[0] + lon_interval[1]) / 2;
 					} else {
 						lon_interval[1] = (lon_interval[0] + lon_interval[1]) / 2;
@@ -138,7 +158,7 @@ public class GeoHashUtils {
 
 				} else {
 
-					if ((cd & mask) != 0) {
+					if ((currentCharacter & mask) != 0) {
 						lat_interval[0] = (lat_interval[0] + lat_interval[1]) / 2;
 					} else {
 						lat_interval[1] = (lat_interval[0] + lat_interval[1]) / 2;
@@ -210,50 +230,111 @@ public class GeoHashUtils {
 				&& longitude >= bbox[2] && longitude <= bbox[3];
 	}
 
-	private static double[] decode_exactly(String geohash) {
-		double[] lat_interval = { -90.0, 90.0 };
-		double[] lon_interval = { -180.0, 180.0 };
-
-		double lat_err = 90.0;
-		double lon_err = 180.0;
-		boolean is_even = true;
-		double latitude, longitude;
-		for (int i = 0; i < geohash.length(); i++) {
-
-			int cd = BASE32_DECODE_MAP.get(geohash.charAt(i));
-
+	/**
+	 * @param geoHash
+	 * @return a BitSet for the given geoHash
+	 */
+	public static BitSet toBitSet(String geoHash) {
+		BitSet bitSet = new BitSet();
+		int b=0;
+		for (int i = 0; i < geoHash.length(); i++) {
+			int currentCharacter = BASE32_DECODE_MAP.get(geoHash.charAt(i));
 			for (int z = 0; z < BITS.length; z++) {
-				int mask = BITS[z];
-				if (is_even) {
-					lon_err /= 2;
-					if ((cd & mask) != 0) {
-						lon_interval[0] = (lon_interval[0] + lon_interval[1]) / 2;
-					} else {
-						lon_interval[1] = (lon_interval[0] + lon_interval[1]) / 2;
-					}
-
-				} else {
-					lat_err /= 2;
-
-					if ((cd & mask) != 0) {
-						lat_interval[0] = (lat_interval[0] + lat_interval[1]) / 2;
-					} else {
-						lat_interval[1] = (lat_interval[0] + lat_interval[1]) / 2;
-					}
+				if((currentCharacter & BITS[z]) != 0) {
+					bitSet.set(b);
 				}
-				is_even = is_even ? false : true;
+				b++;
 			}
-
 		}
-		latitude = (lat_interval[0] + lat_interval[1]) / 2;
-		longitude = (lon_interval[0] + lon_interval[1]) / 2;
 
-		return new double[] { latitude, longitude, lat_err, lon_err };
+		return bitSet;
 	}
 
-	private static double getPrecision(double x, double precision) {
-		double base = Math.pow(10, -precision);
-		double diff = x % base;
-		return x - diff;
+	/**
+	 * @param bitSet
+	 * @return a base32 encoded geo hash for a bitset representing a geo hash.
+	 */
+	public static String fromBitSet(BitSet bitSet) {
+		StringBuilder encoded = new StringBuilder();
+		int ch=0;
+		int b=1;
+		if(bitSet.length() ==0) {
+			return "0";
+		}
+		for(; b <= bitSet.length(); b++) {
+			if(bitSet.get(b-1)) {
+				ch += BITS[(b-1)%BITS.length];
+			}
+
+			if(b%BITS.length==0 && b!=1) {
+				encoded.append(BASE32_CHARS[ch]);
+				ch=0;
+			}
+		}
+		// b will have incremented despite failing the check in the for loop; so compensate
+		if((b-1)%BITS.length!=0) {
+			encoded.append(BASE32_CHARS[ch]);
+			ch=0;
+		}
+		return encoded.toString();
+	}
+
+	/**
+	 * Return the 32 geo hashes this geohash can be divided into.
+	 *
+	 * They are returned alpabetically sorted but in the real world they follow this pattern:
+	 *
+	 * <pre>
+	 * u33dbfc0 u33dbfc2 | u33dbfc8 u33dbfcb
+	 * u33dbfc1 u33dbfc3 | u33dbfc9 u33dbfcc
+	 * -------------------------------------
+	 * u33dbfc4 u33dbfc6 | u33dbfcd u33dbfcf
+	 * u33dbfc5 u33dbfc7 | u33dbfce u33dbfcg
+	 * -------------------------------------
+	 * u33dbfch u33dbfck | u33dbfcs u33dbfcu
+	 * u33dbfcj u33dbfcm | u33dbfct u33dbfcv
+	 * -------------------------------------
+	 * u33dbfcn u33dbfcq | u33dbfcw u33dbfcy
+	 * u33dbfcp u33dbfcr | u33dbfcx u33dbfcz
+	 * </pre>
+	 * the first 4 share the north east 1/8th
+	 * the first 8 share the north east 1/4th
+	 * the first 16 share the north 1/2
+	 * and so on.
+	 *
+	 * They are ordered as follows:
+	 *
+	 * <pre>
+	 *  0  2  8 10
+	 *  1  3  9 11
+	 *  4  6 12 14
+	 *  5  7 13 15
+	 * 16 18 24 26
+	 * 17 19 25 27
+	 * 20 22 28 30
+	 * 21 23 29 31
+	 * </pre>
+	 *
+	 * Some useful properties:
+	 * Anything ending with
+	 * <pre>
+	 * 0-g = N
+	 * h-z = S
+	 *
+	 * 0-7 = NW
+	 * 8-g = NE
+	 * h-r = SW
+	 * s-z = SE
+	 * </pre>
+	 *
+	 * @param geoHash
+	 * @return String array with the geo hashes.
+	 */
+	public static String[] subHashes(String geoHash) {
+		ArrayList<String> list = new ArrayList<>();
+		for (char c : BASE32_CHARS) {
+			list.add(geoHash+c);
+		}
+		return list.toArray(new String[0]);
 	}
 }

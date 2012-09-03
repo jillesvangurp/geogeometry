@@ -21,16 +21,22 @@
  */
 package com.jillesvangurp.geo;
 
-import static com.jillesvangurp.geo.GeoDistance.distance;
+import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoHashUtils.contains;
 import static com.jillesvangurp.geo.GeoHashUtils.decode;
 import static com.jillesvangurp.geo.GeoHashUtils.decode_bbox;
+import static com.jillesvangurp.geo.GeoHashUtils.east;
 import static com.jillesvangurp.geo.GeoHashUtils.encode;
+import static com.jillesvangurp.geo.GeoHashUtils.fromBitSet;
+import static com.jillesvangurp.geo.GeoHashUtils.south;
+import static com.jillesvangurp.geo.GeoHashUtils.toBitSet;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.number.OrderingComparison.lessThan;
+
+import java.util.BitSet;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -127,11 +133,12 @@ public class GeoHashUtilsTest {
 
 	private void assertSimilar(double d1, double d2) {
 		// allow for some margin of error
-		assertThat("should be similar" + d1 + " and " + d2, abs(d1-d2), lessThan(0.0000015));
+		assertThat("should be similar" + d1 + " and " + d2, abs(d1-d2), lessThan(0.0000001));
 	}
 
 	@Test(dataProvider="coordinates")
 	public void shouldCalculateBboxSizes(Double lat, Double lon, String geoHash) {
+		// not a test but nice to get a sense of the scale of a geo hash
 		for(int i=1;i<geoHash.length();i++) {
 			String prefix = geoHash.substring(0,i);
 			double[] bbox = decode_bbox(prefix);
@@ -140,4 +147,37 @@ public class GeoHashUtilsTest {
 			System.out.println(i + " " + prefix + ": " + horizontal + " x " + vertical);
 		}
 	}
+
+	public void shouldConvertToAndFromBitset() {
+		String hash = "u33dbfcyegk2";
+		for(int i=0;i<hash.length()-2; i++) {
+			String prefix = hash.substring(0, hash.length()-i);
+			BitSet bitSet = toBitSet(prefix);
+			assertThat(bitSet.length(), lessThan(5*prefix.length()+1));
+			assertThat(fromBitSet(bitSet), is(prefix));
+		}
+	}
+
+	public void shouldCalculateSubHashes() {
+		String hash = "u33dbfc";
+		String[] subHashes = GeoHashUtils.subHashes(hash);
+		assertThat(subHashes.length, is(32));
+		String first = subHashes[0];
+		String row=first;
+		for(int j=0; j< 16; j++) {
+			String column=row;
+			for(int i=0; i<8 ;i++) {
+				System.out.print(column + " ");
+				column=east(column);
+			}
+			System.out.println();
+			row = south(row);
+		}
+	}
+
+    static double getPrecision(double x, double precision) {
+        double base = Math.pow(10,- precision);
+        double diff = x % base;
+        return x - diff;
+    }
 }
