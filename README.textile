@@ -4,11 +4,16 @@ GeoTools is a small project where I've gathered some code that I've used in the 
 
 h1. Features
 
-* Calculate distance between two coordinates using the haversine algorithm.
+* GeoGeometry
+** Calculate distance between two coordinates using the haversine algorithm.
+** check bounding box containment for a point
+** check polygon containment for a point
+** get bounding box for a polygon
 * Expanded version of Apache's GeoHashUtils with 
-** new methods for calculating geohashes north, south, west, and east of the original geohash
-** method for calculating the north and south latitude and the east and west longitude of a geohash
 ** a contains method for checking if a coordinate is contained in a geohash
+** get the east, west, north, and south geohashes for any geo hash
+** get the 32 sub geo hashes for a geohash
+** convert geo hash to a BitSet and a BitSet to a geo hash
 
 h1. Installation
 
@@ -36,4 +41,9 @@ If anyone wants to fix stuff just send me a pull request.
 
 h1. Changelog
 
-* 1.0 - first release of GeoTools
+* 1.0
+** first release of GeoTools
+* 1.1
+** Added GeoGeometry class for manipulating bounding boxes and polygons of wgs 84 coordinates
+** Improved GeoHashUtils with several new methods
+** Merged GeoDistance into GeoGeometry
