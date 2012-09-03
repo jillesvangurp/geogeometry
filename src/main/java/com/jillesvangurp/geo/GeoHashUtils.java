@@ -225,9 +225,7 @@ public class GeoHashUtils {
 	 */
 	public static boolean contains(String geoHash, double latitude,
 			double longitude) {
-		double[] bbox = decode_bbox(geoHash);
-		return latitude >= bbox[0] && latitude <= bbox[1]
-				&& longitude >= bbox[2] && longitude <= bbox[3];
+		return GeoGeometry.bboxContains(decode_bbox(geoHash), latitude, longitude);
 	}
 
 	/**
