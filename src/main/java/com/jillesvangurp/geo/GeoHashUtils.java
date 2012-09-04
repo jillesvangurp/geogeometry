@@ -27,15 +27,17 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * This class was adapted from Apache Lucene's GeoHashUtils. Please note that
- * this class retains the original licensing.
+ * This class was originally adapted from Apache Lucene's GeoHashUtils.java. Please note that
+ * this class retains the original licensing (as required), which is different from other classes contained
+ * in this project, which are MIT licensed.
  *
- * Relative to the Apache implementation, I have cleaned up some of the code and
- * added a few useful methods that make it easier to work with geo hashes.
+ * Relative to the Apache implementation, the code has been cleaned up and expanded.
+ * Several new methods have been added to facilitate creating sets of geo hashes for e.g.
+ * polygons and other geometric forms.
  */
 public class GeoHashUtils {
 
-	private static int PRECISION = 12;
+	private static int DEFAULT_PRECISION = 12;
 	private static int[] BITS = { 16, 8, 4, 2, 1 };
 	// note: no a,i,l, and o
 	private static char[] BASE32_CHARS = { '0', '1', '2', '3', '4', '5', '6',
@@ -49,15 +51,10 @@ public class GeoHashUtils {
 		}
 	}
 
-	/**
-	 * Encodes a coordinate into a geo hash.
-	 *
-	 * @see "http://en.wikipedia.org/wiki/Geohash"
-	 * @param latitude
-	 * @param longitude
-	 * @return geo hash for the coordinate
-	 */
-	public static String encode(double latitude, double longitude) {
+	private static Object[] encodeWithBbox(double latitude, double longitude, int length) {
+		if(length < 1 || length >12) {
+			throw new IllegalArgumentException("length must be between 1 and 12");
+		}
 		double[] latInterval = { -90.0, 90.0 };
 		double[] lonInterval = { -180.0, 180.0 };
 
@@ -65,7 +62,7 @@ public class GeoHashUtils {
 		boolean is_even = true;
 		int bit = 0, ch = 0;
 
-		while (geohash.length() < PRECISION) {
+		while (geohash.length() < length) {
 			double mid = 0.0;
 			if (is_even) {
 				mid = (lonInterval[0] + lonInterval[1]) / 2;
@@ -96,11 +93,83 @@ public class GeoHashUtils {
 				ch = 0;
 			}
 		}
+		return new Object[] {geohash.toString(), new double[] {latInterval[0], latInterval[1], lonInterval[0], lonInterval[1]}};
+	}
 
+	/**
+	 * Same as encode but returns a substring of the specified length.
+	 * @param latitude
+	 * @param longitude
+	 * @param length
+	 * @return geo hash of the specified length. The minimum length is 1 and the maximum length is 12.
+	 */
+	public static String encode(double latitude, double longitude, int length) {
+		if(length < 1 || length >12) {
+			throw new IllegalArgumentException("length must be between 1 and 12");
+		}
+		double[] latInterval = { -90.0, 90.0 };
+		double[] lonInterval = { -180.0, 180.0 };
+
+		StringBuilder geohash = new StringBuilder();
+		boolean is_even = true;
+		int bit = 0, ch = 0;
+
+		while (geohash.length() < length) {
+			double mid = 0.0;
+			if (is_even) {
+				mid = (lonInterval[0] + lonInterval[1]) / 2;
+				if (longitude > mid) {
+					ch |= BITS[bit];
+					lonInterval[0] = mid;
+				} else {
+					lonInterval[1] = mid;
+				}
+
+			} else {
+				mid = (latInterval[0] + latInterval[1]) / 2;
+				if (latitude > mid) {
+					ch |= BITS[bit];
+					latInterval[0] = mid;
+				} else {
+					latInterval[1] = mid;
+				}
+			}
+
+			is_even = is_even ? false : true;
+
+			if (bit < 4) {
+				bit++;
+			} else {
+				geohash.append(BASE32_CHARS[ch]);
+				bit = 0;
+				ch = 0;
+			}
+		}
 		return geohash.toString();
 	}
 
 	/**
+	 * Encodes a coordinate into a geo hash.
+	 *
+	 * @see "http://en.wikipedia.org/wiki/Geohash"
+	 * @param latitude
+	 * @param longitude
+	 * @return geo hash for the coordinate
+	 */
+	public static String encode(double latitude, double longitude) {
+		return encode(latitude, longitude, DEFAULT_PRECISION);
+	}
+
+	/**
+	 * This decodes the geo hash into it's center. Note that the coordinate that you used to generate
+	 * the geo hash may be anywhere in the geo hash's bounding box and therefore you should not
+	 * expect them to be identical.
+	 *
+	 * The original apache code attempted to round the returned coordinate. I have chosen to remove this 'feature' since
+	 * it is useful to know the center of the geo hash as exactly as possible, even for very short geo hashes.
+	 *
+	 * Should you wish to apply some rounding, you can use the GeoGeometry.roundToDecimals method.
+	 *
 	 * @param geohash
 	 * @return a coordinate representing the center of the geohash as a double
 	 *         array of [latitude,longitude]
@@ -522,5 +591,49 @@ public class GeoHashUtils {
 			}
 		}
 		return stillPartial;
+	}
+
+	/**
+	 * @param length
+	 * @param wayPoints
+	 * @return set of geo hashes along the path with the specified geo hash length
+	 */
+	public static Set<String> geoHashesForPath(int length, double[]...wayPoints) {
+		if(wayPoints == null || wayPoints.length < 2) {
+			throw new IllegalArgumentException("must have at least two way points on the path");
+		}
+		Set<String> hashes = new TreeSet<>();
+		// The slope of the line through points A(ax, ay) and B(bx, by) is given by m = (by-ay)/(bx-ax) and the equation of this
+		// line can be written y = m(x - ax) + ay.
+
+		for(int i=1;i<wayPoints.length;i++) {
+			double[] previousPoint = wayPoints[i-1];
+			double[] point = wayPoints[i];
+			hashes.addAll(geoHashesForLine(length, previousPoint[0], previousPoint[1], point[0], point[1]));
+		}
+
+		return hashes;
+	}
+
+	/**
+	 * @param length
+	 * @param lat1
+	 * @param lon1
+	 * @param lat2
+	 * @param lon2
+	 * @return set of geo hashes along the line with the specified geo hash length.
+	 */
+	public static Set<String> geoHashesForLine(int length, double lat1, double lon1, double lat2, double lon2) {
+		if(lat1 == lat2 && lon1 == lon2) {
+			throw new IllegalArgumentException("identical begin and end coordinate: line must have two different points");
+		}
+
+		double[] bbox1 = (double[]) encodeWithBbox(lat1, lon1, length)[1];
+		double[] bbox2 = (double[]) encodeWithBbox(lat2, lon2, length)[1];
+		if(lat1 <= lat2) {
+			return getGeoHashesForPolygon(length, new double[][] {{bbox1[1],bbox1[2]}, {bbox1[0], bbox1[3]},{bbox2[0],bbox2[3]},{bbox2[1], bbox2[2]}});
+		} else {
+			return getGeoHashesForPolygon(length, new double[][] {{bbox1[0],bbox1[2]}, {bbox1[1], bbox1[3]},{bbox2[1],bbox2[2]},{bbox2[0], bbox2[3]}});
+		}
 	}
 }
