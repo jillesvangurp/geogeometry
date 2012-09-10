@@ -143,7 +143,7 @@ public class GeoHashUtilsTest {
 				lessThan(0.0000001));
 	}
 
-	@Test(dataProvider = "coordinates")
+	@Test(dataProvider = "coordinates", enabled=false)
 	public void shouldCalculateBboxSizes(Double lat, Double lon, String geoHash) {
 		// not a test but nice to get a sense of the scale of a geo hash
 		for (int i = 1; i < geoHash.length(); i++) {
@@ -166,6 +166,7 @@ public class GeoHashUtilsTest {
 		}
 	}
 
+	@Test(enabled=false)
 	public void shouldCalculateSubHashesForHash() {
 		String hash = "u33dbfc";
 		String[] subHashes = GeoHashUtils.subHashes(hash);
@@ -193,7 +194,6 @@ public class GeoHashUtilsTest {
 		for (String h : geoHashesForPolygon) {
 			min = Math.min(min, h.length());
 		}
-		System.out.println(geoHashesForPolygon.size());
 		assertThat("there should be some hashes with length=3", min, is(3));
 		assertThat("huge area, should generate lots of hashes",
 				geoHashesForPolygon.size() > 1000);
@@ -212,7 +212,6 @@ public class GeoHashUtilsTest {
 				lon2);
 		double slope = (lat2 - lat1) / (lon2 - lon1);
 		if (lat1 < lat2 && lon1 != lon2) {
-			System.out.print("/");
 			for (double lat = lat1; lat < lat2; lat += 1.0 / (hashes.size() * 2)) {
 				double lon = slope * lat - slope * lat1 + lon1;
 				String h = encode(lat, lon, 3);
@@ -220,7 +219,6 @@ public class GeoHashUtilsTest {
 						+ ',' + lon + " in the set", hashes.contains(h));
 			}
 		} else if (lat1 > lat2 && lon1 != lon2) {
-			System.out.print("\\");
 			for (double lat = lat1; lat < lat2; lat -= 1.0 / (hashes.size() * 2)) {
 				double lon = slope * lat - slope * lat1 + lon1;
 				String h = encode(lat, lon, 3);
@@ -243,6 +241,5 @@ public class GeoHashUtilsTest {
 		} else {
 			// points are the same, that won't work
 		}
-		System.out.println();
 	}
 }

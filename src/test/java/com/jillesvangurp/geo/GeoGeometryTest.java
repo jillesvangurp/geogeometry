@@ -98,13 +98,11 @@ public class GeoGeometryTest {
 	            d+=distance(last, point);
 	        }
 	        double distance = distance(new double[]{52.530564,13.394964}, point);
-	        System.out.println(point[0] + "," + point[1] + " -> " + distance);
             assertThat("should have distance of radius to origin", abs(radius-distance) < 1);
             last=point;
 	    }
 	    // close the circle
         d+=distance(polygon[0],last);
-
         assertThat("circumference should be very close to length of the polygon", abs(d-2*Math.PI*radius) < 1);
 	}
 }
