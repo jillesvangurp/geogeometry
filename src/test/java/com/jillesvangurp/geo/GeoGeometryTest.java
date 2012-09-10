@@ -25,6 +25,8 @@ import static com.jillesvangurp.geo.GeoGeometry.bboxContains;
 import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoGeometry.polygonContains;
 import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
+import static java.lang.Math.abs;
+import static java.lang.Math.pow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -75,5 +77,34 @@ public class GeoGeometryTest {
 	public void shouldCalculateDistance() {
 		double d  = distance(52.530564,13.394964, 52.530564,13.410821);
 		assertThat("should be a bit more than 1072m", d - 1072 >0 && d-1073 <0);
+	}
+
+	public void shouldTranslateCorrectly() {
+	    double[] translated = GeoGeometry.translate(52.530564,13.394964, 1000, 3000);
+	    double pythagorasDistance = Math.sqrt(pow(1000, 2)+pow(3000,2));
+	    double distance = distance(new double[]{52.530564,13.394964}, translated);
+        assertThat("distance should be correct for translated coordinate", abs(distance - pythagorasDistance) < 1.0);
+	}
+
+	public void shouldHaveDistanceOfRadiusForEachPoint() {
+	    int radius = 5000;
+        int segments = 500;
+        double[][] polygon = GeoGeometry.circle2polygon(segments, 52.530564,13.394964, radius);
+	    double d=0;
+	    double[] last = null;
+
+	    for(double[] point: polygon) {
+	        if(last != null) {
+	            d+=distance(last, point);
+	        }
+	        double distance = distance(new double[]{52.530564,13.394964}, point);
+	        System.out.println(point[0] + "," + point[1] + " -> " + distance);
+            assertThat("should have distance of radius to origin", abs(radius-distance) < 1);
+            last=point;
+	    }
+	    // close the circle
+        d+=distance(polygon[0],last);
+
+        assertThat("circumference should be very close to length of the polygon", abs(d-2*Math.PI*radius) < 1);
 	}
 }
