@@ -29,6 +29,9 @@ import static java.lang.Math.min;
 import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 public class GeoGeometry {
 
     /**
@@ -65,7 +68,13 @@ public class GeoGeometry {
         return bbox[0] <= latitude && latitude <= bbox[1] && bbox[2] <= longitude && longitude <= bbox[3];
     }
 
+
+    public static boolean polygonContains(double[] point, double[]... polygonPoints) {
+        return polygonContains(point[0], point[1],polygonPoints);
+    }
+
     /**
+     * Determine whether a point is contained in a polygon. Note, technically the points that make up the polygon are not contained by it.
      * @param latitude
      * @param longitude
      * @param polygonPoints
@@ -329,5 +338,75 @@ public class GeoGeometry {
             points[i] = new double[]{latOnCircle,lonOnCircle};
         }
         return points;
+    }
+
+    /**
+     * Calculate a convex polygon containing all the points using the Monotone Chain Convex Hull algorithm
+     * @param points
+     * @return polygon containing the points.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked" })
+    public static double[][] pointCloudToPolygon(double[]...points) {
+        Comparator pointComparator = new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                double[] p1 = (double[]) o1;
+                double[] p2 = (double[]) o2;
+                if(p1[0] == p2[0]) {
+                    return (int) Math.round(p1[1]-p2[1]);
+                } else {
+                    return (int) Math.round(p1[0]-p2[0]);
+                }
+            }
+        };
+        double[][] pointsCopy = Arrays.copyOf(points, points.length);
+        // sort the copy of points first (don't modify the parameter array)
+        Arrays.sort(pointsCopy, pointComparator);
+
+        int n = pointsCopy.length;
+
+        double[][] result = new double[n*2][0];
+
+        // calculate lower hull
+        int k=0;
+        int start=0;
+
+        for(int i=0; i<n;i++) {
+            double[] p = pointsCopy[i];
+            while(k-start>=2 && inside(p, result[k-1], result[k-2])) {
+                k--;
+            }
+            result[k++] = p;
+        }
+
+        // drop the last one
+        k--;
+        // calculate upper hull
+        start=k;
+
+        for(int i = n-1 ; i >= 0 ; i --) {
+            double[] p = pointsCopy[i];
+            while(k-start>=2 && inside(p, result[k-1], result[k-2])) {
+                k--;
+            }
+            result[k++] = p;
+        }
+        // drop the last one
+        k--;
+
+        return Arrays.copyOf(result, k);
+    }
+
+    private static boolean inside(double[] p, double[] p1, double[] p2) {
+        return crossProduct(subtract(p,p1),subtract(p,p2)) > 0;
+    }
+
+    private static double[] subtract(double[] p1, double[]p2) {
+        return new double[] {p1[0]-p2[0], p1[1]-p2[1]};
+    }
+
+    private static double crossProduct(double[] p1, double[]p2) {
+        // http://stackoverflow.com/questions/243945/calculating-a-2d-vectors-cross-product
+        return p1[0]*p2[1] - p1[1]*p2[0] ;
     }
 }

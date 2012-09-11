@@ -34,7 +34,25 @@ import org.testng.annotations.Test;
 
 @Test
 public class GeoGeometryTest {
-	double[][] polygon = new double[][] {
+
+    double[] sydney=new double[] {-33.872796,151.206146};
+    double[] buenosaires=new double[] {-34.602875,-58.380449};
+    double[] newyork=new double[] {40.721119,-74.011237};
+    double[] amsterdam=new double[] {52.372103,4.894252};
+    double[] berlin=new double[] {52.527109,13.385721};
+    double[] london=new double[] {51.51283,-0.123656};
+
+
+    double[] brandenBurgerGate=new double[] {52.516279,13.377157};
+    double[] potsDammerPlatz=new double[] {52.509515,13.376599};
+    double[] moritzPlatz=new double[] {52.503663,13.410717};
+    double[] senefelderPlatz=new double[] {52.532755,13.412949};
+    double[] naturkundeMuseum=new double[] {52.531188,13.381921};
+    double[] rosenthalerPlatz=new double[] {52.529948,13.401361};
+    double[] oranienburgerTor=new double[] {52.525339,13.38707};
+
+
+	double[][] samplePolygon = new double[][] {
 		{ -1, 1 },
 		{ 2, 2 },
 		{ 3, -1 },
@@ -42,12 +60,12 @@ public class GeoGeometryTest {
 	};
 
 	public void shouldCheckContainmentForPolygonCorrectly() {
-		assertThat("origin should be in there", polygonContains(0, 0, polygon));
-		assertThat("should be outside", !polygonContains(20, 20, polygon));
-		assertThat("should be inside", polygonContains(0.5, 0.5, polygon));
-		assertThat("should be inside", polygonContains(0.5, -0.5, polygon));
-		assertThat("should be inside", polygonContains(-0.5, 0.5, polygon));
-		assertThat("should be inside", polygonContains(-0.5, -0.5, polygon));
+		assertThat("origin should be in there", polygonContains(0, 0, samplePolygon));
+		assertThat("should be outside", !polygonContains(20, 20, samplePolygon));
+		assertThat("should be inside", polygonContains(0.5, 0.5, samplePolygon));
+		assertThat("should be inside", polygonContains(0.5, -0.5, samplePolygon));
+		assertThat("should be inside", polygonContains(-0.5, 0.5, samplePolygon));
+		assertThat("should be inside", polygonContains(-0.5, -0.5, samplePolygon));
 	}
 
 	public void shouldBboxContainPoint() {
@@ -62,9 +80,9 @@ public class GeoGeometryTest {
 	}
 
 	public void shouldGetCorrectBboxForPolygon() {
-		double[] bbox = GeoGeometry.getBbox(polygon);
+		double[] bbox = GeoGeometry.getBbox(samplePolygon);
 		assertThat("should be contained", bboxContains(bbox, 0, 0));
-		for (double[] coordinate : polygon) {
+		for (double[] coordinate : samplePolygon) {
 			assertThat("should contain point", bboxContains(bbox, coordinate[0], coordinate[1]));
 			assertThat("should not contain point", !bboxContains(bbox, 20*coordinate[0], 20*coordinate[1]));
 		}
@@ -75,8 +93,8 @@ public class GeoGeometryTest {
 	}
 
 	public void shouldCalculateDistance() {
-		double d  = distance(52.530564,13.394964, 52.530564,13.410821);
-		assertThat("should be a bit more than 1072m", d - 1072 >0 && d-1073 <0);
+		double d  = distance(sydney, berlin);
+		assertThat("should be about 16100km but was " + d/1000 + "km.", abs(d - 16000000) < 100000);
 	}
 
 	public void shouldTranslateCorrectly() {
@@ -87,9 +105,9 @@ public class GeoGeometryTest {
 	}
 
 	public void shouldHaveDistanceOfRadiusForEachPoint() {
-	    int radius = 5000;
+	    int radius = 50000;
         int segments = 500;
-        double[][] polygon = GeoGeometry.circle2polygon(segments, 52.530564,13.394964, radius);
+        double[][] polygon = GeoGeometry.circle2polygon(segments, london[0],london[1], radius);
 	    double d=0;
 	    double[] last = null;
 
@@ -97,12 +115,31 @@ public class GeoGeometryTest {
 	        if(last != null) {
 	            d+=distance(last, point);
 	        }
-	        double distance = distance(new double[]{52.530564,13.394964}, point);
-            assertThat("should have distance of radius to origin", abs(radius-distance) < 1);
+	        double distance = distance(new double[]{london[0],london[1]}, point);
+            double difference = abs(radius-distance);
+            assertThat("should have distance of radius to origin within 100 meter but was " + difference, difference < 100);
             last=point;
 	    }
 	    // close the circle
         d+=distance(polygon[0],last);
-        assertThat("circumference should be very close to length of the polygon", abs(d-2*Math.PI*radius) < 1);
+        double difference = abs(d-2*Math.PI*radius);
+        assertThat("circumference should be within 100 meter of length of the polygon but difference was " + difference, difference < 100);
+	}
+
+	public void polygonForPointsShouldContainStuffInside() {
+	    double[][] placesInMitte = new double[][] {
+	            brandenBurgerGate,potsDammerPlatz,moritzPlatz,senefelderPlatz,naturkundeMuseum
+	    };
+	    double[][] polygon = GeoGeometry.pointCloudToPolygon(placesInMitte);
+
+        assertThat("should be inside", polygonContains(rosenthalerPlatz, polygon));
+        assertThat("should be inside", polygonContains(oranienburgerTor, polygon));
+        assertThat("should NOT be inside", !polygonContains(1,1, polygon));
+	}
+
+	public void polygonForPointsInFourQuadrantsShouldContainStuffInside() {
+	    double[][] polygon = GeoGeometry.pointCloudToPolygon(new double[][]{sydney,newyork,amsterdam,buenosaires});
+        assertThat("should be inside", polygonContains(london, polygon));
+        assertThat("should NOT be inside", !polygonContains(berlin, polygon));
 	}
 }
