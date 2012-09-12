@@ -1,19 +1,34 @@
 h1. Introduction
 
-GeoTools is a small project where I've gathered some code that I've used in the past for working with coordinates and geohashes.
+GeoTools is a set of tools for manipulating geo hashes and geometric shapes in the wgs 84 coordinate system. A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leave in a quad tree.
+
+The algorithms used for implementing the functionality in GeoTools are mostly well known and commonly used in 2D graphics. However, I have not found any comprehensive open sourced implementation for the wgs 84 coordinate system. 
+
+The key functionality that motivated the creation of this library was the ability to cover shapes on a map with geo hashes for indexing purposes. To support that, I needed some elementary geometric operations implemented.
 
 h1. Features
 
-* GeoGeometry
+* GeoGeometry class with methods that allow you to:
 ** Calculate distance between two coordinates using the haversine algorithm.
 ** check bounding box containment for a point
 ** check polygon containment for a point
+** get the center for a polygon
 ** get bounding box for a polygon
-* Expanded version of Apache's GeoHashUtils with 
-** a contains method for checking if a coordinate is contained in a geohash
+** convert circle to a polygon
+** create a polygon from a point cloud
+** translate a wgs84 coordinate by x & y meters along the latitude and longitude
+* GeoHashUtils class with methods that allow you to: 
+** check containment of a point in a geohash
+** find out the boundingbox of a geohash
+** find out neighboring geohashes east, west, south, or north of a geohash
 ** get the east, west, north, and south geohashes for any geo hash
-** get the 32 sub geo hashes for a geohash
+** get the 32 sub geo hashes for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
 ** convert geo hash to a BitSet and a BitSet to a geo hash
+** cover lines, paths, polygons, or circles with geo hashes
+
+I've deliberately kept the design simple and non object oriented. These classes have no external dependencies and only use the java.util package and java.lang.Math class. Consequently it should be easy to port this functionality to whatever other language. Also, I've not attempted to implement Point, Polygon, Path, Circle, or other classes to support this library. The reason for this is very simple: these things are commonly implemented in other frameworks and any attempt from my side to impose my own implementation would conflict with the need of others to reuse their own classes. I think it is somewhat of a design smell that world + dog feels compelled to implement their own Point class. 
+
+So instead, a point is represented as a latitude, longitude pair of doubles or as an array of two doubles (like in geo json). Likewise, paths and polygons are represented as arrays of points. A circle is a point and a radius. This should enable anyone to integrate this functionality easily.
 
 h1. Installation
 
@@ -49,9 +64,13 @@ For more details see the LICENSE file
 
 h1. Changelog
 
-* 1.0
-** first release of GeoTools
+* 1.2
+** Vastly expanded functionality in both classes to support basic geometric shapes and covering those with geo hashes.
+** Major refactoring and code and API cleanup
 * 1.1
 ** Added GeoGeometry class for manipulating bounding boxes and polygons of wgs 84 coordinates
 ** Improved GeoHashUtils with several new methods
 ** Merged GeoDistance into GeoGeometry
+* 1.0
+** first release of GeoTools
+
