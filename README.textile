@@ -22,7 +22,6 @@ h1. Features
 ** check containment of a point in a geohash
 ** find out the boundingbox of a geohash
 ** find out neighboring geohashes east, west, south, or north of a geohash
-** get the east, west, north, and south geohashes for any geo hash
 ** get the 32 sub geo hashes for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
 ** convert geo hash to a BitSet and a BitSet to a geo hash
 ** cover lines, paths, polygons, or circles with geo hashes
