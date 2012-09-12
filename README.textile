@@ -18,6 +18,7 @@ h1. Features
 ** create a polygon from a point cloud
 ** translate a wgs84 coordinate by x & y meters along the latitude and longitude
 * GeoHashUtils class with methods that allow you to: 
+** encode and decode geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
 ** check containment of a point in a geohash
 ** find out the boundingbox of a geohash
 ** find out neighboring geohashes east, west, south, or north of a geohash
@@ -48,7 +49,7 @@ Then you can add the following dependency:
 </code>
 </pre>
 
-Alternatively, you can exercise your rights under the license and simply copy and adapt. The "license":https://github.com/jillesvangurp/xmltools/blob/master/LICENSE allows you to do this and I have no problems with this.
+Alternatively, you can exercise your rights under the license and simply copy and adapt as needed. The "license":https://github.com/jillesvangurp/xmltools/blob/master/LICENSE allows you to do this and I have no problems with this although I do appreciate attribution.
 
 Should anyone like this licensed differently, please contact me.
 
@@ -57,8 +58,7 @@ If anyone wants to fix stuff just send me a pull request.
 h1. License
 
 Like all my other projects, this project is licensed under the so-called MIT license. However, GeoHashUtils.java was copied and 
-adapted from Apache Lucene and I have retained the Apache License for that file. Both licenses are compatible and should also pose
-no issues when used with software under most other OSS licenses.
+adapted from Apache Lucene and I have retained the Apache License for that file, as required in that license. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
 
 For more details see the LICENSE file
 
