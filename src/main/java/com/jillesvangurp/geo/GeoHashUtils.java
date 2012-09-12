@@ -364,6 +364,7 @@ public class GeoHashUtils {
         return encoded.toString();
     }
 
+
     /**
      * Return the 32 geo hashes this geohash can be divided into.
      *
@@ -415,12 +416,10 @@ public class GeoHashUtils {
      * @param geoHash
      * @return String array with the geo hashes.
      */
-    public static String[] subHashesNW(String geoHash) {
+    public static String[] subHashes(String geoHash) {
         ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
-            if (c >= '0' && c <= '7') {
-                list.add(geoHash + c);
-            }
+            list.add(geoHash + c);
         }
         return list.toArray(new String[0]);
     }
@@ -456,6 +455,19 @@ public class GeoHashUtils {
     /**
      * @param geoHash
      * @return the 8 north-west sub hashes of the geo hash
+     */    public static String[] subHashesNW(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
+        for (char c : BASE32_CHARS) {
+            if (c >= '0' && c <= '7') {
+                list.add(geoHash + c);
+            }
+        }
+        return list.toArray(new String[0]);
+    }
+
+    /**
+     * @param geoHash
+     * @return the 8 north-east sub hashes of the geo hash
      */
     public static String[] subHashesNE(String geoHash) {
         ArrayList<String> list = new ArrayList<>();
@@ -469,7 +481,7 @@ public class GeoHashUtils {
 
     /**
      * @param geoHash
-     * @return the 8 north-east sub hashes of the geo hash
+     * @return the 8 south-west sub hashes of the geo hash
      */
     public static String[] subHashesSW(String geoHash) {
         ArrayList<String> list = new ArrayList<>();
@@ -483,7 +495,7 @@ public class GeoHashUtils {
 
     /**
      * @param geoHash
-     * @return the 8 south-west sub hashes of the geo hash
+     * @return the 8 south-east sub hashes of the geo hash
      */
     public static String[] subHashesSE(String geoHash) {
         ArrayList<String> list = new ArrayList<>();
@@ -491,18 +503,6 @@ public class GeoHashUtils {
             if (c >= 's' && c <= 'z') {
                 list.add(geoHash + c);
             }
-        }
-        return list.toArray(new String[0]);
-    }
-
-    /**
-     * @param geoHash
-     * @return the 8 south-east sub hashes of the geo hash
-     */
-    public static String[] subHashes(String geoHash) {
-        ArrayList<String> list = new ArrayList<>();
-        for (char c : BASE32_CHARS) {
-            list.add(geoHash + c);
         }
         return list.toArray(new String[0]);
     }
