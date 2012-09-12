@@ -18,7 +18,7 @@
 
     <groupId>com.github.jillesvangurp</groupId>
     <artifactId>geotools</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
 
     <name>GeoTools</name>
     <description>Misc tools for working with wgs 84 coordinates and geohashes</description>
