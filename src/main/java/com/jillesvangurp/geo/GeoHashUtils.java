@@ -262,7 +262,7 @@ public class GeoHashUtils {
         double latDiff = bbox[1] - bbox[0];
         double lat = bbox[0] - latDiff / 2;
         double lon = (bbox[2] + bbox[3]) / 2;
-        return encode(lat, lon).substring(0, geoHash.length());
+        return encode(lat, lon, geoHash.length());
     }
 
     /**
@@ -274,7 +274,7 @@ public class GeoHashUtils {
         double latDiff = bbox[1] - bbox[0];
         double lat = bbox[1] + latDiff / 2;
         double lon = (bbox[2] + bbox[3]) / 2;
-        return encode(lat, lon).substring(0, geoHash.length());
+        return encode(lat, lon, geoHash.length());
     }
 
     /**
@@ -286,7 +286,7 @@ public class GeoHashUtils {
         double lonDiff = bbox[3] - bbox[2];
         double lat = (bbox[0] + bbox[1]) / 2;
         double lon = bbox[2] - lonDiff / 2;
-        return encode(lat, lon).substring(0, geoHash.length());
+        return encode(lat, lon, geoHash.length());
     }
 
     /**
@@ -298,7 +298,7 @@ public class GeoHashUtils {
         double lonDiff = bbox[3] - bbox[2];
         double lat = (bbox[0] + bbox[1]) / 2;
         double lon = bbox[3] + lonDiff / 2;
-        return encode(lat, lon).substring(0, geoHash.length());
+        return encode(lat, lon, geoHash.length());
     }
 
     /**
