@@ -32,15 +32,18 @@ import static com.jillesvangurp.geo.GeoHashUtils.south;
 import static com.jillesvangurp.geo.GeoHashUtils.toBitSet;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.number.OrderingComparison.lessThan;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 
 import java.util.BitSet;
 import java.util.Set;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+//import static org.hamcrest.number.OrderingComparison.lessThan;
 
 @Test
 public class GeoHashUtilsTest {
@@ -94,6 +97,24 @@ public class GeoHashUtilsTest {
 		assertSimilar(bbox[3], eastBbox[2]);
 		assertSimilar((eastBbox[3] - bbox[2]) / 2, bbox[3] - bbox[2]);
 	}
+
+	public void shouldCalculateEastOn180() {
+	    String hash = encode(-18, 179.9,3);
+	    double[] bbox = decode_bbox(hash);
+	    assertThat(bbox[3], equalTo(180.0));
+	    String east = GeoHashUtils.east(hash);
+	    bbox = decode_bbox(east);
+        assertThat(bbox[2], equalTo(-180.0));
+	}
+
+    public void shouldCalculateWestOn180() {
+        String hash = encode(-18, -179.9, 3);
+        double[] bbox = decode_bbox(hash);
+        assertThat(bbox[2], equalTo(-180.0));
+        String west = GeoHashUtils.west(hash);
+        bbox = decode_bbox(west);
+        assertThat(bbox[3], equalTo(180.0));
+    }
 
 	@Test(dataProvider = "coordinates")
 	public void shouldCalculateNorth(Double lat, Double lon, String geoHash) {
@@ -151,8 +172,6 @@ public class GeoHashUtilsTest {
 			double[] bbox = decode_bbox(prefix);
 			long vertical = round(distance(bbox[0], bbox[3], bbox[1], bbox[3]));
 			long horizontal = round(distance(bbox[0], bbox[2], bbox[0], bbox[3]));
-			System.out.println(i + " " + prefix + ": " + horizontal + " x "
-					+ vertical);
 		}
 	}
 
@@ -241,5 +260,53 @@ public class GeoHashUtilsTest {
 		} else {
 			// points are the same, that won't work
 		}
+	}
+
+	public void shouldConvertCircleToPolygonOn180() {
+	    double[][] circle2polygon = GeoGeometry.circle2polygon(6, -18, 180, 1000);
+	    int countEast=0;
+	    for (double[] point : circle2polygon) {
+	        double distance = distance(-18, 180,point[0],point[1]);
+            assertThat(abs(1000-distance), lessThan(1.0));
+            if(GeoHashUtils.isWest(180, point[1])) {
+                countEast++;
+            }
+        }
+	    assertThat(countEast, greaterThan(1));
+	}
+
+	public void shouldCheckIfWest() {
+	    assertThat("should be west", GeoHashUtils.isWest(90, 91));
+	    assertThat("should be west", GeoHashUtils.isWest(-1, 1));
+        assertThat("should be west", GeoHashUtils.isWest(-89, 90));
+        assertThat("should be west", GeoHashUtils.isWest(180,-178));
+        assertThat("should be west", GeoHashUtils.isWest(180,-179.99527198651967));
+        assertThat("should not be west", !GeoHashUtils.isWest(-179, 180));
+        assertThat("should not be west", !GeoHashUtils.isWest(91, 90));
+        assertThat("should not be west", !GeoHashUtils.isWest(-179, 180));
+        assertThat("should not be west", !GeoHashUtils.isWest(89, -90));
+        assertThat("should not be west", !GeoHashUtils.isWest(1, -1));
+        assertThat("should not be west", !GeoHashUtils.isWest(91, 90));
+        assertThat("should not be west", !GeoHashUtils.isWest(-91, 90));
+	}
+
+    public void shouldCheckIfEast() {
+        assertThat("should not be east", !GeoHashUtils.isEast(90, 91));
+        assertThat("should not be east", !GeoHashUtils.isEast(-1, 1));
+        assertThat("should not be east", !GeoHashUtils.isEast(-89, 90));
+        assertThat("should not be east", !GeoHashUtils.isEast(180, -178));
+        assertThat("should not be west", !GeoHashUtils.isEast(180, -179.99527198651967));
+        assertThat("should be east", GeoHashUtils.isEast(-179, 180));
+        assertThat("should be east", GeoHashUtils.isEast(91, 90));
+        assertThat("should be east", GeoHashUtils.isEast(-179, 180));
+        assertThat("should be east", GeoHashUtils.isEast(89, -90));
+        assertThat("should be east", GeoHashUtils.isEast(1, -1));
+        assertThat("should be east", GeoHashUtils.isEast(91, 90));
+        assertThat("should be east", GeoHashUtils.isEast(-91, 90));
+    }
+
+	public void shouldBeNeitherWestNorEast() {
+        assertThat("should not be west", !GeoHashUtils.isWest(-90, 90));
+        assertThat("should not be east", !GeoHashUtils.isEast(-90, 90));
 	}
 }

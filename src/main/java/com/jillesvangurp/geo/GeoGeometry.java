@@ -314,7 +314,7 @@ public class GeoGeometry {
      * @return an array of the points [latitude,longitude] that make up the polygon.
      */
     public static double[][] circle2polygon(int segments,double latitude, double longitude, double radius) {
-        if(segments <= 5) {
+        if(segments < 5) {
             throw new IllegalArgumentException("you need a minimum of 5 segments");
         }
         // for n segments you need n+1 points
@@ -334,6 +334,11 @@ public class GeoGeometry {
             // always note latitude, longitude instead of the other way around
             double latOnCircle = latitude + relativeLatitude * Math.sin(theta);
             double lonOnCircle = longitude + relativeLongitude * Math.cos(theta);
+            if(lonOnCircle > 180) {
+                lonOnCircle = -180 + (lonOnCircle-180);
+            } else if(lonOnCircle<-180) {
+                lonOnCircle = 180 - (lonOnCircle+180);
+            }
 
             points[i] = new double[]{latOnCircle,lonOnCircle};
         }

@@ -286,6 +286,10 @@ public class GeoHashUtils {
         double lonDiff = bbox[3] - bbox[2];
         double lat = (bbox[0] + bbox[1]) / 2;
         double lon = bbox[2] - lonDiff / 2;
+        if(lon < -180) {
+            lon = 180 - (lon+180);
+        }
+
         return encode(lat, lon, geoHash.length());
     }
 
@@ -298,6 +302,11 @@ public class GeoHashUtils {
         double lonDiff = bbox[3] - bbox[2];
         double lat = (bbox[0] + bbox[1]) / 2;
         double lon = bbox[3] + lonDiff / 2;
+
+        if(lon> 180) {
+            lon = -180 + (lon-180);
+        }
+
         return encode(lat, lon, geoHash.length());
     }
 
@@ -531,16 +540,20 @@ public class GeoHashUtils {
         Set<String> partiallyContained = new HashSet<String>();
         // now lets generate all geohashes for the containing bounding box
         // lets start at the top left:
+
+
         String rowHash = encode(bbox[0], bbox[2]).substring(0, hashLength);
         double[] rowBox = decode_bbox(rowHash);
         while (rowBox[0] < bbox[1]) {
             String columnHash = rowHash;
             double[] columnBox = rowBox;
-            while (columnBox[2] < bbox[3]) {
+
+            while (isWest(columnBox[2],bbox[3])) {
                 partiallyContained.add(columnHash);
                 columnHash = east(columnHash);
                 columnBox = decode_bbox(columnHash);
             }
+
             // move to the next row
             rowHash = south(rowHash);
             rowBox = decode_bbox(rowHash);
@@ -562,6 +575,39 @@ public class GeoHashUtils {
 
         return fullyContained;
     }
+
+    public static boolean isWest(double l1, double l2) {
+        double ll1 = l1+180;
+        double ll2 = l2+180;
+        if (ll1 < ll2 && ll2 - ll1 < 180) {
+            return true;
+        } else if (ll1 > ll2 && ll2 + 360 - ll1 < 180) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean isEast(double l1, double l2) {
+        double ll1 = l1+180;
+        double ll2 = l2+180;
+        if (ll1 > ll2 && ll1 - ll2 < 180) {
+            return true;
+        } else if (ll1 < ll2 && ll1 + 360 - ll2 < 180) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean isNorth(double l1, double l2) {
+        return l1>l2;
+    }
+
+    public static boolean isSouth(double l1, double l2) {
+        return l1<l2;
+    }
+
 
     private static Set<String> splitAndFilter(double[] bbox,
             Set<String> fullyContained, Set<String> partiallyContained) {
@@ -644,7 +690,7 @@ public class GeoHashUtils {
         // lots of segments unless we have a long geohash or a large radius
         int segments;
         if(length > getSuitableHashLength(radius)-3) {
-            segments=1000;
+            segments=200;
         } else if(length > getSuitableHashLength(radius)-2) {
             segments=100;
         } else if(length > getSuitableHashLength(radius)-1) {
