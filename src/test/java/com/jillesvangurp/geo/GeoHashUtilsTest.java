@@ -31,7 +31,6 @@ import static com.jillesvangurp.geo.GeoHashUtils.fromBitSet;
 import static com.jillesvangurp.geo.GeoHashUtils.south;
 import static com.jillesvangurp.geo.GeoHashUtils.toBitSet;
 import static java.lang.Math.abs;
-import static java.lang.Math.round;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -164,16 +163,16 @@ public class GeoHashUtilsTest {
 				lessThan(0.0000001));
 	}
 
-	@Test(dataProvider = "coordinates", enabled=false)
-	public void shouldCalculateBboxSizes(Double lat, Double lon, String geoHash) {
-		// not a test but nice to get a sense of the scale of a geo hash
-		for (int i = 1; i < geoHash.length(); i++) {
-			String prefix = geoHash.substring(0, i);
-			double[] bbox = decode_bbox(prefix);
-			long vertical = round(distance(bbox[0], bbox[3], bbox[1], bbox[3]));
-			long horizontal = round(distance(bbox[0], bbox[2], bbox[0], bbox[3]));
-		}
-	}
+//	@Test(dataProvider = "coordinates", enabled=false)
+//	public void shouldCalculateBboxSizes(Double lat, Double lon, String geoHash) {
+//		// not a test but nice to get a sense of the scale of a geo hash
+//		for (int i = 1; i < geoHash.length(); i++) {
+//			String prefix = geoHash.substring(0, i);
+//			double[] bbox = decode_bbox(prefix);
+//			long vertical = round(distance(bbox[0], bbox[3], bbox[1], bbox[3]));
+//			long horizontal = round(distance(bbox[0], bbox[2], bbox[0], bbox[3]));
+//		}
+//	}
 
 	public void shouldConvertToAndFromBitset() {
 		String hash = "u33dbfcyegk2";
