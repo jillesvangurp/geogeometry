@@ -63,6 +63,10 @@ For more details see the LICENSE file
 
 h1. Changelog
 
+* 1.3
+** Fix major bug that happens nea longitude 180, several methods were affected by this one.
+** Remove dependency on java 1.7; should now work fine with 1.6 as well. I may revert this at some point.
+** isEast,isWest,isNorth,isSouth methods added
 * 1.2
 ** Vastly expanded functionality in both classes to support basic geometric shapes and covering those with geo hashes.
 ** Major refactoring and code and API cleanup
