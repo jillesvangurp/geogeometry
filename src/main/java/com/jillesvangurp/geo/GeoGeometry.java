@@ -41,21 +41,21 @@ public class GeoGeometry {
      * @return bounding box that contains the polygon as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
-        public static double[] getBbox(double[]... polygonPoints) {
-            double minLat = Integer.MAX_VALUE;
-            double minLon = Integer.MAX_VALUE;
-            double maxLat = Integer.MIN_VALUE;
-            double maxLon = Integer.MIN_VALUE;
+    public static double[] getBbox(double[]... polygonPoints) {
+        double minLat = Integer.MAX_VALUE;
+        double minLon = Integer.MAX_VALUE;
+        double maxLat = Integer.MIN_VALUE;
+        double maxLon = Integer.MIN_VALUE;
 
-            for (int i = 0; i < polygonPoints.length; i++) {
-                minLat = min(minLat, polygonPoints[i][0]);
-                minLon = min(minLon, polygonPoints[i][1]);
-                maxLat = max(maxLat, polygonPoints[i][0]);
-                maxLon = max(maxLon, polygonPoints[i][1]);
-            }
-
-            return new double[] { minLat, maxLat, minLon, maxLon };
+        for (int i = 0; i < polygonPoints.length; i++) {
+            minLat = min(minLat, polygonPoints[i][0]);
+            minLon = min(minLon, polygonPoints[i][1]);
+            maxLat = max(maxLat, polygonPoints[i][0]);
+            maxLon = max(maxLon, polygonPoints[i][1]);
         }
+
+        return new double[] { minLat, maxLat, minLon, maxLon };
+    }
 
     /**
      * @param bbox
@@ -68,13 +68,14 @@ public class GeoGeometry {
         return bbox[0] <= latitude && latitude <= bbox[1] && bbox[2] <= longitude && longitude <= bbox[3];
     }
 
-
     public static boolean polygonContains(double[] point, double[]... polygonPoints) {
-        return polygonContains(point[0], point[1],polygonPoints);
+        return polygonContains(point[0], point[1], polygonPoints);
     }
 
     /**
-     * Determine whether a point is contained in a polygon. Note, technically the points that make up the polygon are not contained by it.
+     * Determine whether a point is contained in a polygon. Note, technically
+     * the points that make up the polygon are not contained by it.
+     *
      * @param latitude
      * @param longitude
      * @param polygonPoints
@@ -231,13 +232,13 @@ public class GeoGeometry {
     }
 
     /**
-     * Compute the Haversine distance between the two coordinates.
-     * Haversine is one of several distance calculation algorithms that exist.
-     * It is not very precise in the sense that it assumes the earth is a
-     * perfect sphere, which it is not. This means precision drops over larger
-     * distances. According to http://en.wikipedia.org/wiki/Haversine_formula
-     * there is a 0.5% error margin given the 1% difference in curvature between
-     * the equator and the poles.
+     * Compute the Haversine distance between the two coordinates. Haversine is
+     * one of several distance calculation algorithms that exist. It is not very
+     * precise in the sense that it assumes the earth is a perfect sphere, which
+     * it is not. This means precision drops over larger distances. According to
+     * http://en.wikipedia.org/wiki/Haversine_formula there is a 0.5% error
+     * margin given the 1% difference in curvature between the equator and the
+     * poles.
      *
      * @param lat1
      *            the latitude in decimal degrees
@@ -264,8 +265,8 @@ public class GeoGeometry {
     }
 
     /**
-     * Variation of the haversine distance method that takes an array representation of a
-     * coordinate.
+     * Variation of the haversine distance method that takes an array
+     * representation of a coordinate.
      *
      * @param firstCoordinate
      *            [latitude, longitude]
@@ -304,28 +305,33 @@ public class GeoGeometry {
         return new double[][] { { bbox[0], bbox[2] }, { bbox[1], bbox[2] }, { bbox[1], bbox[3] }, { bbox[0], bbox[3] } };
     }
 
-
     /**
      * Converts a circle to a polygon.
-     * @param segments number of segments the polygon should have. The higher this number, the better of an approximation the polygon is for the circle.
+     *
+     * @param segments
+     *            number of segments the polygon should have. The higher this
+     *            number, the better of an approximation the polygon is for the
+     *            circle.
      * @param latitude
      * @param longitude
      * @param radius
-     * @return an array of the points [latitude,longitude] that make up the polygon.
+     * @return an array of the points [latitude,longitude] that make up the
+     *         polygon.
      */
-    public static double[][] circle2polygon(int segments,double latitude, double longitude, double radius) {
-        if(segments < 5) {
+    public static double[][] circle2polygon(int segments, double latitude, double longitude, double radius) {
+        if (segments < 5) {
             throw new IllegalArgumentException("you need a minimum of 5 segments");
         }
         // for n segments you need n+1 points
-        double[][] points= new double[segments+1][0];
+        double[][] points = new double[segments + 1][0];
 
-        double relativeLatitude=radius/EARTH_RADIUS_METERS*180/PI;
-        double relativeLongitude=relativeLatitude/cos(Math.toRadians(latitude));
+        double relativeLatitude = radius / EARTH_RADIUS_METERS * 180 / PI;
+        double relativeLongitude = relativeLatitude / cos(Math.toRadians(latitude));
 
-        for(int i=0;i<segments+1;i++) {
-            // radians go from 0 to 2*PI; we want to divide the circle in nice segments
-            double theta=2*PI*i/segments;
+        for (int i = 0; i < segments + 1; i++) {
+            // radians go from 0 to 2*PI; we want to divide the circle in nice
+            // segments
+            double theta = 2 * PI * i / segments;
 
             // on the unit circle, any point of the circle has the coordinate
             // cos(t),sin(t) where t is the radian. So, all we need to do that
@@ -334,33 +340,35 @@ public class GeoGeometry {
             // always note latitude, longitude instead of the other way around
             double latOnCircle = latitude + relativeLatitude * Math.sin(theta);
             double lonOnCircle = longitude + relativeLongitude * Math.cos(theta);
-            if(lonOnCircle > 180) {
-                lonOnCircle = -180 + (lonOnCircle-180);
-            } else if(lonOnCircle<-180) {
-                lonOnCircle = 180 - (lonOnCircle+180);
+            if (lonOnCircle > 180) {
+                lonOnCircle = -180 + (lonOnCircle - 180);
+            } else if (lonOnCircle < -180) {
+                lonOnCircle = 180 - (lonOnCircle + 180);
             }
 
-            points[i] = new double[]{latOnCircle,lonOnCircle};
+            points[i] = new double[] { latOnCircle, lonOnCircle };
         }
         return points;
     }
 
     /**
-     * Calculate a convex polygon containing all the points using the Monotone Chain Convex Hull algorithm
+     * Calculate a convex polygon containing all the points using the Monotone
+     * Chain Convex Hull algorithm
+     *
      * @param points
      * @return polygon containing the points.
      */
-    @SuppressWarnings({"rawtypes", "unchecked" })
-    public static double[][] pointCloudToPolygon(double[]...points) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static double[][] pointCloudToPolygon(double[]... points) {
         Comparator pointComparator = new Comparator() {
             @Override
             public int compare(Object o1, Object o2) {
                 double[] p1 = (double[]) o1;
                 double[] p2 = (double[]) o2;
-                if(p1[0] == p2[0]) {
-                    return (int) Math.round(p1[1]-p2[1]);
+                if (p1[0] == p2[0]) {
+                    return (int) Math.round(p1[1] - p2[1]);
                 } else {
-                    return (int) Math.round(p1[0]-p2[0]);
+                    return (int) Math.round(p1[0] - p2[0]);
                 }
             }
         };
@@ -370,15 +378,15 @@ public class GeoGeometry {
 
         int n = pointsCopy.length;
 
-        double[][] result = new double[n*2][0];
+        double[][] result = new double[n * 2][0];
 
         // calculate lower hull
-        int k=0;
-        int start=0;
+        int k = 0;
+        int start = 0;
 
-        for(int i=0; i<n;i++) {
+        for (int i = 0; i < n; i++) {
             double[] p = pointsCopy[i];
-            while(k-start>=2 && inside(p, result[k-1], result[k-2])) {
+            while (k - start >= 2 && inside(p, result[k - 1], result[k - 2])) {
                 k--;
             }
             result[k++] = p;
@@ -387,11 +395,11 @@ public class GeoGeometry {
         // drop the last one
         k--;
         // calculate upper hull
-        start=k;
+        start = k;
 
-        for(int i = n-1 ; i >= 0 ; i --) {
+        for (int i = n - 1; i >= 0; i--) {
             double[] p = pointsCopy[i];
-            while(k-start>=2 && inside(p, result[k-1], result[k-2])) {
+            while (k - start >= 2 && inside(p, result[k - 1], result[k - 2])) {
                 k--;
             }
             result[k++] = p;
@@ -403,15 +411,15 @@ public class GeoGeometry {
     }
 
     private static boolean inside(double[] p, double[] p1, double[] p2) {
-        return crossProduct(subtract(p,p1),subtract(p,p2)) > 0;
+        return crossProduct(subtract(p, p1), subtract(p, p2)) > 0;
     }
 
-    private static double[] subtract(double[] p1, double[]p2) {
-        return new double[] {p1[0]-p2[0], p1[1]-p2[1]};
+    private static double[] subtract(double[] p1, double[] p2) {
+        return new double[] { p1[0] - p2[0], p1[1] - p2[1] };
     }
 
-    private static double crossProduct(double[] p1, double[]p2) {
+    private static double crossProduct(double[] p1, double[] p2) {
         // http://stackoverflow.com/questions/243945/calculating-a-2d-vectors-cross-product
-        return p1[0]*p2[1] - p1[1]*p2[0] ;
+        return p1[0] * p2[1] - p1[1] * p2[0];
     }
 }
