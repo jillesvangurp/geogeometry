@@ -41,21 +41,21 @@ public class GeoGeometry {
      * @return bounding box that contains the polygon as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
-    public static double[] getBbox(double[]... polygonPoints) {
-        double minLat = Integer.MAX_VALUE;
-        double minLon = Integer.MAX_VALUE;
-        double maxLat = Integer.MIN_VALUE;
-        double maxLon = Integer.MIN_VALUE;
+        public static double[] getBbox(double[]... polygonPoints) {
+            double minLat = Integer.MAX_VALUE;
+            double minLon = Integer.MAX_VALUE;
+            double maxLat = Integer.MIN_VALUE;
+            double maxLon = Integer.MIN_VALUE;
 
-        for (int i = 0; i < polygonPoints.length; i++) {
-            minLat = min(minLat, polygonPoints[i][0]);
-            minLon = min(minLon, polygonPoints[i][1]);
-            maxLat = max(maxLat, polygonPoints[i][0]);
-            maxLon = max(maxLon, polygonPoints[i][1]);
+            for (int i = 0; i < polygonPoints.length; i++) {
+                minLat = min(minLat, polygonPoints[i][0]);
+                minLon = min(minLon, polygonPoints[i][1]);
+                maxLat = max(maxLat, polygonPoints[i][0]);
+                maxLon = max(maxLon, polygonPoints[i][1]);
+            }
+
+            return new double[] { minLat, maxLat, minLon, maxLon };
         }
-
-        return new double[] { minLat, maxLat, minLon, maxLon };
-    }
 
     /**
      * @param bbox
