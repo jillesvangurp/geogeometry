@@ -164,57 +164,6 @@ public class GeoHashUtils {
     }
 
     /**
-     * This decodes the geo hash into it's center. Note that the coordinate that
-     * you used to generate the geo hash may be anywhere in the geo hash's
-     * bounding box and therefore you should not expect them to be identical.
-     *
-     * The original apache code attempted to round the returned coordinate. I
-     * have chosen to remove this 'feature' since it is useful to know the
-     * center of the geo hash as exactly as possible, even for very short geo
-     * hashes.
-     *
-     * Should you wish to apply some rounding, you can use the
-     * GeoGeometry.roundToDecimals method.
-     *
-     * @param geohash
-     * @return a coordinate representing the center of the geohash as a double
-     *         array of [latitude,longitude]
-     */
-    public static double[] decode(String geohash) {
-        double[] lat_interval = { -90.0, 90.0 };
-        double[] lon_interval = { -180.0, 180.0 };
-
-        boolean is_even = true;
-        double latitude, longitude;
-        for (int i = 0; i < geohash.length(); i++) {
-            int currentChar = BASE32_DECODE_MAP.get(geohash.charAt(i));
-            for (int z = 0; z < BITS.length; z++) {
-                int mask = BITS[z];
-                if (is_even) {
-                    if ((currentChar & mask) != 0) {
-                        lon_interval[0] = (lon_interval[0] + lon_interval[1]) / 2;
-                    } else {
-                        lon_interval[1] = (lon_interval[0] + lon_interval[1]) / 2;
-                    }
-
-                } else {
-                    if ((currentChar & mask) != 0) {
-                        lat_interval[0] = (lat_interval[0] + lat_interval[1]) / 2;
-                    } else {
-                        lat_interval[1] = (lat_interval[0] + lat_interval[1]) / 2;
-                    }
-                }
-                is_even = is_even ? false : true;
-            }
-
-        }
-        latitude = (lat_interval[0] + lat_interval[1]) / 2;
-        longitude = (lon_interval[0] + lon_interval[1]) / 2;
-
-        return new double[] { latitude, longitude };
-    }
-
-    /**
      * @param geohash
      * @return double array representing the bounding box for the geohash of
      *         [nort latitude, south latitude, east longitude, west longitude]
@@ -251,6 +200,32 @@ public class GeoHashUtils {
 
         return new double[] { lat_interval[0], lat_interval[1],
                 lon_interval[0], lon_interval[1] };
+    }
+
+    /**
+     * This decodes the geo hash into it's center. Note that the coordinate that
+     * you used to generate the geo hash may be anywhere in the geo hash's
+     * bounding box and therefore you should not expect them to be identical.
+     *
+     * The original apache code attempted to round the returned coordinate. I
+     * have chosen to remove this 'feature' since it is useful to know the
+     * center of the geo hash as exactly as possible, even for very short geo
+     * hashes.
+     *
+     * Should you wish to apply some rounding, you can use the
+     * GeoGeometry.roundToDecimals method.
+     *
+     * @param geohash
+     * @return a coordinate representing the center of the geohash as a double
+     *         array of [latitude,longitude]
+     */
+    public static double[] decode(String geohash) {
+        double[] bbox = decode_bbox(geohash);
+    
+        double latitude = (bbox[0] + bbox[1]) / 2;
+        double longitude = (bbox[2] + bbox[3]) / 2;
+    
+        return new double[] { latitude, longitude };
     }
 
     /**
