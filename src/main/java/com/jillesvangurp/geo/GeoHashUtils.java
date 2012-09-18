@@ -114,12 +114,12 @@ public class GeoHashUtils {
         double[] lonInterval = { -180.0, 180.0 };
 
         StringBuilder geohash = new StringBuilder();
-        boolean is_even = true;
+        boolean isEven = true;
         int bit = 0, ch = 0;
 
         while (geohash.length() < length) {
             double mid = 0.0;
-            if (is_even) {
+            if (isEven) {
                 mid = (lonInterval[0] + lonInterval[1]) / 2;
                 if (longitude > mid) {
                     ch |= BITS[bit];
@@ -138,7 +138,7 @@ public class GeoHashUtils {
                 }
             }
 
-            is_even = is_even ? false : true;
+            isEven = isEven ? false : true;
 
             if (bit < 4) {
                 bit++;
@@ -169,37 +169,37 @@ public class GeoHashUtils {
      *         [nort latitude, south latitude, east longitude, west longitude]
      */
     public static double[] decode_bbox(String geohash) {
-        double[] lat_interval = { -90.0, 90.0 };
-        double[] lon_interval = { -180.0, 180.0 };
+        double[] latInterval = { -90.0, 90.0 };
+        double[] lonInterval = { -180.0, 180.0 };
 
-        boolean is_even = true;
+        boolean isEven = true;
         for (int i = 0; i < geohash.length(); i++) {
 
             int currentCharacter = BASE32_DECODE_MAP.get(geohash.charAt(i));
 
             for (int z = 0; z < BITS.length; z++) {
                 int mask = BITS[z];
-                if (is_even) {
+                if (isEven) {
                     if ((currentCharacter & mask) != 0) {
-                        lon_interval[0] = (lon_interval[0] + lon_interval[1]) / 2;
+                        lonInterval[0] = (lonInterval[0] + lonInterval[1]) / 2;
                     } else {
-                        lon_interval[1] = (lon_interval[0] + lon_interval[1]) / 2;
+                        lonInterval[1] = (lonInterval[0] + lonInterval[1]) / 2;
                     }
 
                 } else {
 
                     if ((currentCharacter & mask) != 0) {
-                        lat_interval[0] = (lat_interval[0] + lat_interval[1]) / 2;
+                        latInterval[0] = (latInterval[0] + latInterval[1]) / 2;
                     } else {
-                        lat_interval[1] = (lat_interval[0] + lat_interval[1]) / 2;
+                        latInterval[1] = (latInterval[0] + latInterval[1]) / 2;
                     }
                 }
-                is_even = !is_even;
+                isEven = !isEven;
             }
         }
 
-        return new double[] { lat_interval[0], lat_interval[1],
-                lon_interval[0], lon_interval[1] };
+        return new double[] { latInterval[0], latInterval[1],
+                lonInterval[0], lonInterval[1] };
     }
 
     /**
