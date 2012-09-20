@@ -668,9 +668,14 @@ public class GeoHashUtils {
             throw new IllegalArgumentException("identical begin and end coordinate: line must have two different points");
         }
 
-        double[] bbox1 = (double[]) encodeWithBbox(lat1, lon1, hashLength)[1];
-        double[] bbox2 = (double[]) encodeWithBbox(lat2, lon2, hashLength)[1];
-        if (lat1 <= lat2) {
+        Object[] result1 = encodeWithBbox(lat1, lon1, hashLength);
+        double[] bbox1 = (double[]) result1[1];
+        Object[] result2 = encodeWithBbox(lat2, lon2, hashLength);
+        double[] bbox2 = (double[]) result2[1];
+
+        if(result1[0].equals(result2[0])) {
+            return getGeoHashesForPolygon(hashLength, new double[][] {{bbox1[0], bbox1[2]}, {bbox1[0], bbox1[3]}, {bbox1[1], bbox1[3]}, {bbox1[1], bbox2[2]}});
+        } else if (lat1 <= lat2) {
             return getGeoHashesForPolygon(hashLength, new double[][] { { bbox1[1], bbox1[2] }, { bbox1[0], bbox1[3] }, { bbox2[0], bbox2[3] },
                     { bbox2[1], bbox2[2] } });
         } else {
