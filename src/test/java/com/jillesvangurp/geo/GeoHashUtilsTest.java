@@ -220,7 +220,7 @@ public class GeoHashUtilsTest {
 	@DataProvider
 	public Object[][] lines() {
 		return new Object[][] { { 1, 1, 2, 2 }, { 2, 2, 1, 1 }, { 2, 1, 1, 1 },
-				{ 1, 2, 1, 1 }, { 1, 1, 2, 1 }, { 1, 1, 1, 2 } };
+				{ 1, 2, 1, 1 }, { 1, 1, 2, 1 }, { 1, 1, 1, 2 },{1,1,1,2} };
 	}
 
 	@Test(dataProvider = "lines")
@@ -228,6 +228,8 @@ public class GeoHashUtilsTest {
 			double lat2, double lon2) {
 		Set<String> hashes = GeoHashUtils.geoHashesForLine(3, lat1, lon1, lat2,
 				lon2);
+
+		assertThat(hashes.size(), greaterThan(10));
 		double slope = (lat2 - lat1) / (lon2 - lon1);
 		if (lat1 < lat2 && lon1 != lon2) {
 			for (double lat = lat1; lat < lat2; lat += 1.0 / (hashes.size() * 2)) {

@@ -59,6 +59,20 @@ public class GeoGeometryTest {
 		{ -2, -4 }
 	};
 
+
+	public void shouldCheckThatLinesCross() {
+	    assertThat("should intersect", GeoGeometry.linesCross(1, 1, 2, 2, 1, 2, 2, 1));
+        assertThat("should intersect (vertical)", GeoGeometry.linesCross(1, 1, 1, 10, 1, 3, 1, 4));
+        assertThat("should intersect (horizontal)", GeoGeometry.linesCross(1, 666, 10, 666, 3, 666, 4, 666));
+	}
+
+	public void shouldCheckThatLinesDontCross() {
+        assertThat("should not intersect lines intersect but not in the specified interval", !GeoGeometry.linesCross(1, 2, 3, 4, 10, 20, 20, 10));
+	    assertThat("should not intersect parallel", !GeoGeometry.linesCross(1, 1, 2, 2, 2, 2, 3, 3));
+        assertThat("should not intersect same vertical line but not overlapping", !GeoGeometry.linesCross(1, 1, 1, 5, 1, 6, 1, 10));
+        assertThat("should not intersect same horizontal line but not overlapping", !GeoGeometry.linesCross(1, 666, 5, 666, 6, 666, 10, 666));
+	}
+
 	public void shouldCheckContainmentForPolygonCorrectly() {
 		assertThat("origin should be in there", polygonContains(0, 0, samplePolygon));
 		assertThat("should be outside", !polygonContains(20, 20, samplePolygon));

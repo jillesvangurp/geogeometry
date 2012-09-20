@@ -221,10 +221,10 @@ public class GeoHashUtils {
      */
     public static double[] decode(String geohash) {
         double[] bbox = decode_bbox(geohash);
-    
+
         double latitude = (bbox[0] + bbox[1]) / 2;
         double longitude = (bbox[2] + bbox[3]) / 2;
-    
+
         return new double[] { latitude, longitude };
     }
 
@@ -517,7 +517,7 @@ public class GeoHashUtils {
         // lets start at the top left:
 
 
-        String rowHash = encode(bbox[0], bbox[2]).substring(0, hashLength);
+        String rowHash = encode(bbox[0], bbox[2],hashLength);
         double[] rowBox = decode_bbox(rowHash);
         while (rowBox[0] < bbox[1]) {
             String columnHash = rowHash;
@@ -541,7 +541,7 @@ public class GeoHashUtils {
         // extra chars in the geohash ought to be enough and going beyond 9
         // doesn't serve much purpose.
         while (detail < maxLength) {
-            partiallyContained = splitAndFilter(bbox, fullyContained, partiallyContained);
+            partiallyContained = splitAndFilter(polygonPoints, fullyContained, partiallyContained);
             detail++;
         }
 
@@ -584,30 +584,49 @@ public class GeoHashUtils {
     }
 
 
-    private static Set<String> splitAndFilter(double[] bbox,
+    private static Set<String> splitAndFilter(double[][] polygonPoints,
             Set<String> fullyContained, Set<String> partiallyContained) {
         Set<String> stillPartial = new HashSet<String>();
         // now we need to break up the partially contained hashes
         for (String hash : partiallyContained) {
             for (String h : subHashes(hash)) {
                 double[] hashBbox = decode_bbox(h);
-                boolean nw = GeoGeometry.bboxContains(bbox, hashBbox[0],
-                        hashBbox[2]);
-                boolean ne = GeoGeometry.bboxContains(bbox, hashBbox[0],
-                        hashBbox[3]);
-                boolean sw = GeoGeometry.bboxContains(bbox, hashBbox[1],
-                        hashBbox[2]);
-                boolean se = GeoGeometry.bboxContains(bbox, hashBbox[1],
-                        hashBbox[3]);
+                boolean nw = GeoGeometry.polygonContains(new double[] {hashBbox[0],
+                        hashBbox[2]}, polygonPoints);
+                boolean ne = GeoGeometry.polygonContains(new double[] {hashBbox[0],
+                        hashBbox[3]}, polygonPoints);
+                boolean sw = GeoGeometry.polygonContains(new double[] {hashBbox[1],
+                        hashBbox[2]}, polygonPoints);
+                boolean se = GeoGeometry.polygonContains(new double[] {hashBbox[1],
+                        hashBbox[3]}, polygonPoints);
+
+                boolean hashContainsPolygonPoint = false;
                 if (nw && ne && sw && se) {
                     fullyContained.add(h);
-                } else if (nw || ne || sw || se) {
+                } else if (nw || ne || sw || se || hashContainsPolygonPoint) {
                     stillPartial.add(h);
                 } else {
-                    // ignore it
+                    double[] last = polygonPoints[0];
+                    for(int i=1; i<polygonPoints.length;i++) {
+                        double[] current=polygonPoints[i];
+                        if(GeoGeometry.linesCross(hashBbox[0], hashBbox[2], hashBbox[0], hashBbox[3], last[0], last[1], current[0], current[1])) {
+                            stillPartial.add(h);
+                            break;
+                        } else if(GeoGeometry.linesCross(hashBbox[0], hashBbox[3], hashBbox[1], hashBbox[3], last[0], last[1], current[0], current[1])) {
+                            stillPartial.add(h);
+                            break;
+                        } else if(GeoGeometry.linesCross(hashBbox[1], hashBbox[3], hashBbox[1], hashBbox[2], last[0], last[1], current[0], current[1])) {
+                            stillPartial.add(h);
+                            break;
+                        } else if(GeoGeometry.linesCross(hashBbox[1], hashBbox[2], hashBbox[0], hashBbox[2], last[0], last[1], current[0], current[1])) {
+                            stillPartial.add(h);
+                            break;
+                        }
+                    }
                 }
             }
         }
+
         return stillPartial;
     }
 
