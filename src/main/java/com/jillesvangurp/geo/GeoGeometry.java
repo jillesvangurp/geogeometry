@@ -372,6 +372,8 @@ public class GeoGeometry {
     /**
      * Converts a circle to a polygon.
      *
+     * This method does not behave very well very close to the poles because the math gets a little funny there.
+     *
      * @param segments
      *            number of segments the polygon should have. The higher this
      *            number, the better of an approximation the polygon is for the
@@ -390,12 +392,20 @@ public class GeoGeometry {
         double[][] points = new double[segments + 1][0];
 
         double relativeLatitude = radius / EARTH_RADIUS_METERS * 180 / PI;
-        double relativeLongitude = relativeLatitude / cos(Math.toRadians(latitude));
 
-        for (int i = 0; i < segments + 1; i++) {
+        // things get funny near the north and south pole, so doing a modulo 90
+        // to ensure that the relative amount of degrees doesn't get too crazy.
+        double relativeLongitude = relativeLatitude / cos(Math.toRadians(latitude))%90;
+
+        for (int i = 0; i < segments; i++) {
             // radians go from 0 to 2*PI; we want to divide the circle in nice
             // segments
             double theta = 2 * PI * i / segments;
+            // trying to avoid theta being exact factors of pi because that results in some funny behavior around the north-pole
+            theta=theta+=0.1;
+            if(theta>= 2*PI) {
+                theta=theta-2*PI;
+            }
 
             // on the unit circle, any point of the circle has the coordinate
             // cos(t),sin(t) where t is the radian. So, all we need to do that
@@ -410,8 +420,16 @@ public class GeoGeometry {
                 lonOnCircle = 180 - (lonOnCircle + 180);
             }
 
+            if(latOnCircle > 90) {
+                latOnCircle = 90 - (latOnCircle-90);
+            } else if(latOnCircle < -90) {
+                latOnCircle = -90 - (latOnCircle+90);
+            }
+
             points[i] = new double[] { latOnCircle, lonOnCircle };
         }
+        // should end with same point as the origin
+        points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
 

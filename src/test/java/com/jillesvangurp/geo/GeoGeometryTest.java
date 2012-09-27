@@ -29,6 +29,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 
 import org.testng.annotations.Test;
 
@@ -156,4 +158,33 @@ public class GeoGeometryTest {
         assertThat("should be inside", polygonContains(london, polygon));
         assertThat("should NOT be inside", !polygonContains(berlin, polygon));
 	}
+
+   public void shouldConvertCircleToPolygonOn180() {
+        double[][] circle2polygon = GeoGeometry.circle2polygon(6, -18, 180, 1000);
+        int countEast=0;
+        for (double[] point : circle2polygon) {
+            double distance = distance(-18, 180,point[0],point[1]);
+            assertThat(abs(1000-distance), lessThan(1.0));
+            if(GeoHashUtils.isWest(180, point[1])) {
+                countEast++;
+            }
+        }
+        assertThat(countEast, greaterThan(1));
+    }
+
+   public void shouldConvertCircleToPolygonOnNorthPole() {
+
+       double lat=89.9;
+       double lon=0;
+        double[][] circle2polygon = GeoGeometry.circle2polygon(6, lat, lon, 1000);
+        int countEast=0;
+        for (double[] point : circle2polygon) {
+            double distance = distance(lat, lon,point[0],point[1]);
+            assertThat(abs(1000-distance), lessThan(20.0));
+            if(GeoHashUtils.isWest(180, point[1])) {
+                countEast++;
+            }
+        }
+        assertThat(countEast, greaterThan(1));
+    }
 }

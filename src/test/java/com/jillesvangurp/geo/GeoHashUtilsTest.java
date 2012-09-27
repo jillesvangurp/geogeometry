@@ -21,7 +21,6 @@
  */
 package com.jillesvangurp.geo;
 
-import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoHashUtils.contains;
 import static com.jillesvangurp.geo.GeoHashUtils.decode;
 import static com.jillesvangurp.geo.GeoHashUtils.decode_bbox;
@@ -212,9 +211,18 @@ public class GeoHashUtilsTest {
 		for (String h : geoHashesForPolygon) {
 			min = Math.min(min, h.length());
 		}
-		assertThat("there should be some hashes with length=3", min, is(3));
+		assertThat("there should be some hashes with length=3", min, is(4));
 		assertThat("huge area, should generate lots of hashes",
 				geoHashesForPolygon.size() > 1000);
+	}
+
+	public void shouldCalculateHashesForCircle() {
+	    Set<String> hashesForCircle = GeoHashUtils.geoHashesForCircle(8, 50, 15, 2000);
+	    for (String hash : hashesForCircle) {
+            double[] point = GeoHashUtils.decode(hash);
+            double distance = GeoGeometry.distance(point, new double[]{50,15});
+            assertThat(distance, lessThan(2000.0));
+        }
 	}
 
 	@DataProvider
@@ -226,54 +234,11 @@ public class GeoHashUtilsTest {
 	@Test(dataProvider = "lines")
 	public void shouldCalculateHashesForLine(double lat1, double lon1,
 			double lat2, double lon2) {
-		Set<String> hashes = GeoHashUtils.geoHashesForLine(3, lat1, lon1, lat2,
+		Set<String> hashes = GeoHashUtils.geoHashesForLine(1000, lat1, lon1, lat2,
 				lon2);
 
 		assertThat(hashes.size(), greaterThan(10));
-		double slope = (lat2 - lat1) / (lon2 - lon1);
-		if (lat1 < lat2 && lon1 != lon2) {
-			for (double lat = lat1; lat < lat2; lat += 1.0 / (hashes.size() * 2)) {
-				double lon = slope * lat - slope * lat1 + lon1;
-				String h = encode(lat, lon, 3);
-				assertThat("points on the line should have " + h + ' ' + lat
-						+ ',' + lon + " in the set", hashes.contains(h));
-			}
-		} else if (lat1 > lat2 && lon1 != lon2) {
-			for (double lat = lat1; lat < lat2; lat -= 1.0 / (hashes.size() * 2)) {
-				double lon = slope * lat - slope * lat1 + lon1;
-				String h = encode(lat, lon, 3);
-				assertThat("points on the line should have " + h + ' ' + lat
-						+ ',' + lon + " in the set", hashes.contains(h));
-			}
-		} else if (lon1 < lon2 && lat1 != lat2) {
-			for (double lon = lon1; lon < lon2; lon += 1.0 / (hashes.size() * 2)) {
-				String h = encode(lat1, lon, 3);
-				assertThat("points on the line should have " + h + ' ' + lat1
-						+ ',' + lon + " in the set", hashes.contains(h));
-			}
 
-		} else if (lon1 > lon2 && lat1 != lat2) {
-			for (double lon = lon1; lon < lon2; lon -= 1.0 / (hashes.size() * 2)) {
-				String h = encode(lat1, lon, 3);
-				assertThat("points on the line should have " + h + ' ' + lat1
-						+ ',' + lon + " in the set", hashes.contains(h));
-			}
-		} else {
-			// points are the same, that won't work
-		}
-	}
-
-	public void shouldConvertCircleToPolygonOn180() {
-	    double[][] circle2polygon = GeoGeometry.circle2polygon(6, -18, 180, 1000);
-	    int countEast=0;
-	    for (double[] point : circle2polygon) {
-	        double distance = distance(-18, 180,point[0],point[1]);
-            assertThat(abs(1000-distance), lessThan(1.0));
-            if(GeoHashUtils.isWest(180, point[1])) {
-                countEast++;
-            }
-        }
-	    assertThat(countEast, greaterThan(1));
 	}
 
 	public void shouldCheckIfWest() {
@@ -310,4 +275,35 @@ public class GeoHashUtilsTest {
         assertThat("should not be west", !GeoHashUtils.isWest(-90, 90));
         assertThat("should not be east", !GeoHashUtils.isEast(-90, 90));
 	}
+
+    @DataProvider
+    public Double[][] samplePoints() {
+        return new Double[][] {
+                { 10.0, 85.0, 15.0 },
+                { 10.0, 50.0, 15.0 },
+                { 10.0, 0.0, 15.0 },
+                { 100.0, 85.0, 15.0 },
+                { 100.0, 50.0, 15.0 },
+                { 100.0, 0.0, 15.0 },
+                { 1000.0, 85.0, 15.0 },
+                { 1000.0, 50.0, 15.0 },
+                { 1000.0, 0.0, 15.0 },
+                { 10000.0, 85.0, 15.0 },
+                { 10000.0, 50.0, 15.0 },
+                { 10000.0, 0.0, 15.0 },
+                { 100000.0, 85.0, 15.0 },
+                { 100000.0, 50.0, 15.0 },
+                { 100000.0, 0.0, 15.0 }
+        };
+    }
+
+    @Test(dataProvider="samplePoints")
+	public void shouldCalculateHashLength(double m, double latitude, double longitude) {
+        int length = GeoHashUtils.getSuitableHashLength(m, latitude, longitude);
+        String hash = encode(latitude, longitude, length);
+        double[] bbox = decode_bbox(hash);
+        double distance = GeoGeometry.distance(bbox[0], bbox[2], bbox[0], bbox[3]);
+        assertThat(distance, lessThan(m));
+	}
+
 }
