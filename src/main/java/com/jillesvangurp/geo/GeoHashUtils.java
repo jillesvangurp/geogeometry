@@ -503,8 +503,8 @@ public class GeoHashUtils {
      * @return a set of geo hashes that cover the polygon area.
      */
     public static Set<String> getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) {
-        if (maxLength < 2 || maxLength > 10) {
-            throw new IllegalArgumentException("maxLength should be between 1 and 10");
+        if (maxLength < 2 || maxLength >= DEFAULT_PRECISION) {
+            throw new IllegalArgumentException("maxLength should be between 2 and " + DEFAULT_PRECISION + " was " + maxLength);
         }
 
         double[] bbox = GeoGeometry.getBbox(polygonPoints);
@@ -722,16 +722,21 @@ public class GeoHashUtils {
      * @return the largest hash length where the hash bbox has a width < granularityInMeters.
      */
     public static int getSuitableHashLength(double granularityInMeters, double latitude, double longitude) {
+        if(granularityInMeters < 5) {
+            return 10;
+        }
         String hash = encode(latitude, longitude);
         double width=0;
+        int length=hash.length();
         // the height is the same at for any latitude given a length, but the width converges towards the poles
-        while(width < granularityInMeters) {
+        while(width < granularityInMeters && hash.length() >=2) {
+            length=hash.length();
             double[] bbox = decode_bbox(hash);
             width = GeoGeometry.distance(bbox[0],bbox[2],bbox[0],bbox[3]);
             hash=hash.substring(0, hash.length()-1);
         }
 
-        return hash.length()+2;
+        return Math.min(length+1, DEFAULT_PRECISION);
     }
 
 }
