@@ -504,4 +504,20 @@ public class GeoGeometry {
         // http://stackoverflow.com/questions/243945/calculating-a-2d-vectors-cross-product
         return p1[0] * p2[1] - p1[1] * p2[0];
     }
+    
+    
+    /**
+     * @param direction n,s,e,w
+     * @param degrees
+     * @param minutes
+     * @param seconds
+     * @return decimal degree
+     */
+    public static double toDecimalDegree(String direction,double degrees, double minutes, double seconds) {
+        int factor=1;
+        if(direction != null && (direction.toLowerCase().startsWith("e") || direction.toLowerCase().startsWith("s"))) {
+            factor=-1;
+        }
+        return (degrees + minutes/60 + seconds/60/60)*factor;
+    }
 }
