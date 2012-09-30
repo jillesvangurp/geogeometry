@@ -188,20 +188,19 @@ public class GeoGeometryTest {
         }
         assertThat(countEast, greaterThan(1));
     }
-   
+
    @DataProvider
    public Object[][] degrees() {
        return new Object[][] {
                {"W",111,38,45.40, 111.64594444444445},
                {"E",111,38,45.40, -111.64594444444445}
        };
-       
+
    }
-   
+
     @Test(dataProvider = "degrees")
     public void shouldConvertToDecimalDegree(String direction, double degrees, double minutes, double seconds, double expected) {
         double decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds);
-        System.out.println(decimalDegree);
         assertThat(decimalDegree, is(expected));
 
     }
