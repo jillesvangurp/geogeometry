@@ -515,7 +515,7 @@ public class GeoGeometry {
      */
     public static double toDecimalDegree(String direction,double degrees, double minutes, double seconds) {
         int factor=1;
-        if(direction != null && (direction.toLowerCase().startsWith("e") || direction.toLowerCase().startsWith("s"))) {
+        if(direction != null && (direction.toLowerCase().startsWith("w") || direction.toLowerCase().startsWith("s"))) {
             factor=-1;
         }
         return (degrees + minutes/60 + seconds/60/60)*factor;
