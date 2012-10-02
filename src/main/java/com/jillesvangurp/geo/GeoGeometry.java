@@ -31,7 +31,6 @@ import static java.lang.Math.toRadians;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 
 public class GeoGeometry {
 
@@ -514,6 +513,16 @@ public class GeoGeometry {
 
     public static double[][] getPolygonForPoints(double[]... points) {
         return getPolygonForPointsNew(points);
+    }
+    
+    public static double[] getCentroid(double[][] points) {
+        double totalLat=0.0;
+        double totalLon=0.0;
+        for (double[] p : points) {
+            totalLat+=p[0];
+            totalLon+=p[1];
+        }
+        return new double[] {totalLat/points.length, totalLon/points.length};
     }
 
     /**
