@@ -31,6 +31,7 @@ import static java.lang.Math.toRadians;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 
 public class GeoGeometry {
 
@@ -432,80 +433,89 @@ public class GeoGeometry {
         points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
-
-    /**
-     * Calculate a convex polygon containing all the points using the Monotone
-     * Chain Convex Hull algorithm
-     *
-     * @param points
-     * @return polygon containing the points.
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static double[][] pointCloudToPolygon(double[]... points) {
-        Comparator pointComparator = new Comparator() {
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static double[][] getPolygonForPointsNew(double[][] points) {
+        if(points.length <3) {
+            throw new IllegalStateException("need at least 3 pois for a cluster");
+        }
+        double[][] xSorted = Arrays.copyOf(points, points.length);
+        Arrays.sort(xSorted, new Comparator() {
             @Override
             public int compare(Object o1, Object o2) {
                 double[] p1 = (double[]) o1;
-                double[] p2 = (double[]) o2;
-                if (p1[0] == p2[0]) {
-                    return (int) Math.round(p1[1] - p2[1]);
-                } else {
-                    return (int) Math.round(p1[0] - p2[0]);
-                }
+                double[] p2 =(double[]) o2;
+                
+            if (p1[0] == p2[0]) {               
+                  return (new Double(p1[1]).compareTo(new Double(p2[1])));
+              } else {
+                  return (new Double(p1[0]).compareTo(new Double(p2[0])));
+              }
             }
-        };
-        double[][] pointsCopy = Arrays.copyOf(points, points.length);
-        // sort the copy of points first (don't modify the parameter array)
-        Arrays.sort(pointsCopy, pointComparator);
+        });
 
-        int n = pointsCopy.length;
+        int n = xSorted.length;
 
-        double[][] result = new double[n * 2][0];
+        double[][] lUpper = new double[n][0];
 
-        // calculate lower hull
-        int k = 0;
-        int start = 0;
+        lUpper[0] = xSorted[0];
+        lUpper[1] = xSorted[1];
 
-        for (int i = 0; i < n; i++) {
-            double[] p = pointsCopy[i];
-            while (k - start >= 2 && inside(p, result[k - 1], result[k - 2])) {
-                k--;
+        int lUpperSize = 2;
+
+        for (int i = 2; i < n; i++) {
+            lUpper[lUpperSize] = xSorted[i];
+            lUpperSize++;
+
+            while (lUpperSize > 2 && !rightTurn(lUpper[lUpperSize - 3], lUpper[lUpperSize - 2], lUpper[lUpperSize - 1])) {
+                // Remove the middle point of the three last
+                lUpper[lUpperSize - 2] = lUpper[lUpperSize - 1];
+                lUpperSize--;
             }
-            result[k++] = p;
         }
 
-        // drop the last one
-        k--;
-        // calculate upper hull
-        start = k;
+        double[][] lLower = new double[n][0];
 
-        for (int i = n - 1; i >= 0; i--) {
-            double[] p = pointsCopy[i];
-            while (k - start >= 2 && inside(p, result[k - 1], result[k - 2])) {
-                k--;
+        lLower[0] = xSorted[n - 1];
+        lLower[1] = xSorted[n - 2];
+
+        int lLowerSize = 2;
+
+        for (int i = n - 3; i >= 0; i--) {
+            lLower[lLowerSize] = xSorted[i];
+            lLowerSize++;
+
+            while (lLowerSize > 2 && !rightTurn(lLower[lLowerSize - 3], lLower[lLowerSize - 2], lLower[lLowerSize - 1])) {
+                // Remove the middle point of the three last
+                lLower[lLowerSize - 2] = lLower[lLowerSize - 1];
+                lLowerSize--;
             }
-            result[k++] = p;
         }
-        // drop the last one
-        k--;
 
-        return Arrays.copyOf(result, k);
+        double[][] result = new double[lUpperSize + lLowerSize-2][0];
+        int idx=0;
+        for (int i = 0; i < lUpperSize; i++) {
+            result[idx] = (lUpper[i]);
+            idx++;
+        }
+
+        for (int i = 1; i < lLowerSize - 1; i++) {
+            result[idx] = (lLower[i]);
+            idx++;
+        }
+
+        return result;
     }
 
-    private static boolean inside(double[] p, double[] p1, double[] p2) {
-        return crossProduct(subtract(p, p1), subtract(p, p2)) > 0;
+    private static boolean rightTurn(double[] a, double[] b, double[] c) {
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0;
     }
 
-    private static double[] subtract(double[] p1, double[] p2) {
-        return new double[] { p1[0] - p2[0], p1[1] - p2[1] };
+
+    public static double[][] getPolygonForPoints(double[]... points) {
+        return getPolygonForPointsNew(points);
     }
 
-    private static double crossProduct(double[] p1, double[] p2) {
-        // http://stackoverflow.com/questions/243945/calculating-a-2d-vectors-cross-product
-        return p1[0] * p2[1] - p1[1] * p2[0];
-    }
-    
-    
     /**
      * @param direction n,s,e,w
      * @param degrees
