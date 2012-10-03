@@ -355,7 +355,7 @@ public class GeoGeometry {
      *            [latitude,longitude]
      * @return the average latitude and longitude.
      */
-    public double[] getPolygonCenter(double[]... polygonPoints) {
+    public static double[] getPolygonCenter(double[]... polygonPoints) {
         double cumLat = 0;
         double cumLon = 0;
         for (double[] coordinate : polygonPoints) {
@@ -513,16 +513,6 @@ public class GeoGeometry {
 
     public static double[][] getPolygonForPoints(double[]... points) {
         return getPolygonForPointsNew(points);
-    }
-    
-    public static double[] getCentroid(double[][] points) {
-        double totalLat=0.0;
-        double totalLon=0.0;
-        for (double[] p : points) {
-            totalLat+=p[0];
-            totalLon+=p[1];
-        }
-        return new double[] {totalLat/points.length, totalLon/points.length};
     }
 
     /**
