@@ -189,8 +189,7 @@ public class GeoGeometryTest {
 	    buf.deleteCharAt(buf.length()-1);
 	    buf.append("]");
 	    
-	    System.out.println(buf.toString());
-	    
+	    // FIXME complete test
 	}
 
 	public void polygonForPointsInFourQuadrantsShouldContainStuffInside() {

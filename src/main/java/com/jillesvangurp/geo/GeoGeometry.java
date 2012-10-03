@@ -388,8 +388,7 @@ public class GeoGeometry {
         if (segments < 5) {
             throw new IllegalArgumentException("you need a minimum of 5 segments");
         }
-        // for n segments you need n+1 points
-        double[][] points = new double[segments + 1][0];
+        double[][] points = new double[segments][0];
 
         double relativeLatitude = radius / EARTH_RADIUS_METERS * 180 / PI;
 
@@ -429,12 +428,12 @@ public class GeoGeometry {
             points[i] = new double[] { latOnCircle, lonOnCircle };
         }
         // should end with same point as the origin
-        points[points.length-1] = new double[] {points[0][0],points[0][1]};
+//        points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static double[][] getPolygonForPointsNew(double[][] points) {
+    public static double[][] getPolygonForPoints(double[][] points) {
         if(points.length <3) {
             throw new IllegalStateException("need at least 3 pois for a cluster");
         }
@@ -508,11 +507,6 @@ public class GeoGeometry {
 
     private static boolean rightTurn(double[] a, double[] b, double[] c) {
         return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0;
-    }
-
-
-    public static double[][] getPolygonForPoints(double[]... points) {
-        return getPolygonForPointsNew(points);
     }
 
     /**
