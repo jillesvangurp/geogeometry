@@ -52,51 +52,6 @@ public class GeoHashUtils {
         }
     }
 
-    private static Object[] encodeWithBbox(double latitude, double longitude, int length) {
-        if (length < 1 || length > 12) {
-            throw new IllegalArgumentException("length must be between 1 and 12");
-        }
-        double[] latInterval = { -90.0, 90.0 };
-        double[] lonInterval = { -180.0, 180.0 };
-
-        StringBuilder geohash = new StringBuilder();
-        boolean is_even = true;
-        int bit = 0, ch = 0;
-
-        while (geohash.length() < length) {
-            double mid = 0.0;
-            if (is_even) {
-                mid = (lonInterval[0] + lonInterval[1]) / 2;
-                if (longitude > mid) {
-                    ch |= BITS[bit];
-                    lonInterval[0] = mid;
-                } else {
-                    lonInterval[1] = mid;
-                }
-
-            } else {
-                mid = (latInterval[0] + latInterval[1]) / 2;
-                if (latitude > mid) {
-                    ch |= BITS[bit];
-                    latInterval[0] = mid;
-                } else {
-                    latInterval[1] = mid;
-                }
-            }
-
-            is_even = is_even ? false : true;
-
-            if (bit < 4) {
-                bit++;
-            } else {
-                geohash.append(BASE32_CHARS[ch]);
-                bit = 0;
-                ch = 0;
-            }
-        }
-        return new Object[] { geohash.toString(), new double[] { latInterval[0], latInterval[1], lonInterval[0], lonInterval[1] } };
-    }
-
     /**
      * Same as encode but returns a substring of the specified length.
      *
@@ -599,11 +554,9 @@ public class GeoHashUtils {
                         hashBbox[2]}, polygonPoints);
                 boolean se = GeoGeometry.polygonContains(new double[] {hashBbox[1],
                         hashBbox[3]}, polygonPoints);
-
-                boolean hashContainsPolygonPoint = false;
                 if (nw && ne && sw && se) {
                     fullyContained.add(h);
-                } else if (nw || ne || sw || se || hashContainsPolygonPoint) {
+                } else if (nw || ne || sw || se) {
                     stillPartial.add(h);
                 } else {
                     double[] last = polygonPoints[0];
@@ -693,6 +646,51 @@ public class GeoHashUtils {
                     { bbox2[1], bbox2[2] },
                     { bbox2[1], bbox2[3] } });
         }
+    }
+
+    private static Object[] encodeWithBbox(double latitude, double longitude, int length) {
+        if (length < 1 || length > 12) {
+            throw new IllegalArgumentException("length must be between 1 and 12");
+        }
+        double[] latInterval = { -90.0, 90.0 };
+        double[] lonInterval = { -180.0, 180.0 };
+    
+        StringBuilder geohash = new StringBuilder();
+        boolean is_even = true;
+        int bit = 0, ch = 0;
+    
+        while (geohash.length() < length) {
+            double mid = 0.0;
+            if (is_even) {
+                mid = (lonInterval[0] + lonInterval[1]) / 2;
+                if (longitude > mid) {
+                    ch |= BITS[bit];
+                    lonInterval[0] = mid;
+                } else {
+                    lonInterval[1] = mid;
+                }
+    
+            } else {
+                mid = (latInterval[0] + latInterval[1]) / 2;
+                if (latitude > mid) {
+                    ch |= BITS[bit];
+                    latInterval[0] = mid;
+                } else {
+                    latInterval[1] = mid;
+                }
+            }
+    
+            is_even = is_even ? false : true;
+    
+            if (bit < 4) {
+                bit++;
+            } else {
+                geohash.append(BASE32_CHARS[ch]);
+                bit = 0;
+                ch = 0;
+            }
+        }
+        return new Object[] { geohash.toString(), new double[] { latInterval[0], latInterval[1], lonInterval[0], lonInterval[1] } };
     }
 
     public static Set<String> geoHashesForCircle(int length, double latitude, double longitude, double radius) {
