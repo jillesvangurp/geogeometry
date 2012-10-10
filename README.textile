@@ -43,7 +43,7 @@ Then you can add the following dependency:
 <dependency>
     <groupId>com.github.jillesvangurp</groupId>
     <artifactId>geohash</artifactId>
-    <version>1.0</version>
+    <version>x.y</version>
 </dependency>
 </code>
 </pre>
@@ -63,6 +63,13 @@ For more details see the LICENSE file
 
 h1. Changelog
 
+* 1.4
+** many bug fixes & misc refactoring
+** improve covering polygon with geohashes
+** improve getSuitableHashLength
+** add method to convert degrees with minutes and seconds to their decimal equivalent
+** replace the algorithm for calculating a polygon from points with a better one
+** simple method for calculating centroid of a polygon
 * 1.3
 ** Fix major bug that happens nea longitude 180, several methods were affected by this one.
 ** Remove dependency on java 1.7; should now work fine with 1.6 as well. I may revert this at some point.
