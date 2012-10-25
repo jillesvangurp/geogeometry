@@ -29,8 +29,11 @@ import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
+
+import java.util.Random;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -240,6 +243,31 @@ public class GeoGeometryTest {
     public void shouldConvertToDecimalDegree(String direction, double degrees, double minutes, double seconds, double expected) {
         double decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds);
         assertThat(decimalDegree, is(expected));
-
+    }
+    
+    public void shouldFilterPoints() {
+        double latitude=52.0;
+        double longitude=13.0;
+        double points[][] = new double[1000][2];
+        Random random = new Random();
+        for(int i=0;i<1000;i++) {
+            points[i]=new double[] {latitude+random.nextDouble(), longitude+random.nextDouble()};
+        }
+        // insert a few 'bad' points
+        points[50]=new double[]{100,100};
+        points[100]=new double[]{-100,100};
+        points[150]=new double[]{100,-100};
+        points[200]=new double[]{-100,-100};
+        
+        double[][] filtered = GeoGeometry.filterNoiseFromPointCloud(points, 0.005f);
+        
+        assertThat(filtered.length, is(996));
+        double[] bbox = GeoGeometry.getBbox(filtered);
+        
+        // the four bad pois should be gone
+        assertThat(bbox[0], allOf(greaterThan(52.0), lessThan(53.0)));
+        assertThat(bbox[1], allOf(greaterThan(52.0), lessThan(53.0)));
+        assertThat(bbox[2], allOf(greaterThan(13.0), lessThan(14.0)));
+        assertThat(bbox[3], allOf(greaterThan(13.0), lessThan(14.0)));
     }
 }

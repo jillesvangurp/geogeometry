@@ -41,7 +41,7 @@ public class GeoGeometry {
      * @return bounding box that contains the polygon as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
-    public static double[] getBbox(double[]...polygonPoints) {
+    public static double[] getBbox(double[]... polygonPoints) {
         double minLat = Integer.MAX_VALUE;
         double minLon = Integer.MAX_VALUE;
         double maxLat = Integer.MIN_VALUE;
@@ -55,6 +55,40 @@ public class GeoGeometry {
         }
 
         return new double[] { minLat, maxLat, minLon, maxLon };
+    }
+
+    /**
+     * Points in a cloud are supposed to be close together. Sometimes bad data causes a handful of points out of
+     * thousands to be way off. This method filters those out by sorting the coordinates and then discarding the 
+     * specified percentage.
+     * 
+     * @param points
+     * @return
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static double[][] filterNoiseFromPointCloud(double[][] points, float percentage) {
+        Arrays.sort(points, new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                double[] p1 = (double[]) o1;
+                double[] p2 = (double[]) o2;
+                if(p1[0] == p2[0]) {
+                    if(p1[1] > p2[1]) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else 
+                    if(p1[0] > p2[0]) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+            }
+        });
+        int discard = (int) (points.length * percentage/2);
+        
+        return Arrays.copyOfRange(points, discard, points.length-discard);
     }
 
     /**
@@ -75,7 +109,7 @@ public class GeoGeometry {
     /**
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
-     *
+     * 
      * @param latitude
      * @param longitude
      * @param polygonPoints
@@ -157,15 +191,14 @@ public class GeoGeometry {
     /**
      * Simple rounding method that allows you to get rid of some decimals in a
      * double.
-     *
+     * 
      * @param d
      * @param decimals
      * @return d rounded to the specified precision
      */
     public static double roundToDecimals(double d, int decimals) {
         if (decimals > 17) {
-            throw new IllegalArgumentException(
-                    "this probably doesn't do what you want; makes sense only for <= 17 decimals");
+            throw new IllegalArgumentException("this probably doesn't do what you want; makes sense only for <= 17 decimals");
         }
         double factor = Math.pow(10, decimals);
         return Math.round(d * factor) / factor;
@@ -179,9 +212,9 @@ public class GeoGeometry {
         boolean line2Vertical = u2 == u1;
         if (line1Vertical && line2Vertical) {
             // x=a
-            if(x1==u1) {
+            if (x1 == u1) {
                 // lines are the same
-                return y1<=v1 && v1<y2 || y1<=v2 && v2<y2;
+                return y1 <= v1 && v1 < y2 || y1 <= v2 && v2 < y2;
             } else {
                 // parallel -> they don't intersect!
                 return false;
@@ -190,19 +223,19 @@ public class GeoGeometry {
             double b2 = (v2 - v1) / (u2 - u1);
             double a2 = v1 - b2 * u1;
 
-            double xi=x1;
-            double yi=a2+b2*xi;
+            double xi = x1;
+            double yi = a2 + b2 * xi;
 
-            return yi>=y1 && yi<=y2;
+            return yi >= y1 && yi <= y2;
 
         } else if (!line1Vertical && line2Vertical) {
             double b1 = (y2 - y1) / (x2 - x1);
             double a1 = y1 - b1 * x1;
 
-            double xi=u1;
-            double yi=a1+b1*xi;
+            double xi = u1;
+            double yi = a1 + b1 * xi;
 
-            return yi>=v1 && yi<=v2;
+            return yi >= v1 && yi <= v2;
         } else {
 
             double b1 = (y2 - y1) / (x2 - x1);
@@ -213,9 +246,9 @@ public class GeoGeometry {
             double a2 = v1 - b2 * u1;
 
             if (b1 - b2 == 0) {
-                if(a1 == a2) {
+                if (a1 == a2) {
                     // lines are the same
-                    return x1<=u1 && u1<x2 || x1<=u2 && u2<x2;
+                    return x1 <= u1 && u1 < x2 || x1 <= u2 && u2 < x2;
                 } else {
                     // parallel -> they don't intersect!
                     return false;
@@ -224,10 +257,7 @@ public class GeoGeometry {
             // calculate intersection point xi,yi
             double xi = -(a1 - a2) / (b1 - b2);
             double yi = a1 + b1 * xi;
-            if ((x1 - xi) * (xi - x2) >= 0 &&
-                    (u1 - xi) * (xi - u2) >= 0 &&
-                    (y1 - yi) * (yi - y2) >= 0 &&
-                    (v1 - yi) * (yi - v2) >= 0) {
+            if ((x1 - xi) * (xi - x2) >= 0 && (u1 - xi) * (xi - u2) >= 0 && (y1 - yi) * (yi - y2) >= 0 && (v1 - yi) * (yi - v2) >= 0) {
                 return true;
             } else {
                 return false;
@@ -237,7 +267,7 @@ public class GeoGeometry {
 
     /**
      * Earth's mean radius, in meters.
-     *
+     * 
      * @see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
      */
     private static final double EARTH_RADIUS = 6371000.0;
@@ -255,7 +285,7 @@ public class GeoGeometry {
      * Translate a point along the longitude for the specified amount of meters.
      * Note, this method assumes the earth is a sphere and the result is not
      * going to be very precise for larger distances.
-     *
+     * 
      * @param latitude
      * @param longitude
      * @param meters
@@ -269,7 +299,7 @@ public class GeoGeometry {
      * Translate a point along the latitude for the specified amount of meters.
      * Note, this method assumes the earth is a sphere and the result is not
      * going to be very precise for larger distances.
-     *
+     * 
      * @param latitude
      * @param longitude
      * @param meters
@@ -283,7 +313,7 @@ public class GeoGeometry {
      * Translate a point by the specified meters along the longitude and
      * latitude. Note, this method assumes the earth is a sphere and the result
      * is not going to be very precise for larger distances.
-     *
+     * 
      * @param latitude
      * @param longitude
      * @param lateralMeters
@@ -303,7 +333,7 @@ public class GeoGeometry {
      * http://en.wikipedia.org/wiki/Haversine_formula there is a 0.5% error
      * margin given the 1% difference in curvature between the equator and the
      * poles.
-     *
+     * 
      * @param lat1
      *            the latitude in decimal degrees
      * @param long1
@@ -314,14 +344,12 @@ public class GeoGeometry {
      *            the longitude in decimal degrees
      * @return the distance in meters
      */
-    public static double distance(final double lat1,
-            final double long1, final double lat2, final double long2) {
+    public static double distance(final double lat1, final double long1, final double lat2, final double long2) {
 
         final double deltaLat = toRadians(lat2 - lat1);
         final double deltaLon = toRadians(long2 - long1);
 
-        final double a = sin(deltaLat / 2) * sin(deltaLat / 2) + cos(Math.toRadians(lat1))
-                * cos(Math.toRadians(lat2)) * sin(deltaLon / 2) * sin(deltaLon / 2);
+        final double a = sin(deltaLat / 2) * sin(deltaLat / 2) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(deltaLon / 2) * sin(deltaLon / 2);
 
         final double c = 2 * asin(Math.sqrt(a));
 
@@ -331,7 +359,7 @@ public class GeoGeometry {
     /**
      * Variation of the haversine distance method that takes an array
      * representation of a coordinate.
-     *
+     * 
      * @param firstCoordinate
      *            [latitude, longitude]
      * @param secondCoordinate
@@ -346,10 +374,9 @@ public class GeoGeometry {
      * Simple/naive method for calculating the center of a polygon based on
      * averaging the latitude and longitude. Better algorithms exist but this
      * may be good enough for most purposes.
-     *
      * Note, for some polygons, this may actually be located outside the
      * polygon.
-     *
+     * 
      * @param polygonPoints
      *            polygonPoints points that make up the polygon as arrays of
      *            [latitude,longitude]
@@ -371,9 +398,8 @@ public class GeoGeometry {
 
     /**
      * Converts a circle to a polygon.
-     *
      * This method does not behave very well very close to the poles because the math gets a little funny there.
-     *
+     * 
      * @param segments
      *            number of segments the polygon should have. The higher this
      *            number, the better of an approximation the polygon is for the
@@ -394,16 +420,17 @@ public class GeoGeometry {
 
         // things get funny near the north and south pole, so doing a modulo 90
         // to ensure that the relative amount of degrees doesn't get too crazy.
-        double relativeLongitude = relativeLatitude / cos(Math.toRadians(latitude))%90;
+        double relativeLongitude = relativeLatitude / cos(Math.toRadians(latitude)) % 90;
 
         for (int i = 0; i < segments; i++) {
             // radians go from 0 to 2*PI; we want to divide the circle in nice
             // segments
             double theta = 2 * PI * i / segments;
-            // trying to avoid theta being exact factors of pi because that results in some funny behavior around the north-pole
-            theta=theta+=0.1;
-            if(theta>= 2*PI) {
-                theta=theta-2*PI;
+            // trying to avoid theta being exact factors of pi because that results in some funny behavior around the
+            // north-pole
+            theta = theta += 0.1;
+            if (theta >= 2 * PI) {
+                theta = theta - 2 * PI;
             }
 
             // on the unit circle, any point of the circle has the coordinate
@@ -419,22 +446,22 @@ public class GeoGeometry {
                 lonOnCircle = 180 - (lonOnCircle + 180);
             }
 
-            if(latOnCircle > 90) {
-                latOnCircle = 90 - (latOnCircle-90);
-            } else if(latOnCircle < -90) {
-                latOnCircle = -90 - (latOnCircle+90);
+            if (latOnCircle > 90) {
+                latOnCircle = 90 - (latOnCircle - 90);
+            } else if (latOnCircle < -90) {
+                latOnCircle = -90 - (latOnCircle + 90);
             }
 
             points[i] = new double[] { latOnCircle, lonOnCircle };
         }
         // should end with same point as the origin
-//        points[points.length-1] = new double[] {points[0][0],points[0][1]};
+        // points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
-    
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static double[][] getPolygonForPoints(double[][] points) {
-        if(points.length <3) {
+        if (points.length < 3) {
             throw new IllegalStateException("need at least 3 pois for a cluster");
         }
         double[][] xSorted = Arrays.copyOf(points, points.length);
@@ -442,13 +469,13 @@ public class GeoGeometry {
             @Override
             public int compare(Object o1, Object o2) {
                 double[] p1 = (double[]) o1;
-                double[] p2 =(double[]) o2;
-                
-            if (p1[0] == p2[0]) {               
-                  return (new Double(p1[1]).compareTo(new Double(p2[1])));
-              } else {
-                  return (new Double(p1[0]).compareTo(new Double(p2[0])));
-              }
+                double[] p2 = (double[]) o2;
+
+                if (p1[0] == p2[0]) {
+                    return (new Double(p1[1]).compareTo(new Double(p2[1])));
+                } else {
+                    return (new Double(p1[0]).compareTo(new Double(p2[0])));
+                }
             }
         });
 
@@ -490,8 +517,8 @@ public class GeoGeometry {
             }
         }
 
-        double[][] result = new double[lUpperSize + lLowerSize-2][0];
-        int idx=0;
+        double[][] result = new double[lUpperSize + lLowerSize - 2][0];
+        int idx = 0;
         for (int i = 0; i < lUpperSize; i++) {
             result[idx] = (lUpper[i]);
             idx++;
@@ -510,17 +537,18 @@ public class GeoGeometry {
     }
 
     /**
-     * @param direction n,s,e,w
+     * @param direction
+     *            n,s,e,w
      * @param degrees
      * @param minutes
      * @param seconds
      * @return decimal degree
      */
-    public static double toDecimalDegree(String direction,double degrees, double minutes, double seconds) {
-        int factor=1;
-        if(direction != null && (direction.toLowerCase().startsWith("w") || direction.toLowerCase().startsWith("s"))) {
-            factor=-1;
+    public static double toDecimalDegree(String direction, double degrees, double minutes, double seconds) {
+        int factor = 1;
+        if (direction != null && (direction.toLowerCase().startsWith("w") || direction.toLowerCase().startsWith("s"))) {
+            factor = -1;
         }
-        return (degrees + minutes/60 + seconds/60/60)*factor;
+        return (degrees + minutes / 60 + seconds / 60 / 60) * factor;
     }
 }
