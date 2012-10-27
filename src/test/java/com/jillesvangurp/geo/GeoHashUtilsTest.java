@@ -21,6 +21,8 @@
  */
 package com.jillesvangurp.geo;
 
+import static com.jillesvangurp.geo.GeoGeometry.distance;
+import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
 import static com.jillesvangurp.geo.GeoHashUtils.contains;
 import static com.jillesvangurp.geo.GeoHashUtils.decode;
 import static com.jillesvangurp.geo.GeoHashUtils.decode_bbox;
@@ -48,9 +50,9 @@ public class GeoHashUtilsTest {
 
 	@DataProvider
 	public Object[][] coordinates() {
-		return new Object[][] { { 0.1, -0.1, "ebpbtdpntc6e" }, // very cold
-																// there ;-)
-				{ 52.530888, 13.394904, "u33dbfcyegk2" } // home sweet home
+		return new Object[][] { 
+		        { 0.1, -0.1, "ebpbtdpntc6e" }, // very cold there ;-)
+				{ 52.530888, 13.394904, "u33dbfcyegk2" }, // home sweet home
 		};
 	}
 
@@ -162,17 +164,38 @@ public class GeoHashUtilsTest {
 				lessThan(0.0000001));
 	}
 
-//	@Test(dataProvider = "coordinates", enabled=false)
-//	public void shouldCalculateBboxSizes(Double lat, Double lon, String geoHash) {
-//		// not a test but nice to get a sense of the scale of a geo hash
-//		for (int i = 1; i < geoHash.length(); i++) {
-//			String prefix = geoHash.substring(0, i);
-//			double[] bbox = decode_bbox(prefix);
-//			long vertical = round(distance(bbox[0], bbox[3], bbox[1], bbox[3]));
-//			long horizontal = round(distance(bbox[0], bbox[2], bbox[0], bbox[3]));
-//		}
-//	}
+	@Test(enabled=true)
+	public void shouldCalculateBboxSizes() {
+	    System.out.println("<table border=\"1\">");
+	    System.out.println("<th><td>latitude</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></th>");
+        printHashSizes(90, 0);
+        printHashSizes(80, 0);
+        printHashSizes(70, 0);
+        printHashSizes(60, 0);
+        printHashSizes(50, 0);
+        printHashSizes(40, 0);
+        printHashSizes(30, 0);
+        printHashSizes(20, 0);
+        printHashSizes(10, 0);
+        printHashSizes(0, 0);
+        System.out.println("</table>");
+	}
 
+    private void printHashSizes(double lat, double lon) {
+        String geoHash=encode(lat, lon);
+	    
+		// not a test but nice to get a sense of the scale of a geo hash
+        System.out.println("<tr><td>"+lat+"</td>");
+		for (int i = 1; i <= geoHash.length(); i++) {
+			String prefix = geoHash.substring(0, i);
+			double[] bbox = decode_bbox(prefix);
+			double vertical = roundToDecimals(distance(bbox[0], bbox[3], bbox[1], bbox[3]),2);
+			double horizontal = roundToDecimals(distance(bbox[0], bbox[2], bbox[0], bbox[3]),2);
+			System.out.print("<td>"+horizontal+"x"+vertical+"</td>");			
+		}
+		System.out.print("</tr>\n");
+    }
+    
 	public void shouldConvertToAndFromBitset() {
 		String hash = "u33dbfcyegk2";
 		for (int i = 0; i < hash.length() - 2; i++) {
