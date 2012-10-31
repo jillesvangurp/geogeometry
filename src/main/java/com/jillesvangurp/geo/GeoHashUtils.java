@@ -455,6 +455,13 @@ public class GeoHashUtils {
      * @return a set of geo hashes that cover the polygon area.
      */
     public static Set<String> getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) {
+        for (double[] ds : polygonPoints) {
+            // basically the algorithm can go into an endless loop. Best to avoid the poles.
+            if(ds[0] < -89.5 || ds[0] > 89.5) {
+                throw new IllegalArgumentException(
+                        "please stay away from the north pole or the south pole; there are some known issues there. Besides, nothing there but snow and ice.");
+            }
+        }
         if (maxLength < 1 || maxLength >= DEFAULT_PRECISION) {
             throw new IllegalArgumentException("maxLength should be between 2 and " + DEFAULT_PRECISION + " was " + maxLength);
         }
