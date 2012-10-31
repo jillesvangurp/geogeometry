@@ -324,6 +324,22 @@ public class GeoGeometry {
         double[] longitudal = translateLongitude(latitude, longitude, longitudalMeters);
         return translateLatitude(longitudal[0], longitudal[1], lateralMeters);
     }
+    
+    /**
+     * Calculate a bounding box of the specified longitudal and latitudal meters with the latitude/longitude as the center.
+     * @param latitude
+     * @param longitude
+     * @param latitudalMeters
+     * @param longitudalMeters
+     * @return [minlat,maxlat,minlon,maxlon]
+     */
+    public static double[] bbox(double latitude, double longitude, double latitudalMeters,double longitudalMeters) {
+        double[] tr = translate(latitude, longitude, latitudalMeters/2, longitudalMeters/2);
+        double[] br = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
+        double[] bl = translate(latitude, longitude, -latitudalMeters/2, -longitudalMeters/2);
+        
+        return new double[] {tr[0], br[0],tr[1],bl[1]};
+    }
 
     /**
      * Compute the Haversine distance between the two coordinates. Haversine is
