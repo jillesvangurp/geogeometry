@@ -30,6 +30,12 @@ I've deliberately kept the design simple and non object oriented. These classes 
 
 So instead, a point is represented as a latitude, longitude pair of doubles or as an array of two doubles (like in geo json). Likewise, paths and polygons are represented as arrays of points. A circle is a point and a radius. This should enable anyone to integrate this functionality easily.
 
+h1. Caveats
+
+* Some of the algorithms used have limitations with respect to where you can use them. Generally things should be fine around the date line (if not report bugs). However, the poles are tricky and some of the algorithms get inaccurate or simply fail to exit. Because most data sets lack data for the poles, this should not be a big issue for most. Some of the algorithms now throw an exception if you try this. I'm not currently planning a fix but would appreciate pull requests for this.
+* There is currently not a whole lot of input validation in this library. That means some of the algorithms might do unexpected things if you call them in the wrong way. Input validation would make using this library more expensive and that is something I'm trying to avoid.
+* Some of the algorithms have quadratic or exponential complexity and you can easily trigger situations where execution time is going to be substantial and/or you run out of memory. For example covering a circle with a radius of a few hundred kilometers with geohashes of length 10 is probably not a great idea. If you are unsure, use getSuitableHashLength() and add 1 or 2 to get good enough granularity.
+
 h1. Installation
 
 It's a maven project. So, checking it out and doing a mvn clean install should do the trick.
