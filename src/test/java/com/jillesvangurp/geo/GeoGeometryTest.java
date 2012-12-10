@@ -270,4 +270,23 @@ public class GeoGeometryTest {
         assertThat(bbox[2], allOf(greaterThan(13.0), lessThan(14.0)));
         assertThat(bbox[3], allOf(greaterThan(13.0), lessThan(14.0)));
     }
+    
+    public void shouldOverLapWithSelf() {
+        assertThat("should overlap with itself",GeoGeometry.overlap(samplePolygon, samplePolygon));
+    }
+    
+    @DataProvider
+    public Object[][] overlappingPolygons() {
+        return new Object[][] {
+                {new double[][]{berlin, amsterdam, newyork}, new double[][]{london,potsDammerPlatz,moritzPlatz}},      
+                {new double[][]{rosenthalerPlatz,moritzPlatz,brandenBurgerGate}, new double[][]{oranienburgerTor,potsDammerPlatz,senefelderPlatz}}      
+        };
+    }
+    
+    @Test(dataProvider="overlappingPolygons")
+    public void shouldOverlap(double[][] left, double[][] right) {
+        assertThat("left should overlap with right",GeoGeometry.overlap(left,right));        
+        assertThat("right should overlap with left",GeoGeometry.overlap(right, left));        
+    }
+    
 }

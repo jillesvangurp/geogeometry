@@ -75,13 +75,17 @@ public class GeoGeometry {
                 if(p1[0] == p2[0]) {
                     if(p1[1] > p2[1]) {
                         return 1;
-                    } else {
+                    } else if(p1[1] == p2[1]){
+                        return 0;
+                    } else { 
                         return -1;
                     }
                 } else 
                     if(p1[0] > p2[0]) {
                         return 1;
-                    } else {
+                    } if(p1[0] == p2[0]){
+                        return 0;
+                    } else { 
                         return -1;
                     }
             }
@@ -474,11 +478,33 @@ public class GeoGeometry {
         // points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
+    
+    public static boolean overlap(double[][] left, double[][] right) {
+        if(polygonContains(getPolygonCenter(right), left)) {
+            return true;
+        }        
+        if(polygonContains(getPolygonCenter(left), right)) {
+            return true;
+        }
+        
+        for (double[] p : right) {
+            if(polygonContains(p, left)) {
+                return true;
+            }
+        }
+        for (double[] p : left) {
+            if(polygonContains(p, right)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static double[][] getPolygonForPoints(double[][] points) {
         if (points.length < 3) {
-            throw new IllegalStateException("need at least 3 pois for a cluster");
+            throw new IllegalStateException("need at least 3 pois for a polygon");
         }
         double[][] xSorted = Arrays.copyOf(points, points.length);
         Arrays.sort(xSorted, new Comparator() {
