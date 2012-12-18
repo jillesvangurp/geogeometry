@@ -59,9 +59,9 @@ public class GeoGeometry {
 
     /**
      * Points in a cloud are supposed to be close together. Sometimes bad data causes a handful of points out of
-     * thousands to be way off. This method filters those out by sorting the coordinates and then discarding the 
+     * thousands to be way off. This method filters those out by sorting the coordinates and then discarding the
      * specified percentage.
-     * 
+     *
      * @param points
      * @return
      */
@@ -77,21 +77,21 @@ public class GeoGeometry {
                         return 1;
                     } else if(p1[1] == p2[1]){
                         return 0;
-                    } else { 
+                    } else {
                         return -1;
                     }
-                } else 
+                } else
                     if(p1[0] > p2[0]) {
                         return 1;
                     } if(p1[0] == p2[0]){
                         return 0;
-                    } else { 
+                    } else {
                         return -1;
                     }
             }
         });
         int discard = (int) (points.length * percentage/2);
-        
+
         return Arrays.copyOfRange(points, discard, points.length-discard);
     }
 
@@ -113,7 +113,7 @@ public class GeoGeometry {
     /**
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param polygonPoints
@@ -195,7 +195,7 @@ public class GeoGeometry {
     /**
      * Simple rounding method that allows you to get rid of some decimals in a
      * double.
-     * 
+     *
      * @param d
      * @param decimals
      * @return d rounded to the specified precision
@@ -271,7 +271,7 @@ public class GeoGeometry {
 
     /**
      * Earth's mean radius, in meters.
-     * 
+     *
      * @see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
      */
     private static final double EARTH_RADIUS = 6371000.0;
@@ -289,7 +289,7 @@ public class GeoGeometry {
      * Translate a point along the longitude for the specified amount of meters.
      * Note, this method assumes the earth is a sphere and the result is not
      * going to be very precise for larger distances.
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param meters
@@ -303,7 +303,7 @@ public class GeoGeometry {
      * Translate a point along the latitude for the specified amount of meters.
      * Note, this method assumes the earth is a sphere and the result is not
      * going to be very precise for larger distances.
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param meters
@@ -317,7 +317,7 @@ public class GeoGeometry {
      * Translate a point by the specified meters along the longitude and
      * latitude. Note, this method assumes the earth is a sphere and the result
      * is not going to be very precise for larger distances.
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param lateralMeters
@@ -328,7 +328,7 @@ public class GeoGeometry {
         double[] longitudal = translateLongitude(latitude, longitude, longitudalMeters);
         return translateLatitude(longitudal[0], longitudal[1], lateralMeters);
     }
-    
+
     /**
      * Calculate a bounding box of the specified longitudal and latitudal meters with the latitude/longitude as the center.
      * @param latitude
@@ -341,7 +341,7 @@ public class GeoGeometry {
         double[] tr = translate(latitude, longitude, latitudalMeters/2, longitudalMeters/2);
         double[] br = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
         double[] bl = translate(latitude, longitude, -latitudalMeters/2, -longitudalMeters/2);
-        
+
         return new double[] {tr[0], br[0],tr[1],bl[1]};
     }
 
@@ -353,7 +353,7 @@ public class GeoGeometry {
      * http://en.wikipedia.org/wiki/Haversine_formula there is a 0.5% error
      * margin given the 1% difference in curvature between the equator and the
      * poles.
-     * 
+     *
      * @param lat1
      *            the latitude in decimal degrees
      * @param long1
@@ -379,7 +379,7 @@ public class GeoGeometry {
     /**
      * Variation of the haversine distance method that takes an array
      * representation of a coordinate.
-     * 
+     *
      * @param firstCoordinate
      *            [latitude, longitude]
      * @param secondCoordinate
@@ -396,7 +396,7 @@ public class GeoGeometry {
      * may be good enough for most purposes.
      * Note, for some polygons, this may actually be located outside the
      * polygon.
-     * 
+     *
      * @param polygonPoints
      *            polygonPoints points that make up the polygon as arrays of
      *            [latitude,longitude]
@@ -419,7 +419,7 @@ public class GeoGeometry {
     /**
      * Converts a circle to a polygon.
      * This method does not behave very well very close to the poles because the math gets a little funny there.
-     * 
+     *
      * @param segments
      *            number of segments the polygon should have. The higher this
      *            number, the better of an approximation the polygon is for the
@@ -478,15 +478,15 @@ public class GeoGeometry {
         // points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
-    
+
     public static boolean overlap(double[][] left, double[][] right) {
         if(polygonContains(getPolygonCenter(right), left)) {
             return true;
-        }        
+        }
         if(polygonContains(getPolygonCenter(left), right)) {
             return true;
         }
-        
+
         for (double[] p : right) {
             if(polygonContains(p, left)) {
                 return true;
@@ -499,6 +499,15 @@ public class GeoGeometry {
         }
 
         return false;
+    }
+
+    public static boolean contains(double[][] containingPolygon, double[][] containedPolygon) {
+        for (double[] p : containedPolygon) {
+            if(!polygonContains(p, containingPolygon)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
