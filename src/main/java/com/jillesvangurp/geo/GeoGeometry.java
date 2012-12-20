@@ -510,6 +510,19 @@ public class GeoGeometry {
         return true;
     }
 
+    public static double[][] expandPolygon(int meters, double[][] points) {
+        double[][] expanded = new double[points.length*4][0];
+        for (int i = 0; i < points.length; i++) {
+            double[] p = points[i];
+            expanded[i*4]=new double[] {translateLatitude(p[0], p[1], meters)[0], p[1]};
+            expanded[i*4+1]=new double[] {translateLatitude(p[0], p[1], -1*meters)[0], p[1]};
+            expanded[i*4+2]=new double[] {p[0],translateLongitude(p[0], p[1], meters)[1]};
+            expanded[i*4+3]=new double[] {p[0],translateLongitude(p[0], p[1], -1*meters)[1]};
+        }
+
+        return getPolygonForPoints(expanded);
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static double[][] getPolygonForPoints(double[][] points) {
         if (points.length < 3) {
