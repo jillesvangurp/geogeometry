@@ -48,16 +48,17 @@
         <developerConnection>scm:git:git://github.com/jillesvangurp/geotools.git</developerConnection>
     </scm>
 
-    <distributionManagement>
-        <repository>
-            <id>repo</id>
-            <url>https://github.com/jillesvangurp/mvnrepo/raw/master/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshot-repo</id>
-            <url>https://github.com/jillesvangurp/mvnrepo/raw/master/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+	<distributionManagement>
+		<repository>
+			<id>release.repo</id>
+			<url>dav:http://repo.jillesvangurp.com/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshot.repo</id>
+			<url>dav:http://repo.jillesvangurp.com/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
     
     <developers>
         <developer>
@@ -122,8 +123,14 @@
                 </executions>
             </plugin>
         </plugins>
+        <extensions>
+            <extension>
+            <artifactId>wagon-webdav-jackrabbit</artifactId>
+            <groupId>org.apache.maven.wagon</groupId>
+            <version>2.2</version>
+            </extension>
+        </extensions>
     </build>
-
     <profiles>
         <profile>
             <id>signartifacts</id>
