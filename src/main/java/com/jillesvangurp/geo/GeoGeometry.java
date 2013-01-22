@@ -250,7 +250,7 @@ public class GeoGeometry {
             double a2 = v1 - b2 * u1;
 
             if (b1 - b2 == 0) {
-                if (a1 == a2) {
+                if (Math.abs(a1 - a2) < .0000001) {
                     // lines are the same
                     return x1 <= u1 && u1 < x2 || x1 <= u2 && u2 < x2;
                 } else {
