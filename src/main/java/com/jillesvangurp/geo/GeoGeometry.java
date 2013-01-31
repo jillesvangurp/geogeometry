@@ -296,7 +296,7 @@ public class GeoGeometry {
      * @return the translated coordinate.
      */
     public static double[] translateLongitude(double latitude, double longitude, double meters) {
-        return new double[] { latitude, longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude) };
+        return new double[] { latitude, roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6) };
     }
 
     /**
@@ -310,7 +310,7 @@ public class GeoGeometry {
      * @return the translated coordinate.
      */
     public static double[] translateLatitude(double latitude, double longitude, double meters) {
-        return new double[] { latitude + meters / DEGREE_LATITUDE_METERS, longitude };
+        return new double[] { roundToDecimals(latitude + meters / DEGREE_LATITUDE_METERS,6), longitude };
     }
 
     /**
@@ -434,7 +434,7 @@ public class GeoGeometry {
         if (segments < 5) {
             throw new IllegalArgumentException("you need a minimum of 5 segments");
         }
-        double[][] points = new double[segments][0];
+        double[][] points = new double[segments+1][0];
 
         double relativeLatitude = radius / EARTH_RADIUS_METERS * 180 / PI;
 
@@ -475,7 +475,7 @@ public class GeoGeometry {
             points[i] = new double[] { latOnCircle, lonOnCircle };
         }
         // should end with same point as the origin
-        // points[points.length-1] = new double[] {points[0][0],points[0][1]};
+        points[points.length-1] = new double[] {points[0][0],points[0][1]};
         return points;
     }
 
