@@ -43,9 +43,9 @@
     </licenses>
 
     <scm>
-        <url>git://github.com/jillesvangurp/geotools.git</url>
+        <url>git@github.com:jillesvangurp/geotools.git</url>
         <connection>scm:git:git@github.com:jillesvangurp/geotools.git</connection>
-        <developerConnection>scm:git:git://github.com/jillesvangurp/geotools.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:jillesvangurp/geotools.git</developerConnection>
     </scm>
 
 	<distributionManagement>
