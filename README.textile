@@ -55,6 +55,13 @@ For more details see the LICENSE file
 
 h1. Changelog
 
+* 1.5
+** misc bug fixes
+** close circle polygon with start coordinate
+** expandPolygon, contains, and overlaps methods added
+** add some ifs to prevent infinite loops near the poles
+** method to filter point clouds by dropping the x% furthest points
+
 * 1.4
 ** many bug fixes & misc refactoring
 ** improve covering polygon with geohashes
