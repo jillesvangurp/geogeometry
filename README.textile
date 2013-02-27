@@ -44,6 +44,8 @@ Alternatively, you can exercise your rights under the license and simply copy an
 
 Should anyone like this licensed differently, please contact me.
 
+If you like to use pre-built jars, you can utilize my private maven repository as explained "here":http://www.jillesvangurp.com/2013/02/27/maven-and-my-github-projects/
+
 If anyone wants to fix stuff just send me a pull request.
 
 h1. License
