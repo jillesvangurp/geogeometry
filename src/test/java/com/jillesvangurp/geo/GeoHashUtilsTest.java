@@ -50,11 +50,23 @@ public class GeoHashUtilsTest {
 
 	@DataProvider
 	public Object[][] coordinates() {
-		return new Object[][] { 
+		return new Object[][] {
 		        { 0.1, -0.1, "ebpbtdpntc6e" }, // very cold there ;-)
 				{ 52.530888, 13.394904, "u33dbfcyegk2" }, // home sweet home
 		};
 	}
+
+    public void shouldEncodeLong() {
+        double[][] poly = GeoGeometry.circle2polygon(40, 52.530888, 13.394904, 1);
+        for (double[] c : poly) {
+            String hash = encode(c[0], c[1]);
+            long longValue = GeoHashUtils.toLong(hash);
+//            System.out.println(hash + " - " + longValue);
+            // last
+            assertThat(longValue, greaterThan(424189746490000000l));
+            assertThat(longValue, lessThan(424189746500000000l));
+        }
+    }
 
 	@Test(dataProvider = "coordinates")
 	public void shouldDecode(Double lat, Double lon, String geoHash) {
@@ -183,7 +195,7 @@ public class GeoHashUtilsTest {
 
     private void printHashSizes(double lat, double lon) {
         String geoHash=encode(lat, lon);
-	    
+
 		// not a test but nice to get a sense of the scale of a geo hash
         System.out.println("<tr><td>"+lat+"</td>");
 		for (int i = 1; i <= geoHash.length(); i++) {
@@ -191,11 +203,11 @@ public class GeoHashUtilsTest {
 			double[] bbox = decode_bbox(prefix);
 			double vertical = roundToDecimals(distance(bbox[0], bbox[3], bbox[1], bbox[3]),2);
 			double horizontal = roundToDecimals(distance(bbox[0], bbox[2], bbox[0], bbox[3]),2);
-			System.out.print("<td>"+horizontal+"x"+vertical+"</td>");			
+			System.out.print("<td>"+horizontal+"x"+vertical+"</td>");
 		}
 		System.out.print("</tr>\n");
     }
-    
+
 	public void shouldConvertToAndFromBitset() {
 		String hash = "u33dbfcyegk2";
 		for (int i = 0; i < hash.length() - 2; i++) {

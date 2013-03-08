@@ -30,7 +30,7 @@ import java.util.TreeSet;
  * This class was originally adapted from Apache Lucene's GeoHashUtils.java. Please note that this class retains the
  * original licensing (as required), which is different from other classes contained in this project, which are MIT
  * licensed.
- * 
+ *
  * Relative to the Apache implementation, the code has been cleaned up and expanded. Several new methods have been added
  * to facilitate creating sets of geo hashes for e.g. polygons and other geometric forms.
  */
@@ -51,7 +51,7 @@ public class GeoHashUtils {
 
     /**
      * Same as encode but returns a substring of the specified length.
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param length
@@ -104,7 +104,7 @@ public class GeoHashUtils {
 
     /**
      * Encodes a coordinate into a geo hash.
-     * 
+     *
      * @see "http://en.wikipedia.org/wiki/Geohash"
      * @param latitude
      * @param longitude
@@ -155,12 +155,12 @@ public class GeoHashUtils {
     /**
      * This decodes the geo hash into it's center. Note that the coordinate that you used to generate the geo hash may
      * be anywhere in the geo hash's bounding box and therefore you should not expect them to be identical.
-     * 
+     *
      * The original apache code attempted to round the returned coordinate. I have chosen to remove this 'feature' since
      * it is useful to know the center of the geo hash as exactly as possible, even for very short geo hashes.
-     * 
+     *
      * Should you wish to apply some rounding, you can use the GeoGeometry.roundToDecimals method.
-     * 
+     *
      * @param geohash
      * @return a coordinate representing the center of the geohash as a double array of [latitude,longitude]
      */
@@ -243,7 +243,7 @@ public class GeoHashUtils {
     public static BitSet toBitSet(String geoHash) {
         BitSet bitSet = new BitSet();
         int b = 0;
-        for (int i = 0; i < geoHash.length(); i++) {
+        for (int i = geoHash.length()-1; i >=0; i--) {
             int currentCharacter = BASE32_DECODE_MAP.get(geoHash.charAt(i));
             for (int z = 0; z < BITS.length; z++) {
                 if ((currentCharacter & BITS[z]) != 0) {
@@ -254,6 +254,31 @@ public class GeoHashUtils {
         }
 
         return bitSet;
+    }
+
+    public static long toLong(String geoHash) {
+        return convert(toBitSet(geoHash));
+    }
+
+    public static long convert(BitSet bits) {
+        long value = 0L;
+        for (int i = 0; i < bits.length(); ++i) {
+            value += bits.get(i) ? (1L << i) : 0L;
+        }
+        return value;
+    }
+
+    public static BitSet convert(long value) {
+        BitSet bits = new BitSet();
+        int index = 0;
+        while (value != 0L) {
+            if (value % 2L != 0) {
+                bits.set(index);
+            }
+            ++index;
+            value = value >>> 1;
+        }
+        return bits;
     }
 
     /**
@@ -288,9 +313,9 @@ public class GeoHashUtils {
 
     /**
      * Return the 32 geo hashes this geohash can be divided into.
-     * 
+     *
      * They are returned alpabetically sorted but in the real world they follow this pattern:
-     * 
+     *
      * <pre>
      * u33dbfc0 u33dbfc2 | u33dbfc8 u33dbfcb
      * u33dbfc1 u33dbfc3 | u33dbfc9 u33dbfcc
@@ -304,12 +329,12 @@ public class GeoHashUtils {
      * u33dbfcn u33dbfcq | u33dbfcw u33dbfcy
      * u33dbfcp u33dbfcr | u33dbfcx u33dbfcz
      * </pre>
-     * 
+     *
      * the first 4 share the north east 1/8th the first 8 share the north east 1/4th the first 16 share the north 1/2
      * and so on.
-     * 
+     *
      * They are ordered as follows:
-     * 
+     *
      * <pre>
      *  0  2  8 10
      *  1  3  9 11
@@ -320,19 +345,19 @@ public class GeoHashUtils {
      * 20 22 28 30
      * 21 23 29 31
      * </pre>
-     * 
+     *
      * Some useful properties: Anything ending with
-     * 
+     *
      * <pre>
      * 0-g = N
      * h-z = S
-     * 
+     *
      * 0-7 = NW
      * 8-g = NE
      * h-r = SW
      * s-z = SE
      * </pre>
-     * 
+     *
      * @param geoHash
      * @return String array with the geo hashes.
      */
@@ -432,7 +457,7 @@ public class GeoHashUtils {
      * Cover the polygon with geo hashes. Calls getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
      * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
      * boxes, specify your own maxLength.
-     * 
+     *
      * @param polygonPoints
      *            polygonPoints points that make up the polygon as arrays of [latitude,longitude]
      * @return a set of geo hashes that cover the polygon area.
@@ -447,7 +472,7 @@ public class GeoHashUtils {
 
     /**
      * Cover the polygon with geo hashes.
-     * 
+     *
      * @param maxLength
      *            maximum length of the geoHash; the more you specify, the more expensive it gets
      * @param polygonPoints
