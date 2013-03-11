@@ -387,7 +387,7 @@ public class GeoGeometry {
         double[] br = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
         double[] bl = translate(latitude, longitude, -latitudalMeters/2, -longitudalMeters/2);
 
-        return new double[] {tr[0], br[0],tr[1],bl[1]};
+        return new double[] {tr[1], br[1],tr[0],bl[0]};
     }
 
     /**
@@ -458,7 +458,7 @@ public class GeoGeometry {
     }
 
     public static double[][] bbox2polygon(double[] bbox) {
-        return new double[][] { { bbox[0], bbox[2] }, { bbox[1], bbox[2] }, { bbox[1], bbox[3] }, { bbox[0], bbox[3] } };
+        return new double[][] { { bbox[2], bbox[0] }, { bbox[2], bbox[1] }, { bbox[3], bbox[1] }, { bbox[3], bbox[0] }, { bbox[2], bbox[0] } };
     }
 
     /**

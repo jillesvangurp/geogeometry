@@ -309,12 +309,31 @@ public class GeoGeometryTest {
         };
     }
 
-
     @Test(dataProvider="clouds")
     public void shouldCalculatePolygonForPointCloud(double[][] points, double[][] contained) {
         double[][] polygonForPoints = GeoGeometry.polygonForPoints(points);
         for (int i = 0; i < contained.length; i++) {
             assertThat("point in the middle should be contained", polygonContains(contained[i], polygonForPoints));
         }
+    }
+
+    public void shouldCalculateCorrectBbox() {
+        double[] bbox = GeoGeometry.bbox(berlin[1], berlin[0], 1000, 1000);
+        assertThat(distance(bbox[0],berlin[0],berlin[1],berlin[0]), greaterThan(499.0));
+        assertThat(distance(bbox[0],berlin[0],berlin[1],berlin[0]), lessThan(501.0));
+        assertThat(distance(bbox[1],berlin[0],berlin[1],berlin[0]), greaterThan(499.0));
+        assertThat(distance(bbox[1],berlin[0],berlin[1],berlin[0]), lessThan(501.0));
+        assertThat(distance(berlin[1],bbox[2],berlin[1],berlin[0]), greaterThan(499.0));
+        assertThat(distance(berlin[1],bbox[2],berlin[1],berlin[0]), lessThan(501.0));
+        assertThat(distance(berlin[1],bbox[3],berlin[1],berlin[0]), greaterThan(499.0));
+        assertThat(distance(berlin[1],bbox[3],berlin[1],berlin[0]), lessThan(501.0));
+    }
+
+    public void shouldCalculateCorrectPolygonForBbox() {
+        double[] bbox = GeoGeometry.bbox(berlin[1], berlin[0], 1000, 1000);
+        double[][] polygon = GeoGeometry.bbox2polygon(bbox);
+        assertThat(polygon.length, is(5));
+        assertThat(polygon[0][0], is(polygon[polygon.length-1][0]));
+        assertThat(polygon[0][1], is(polygon[polygon.length-1][1]));
     }
 }
