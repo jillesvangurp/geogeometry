@@ -57,6 +57,9 @@ For more details see the LICENSE file
 
 h1. Changelog
 
+* 2.0 - Geojsonify & project rename
+** There was an existing, high profile project out there called geotools. So I renamed my project to geogeometry.
+** Adapt the API to comply with geojson wherever possible. This means polygons are 3d arrays and points are [longitude,latitude] instead of the other way around. This is a major, API breaking change.
 * 1.5
 ** misc bug fixes
 ** close circle polygon with start coordinate
