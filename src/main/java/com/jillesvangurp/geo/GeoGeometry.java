@@ -41,7 +41,7 @@ public class GeoGeometry {
      * @return bounding box that contains the polygon as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
-    public static double[] getBbox(double[]... polygonPoints) {
+    public static double[] boundingBox(double[]... polygonPoints) {
         double minLat = Integer.MAX_VALUE;
         double minLon = Integer.MAX_VALUE;
         double maxLat = Integer.MIN_VALUE;
@@ -106,8 +106,41 @@ public class GeoGeometry {
         return bbox[0] <= latitude && latitude <= bbox[1] && bbox[2] <= longitude && longitude <= bbox[3];
     }
 
+    /**
+     * Determine whether a point is contained in a polygon. Note, technically
+     * the points that make up the polygon are not contained by it.
+     *
+     * @param point
+     * @param polygonPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
+     * @return true if the polygon contains the coordinate
+     */
+    public static boolean polygonContains(double[] point, double[][][] polygonPoints) {
+        return polygonContains(point[1], point[0], polygonPoints[0]);
+    }
+
+    /**
+     * Determine whether a point is contained in a polygon. Note, technically
+     * the points that make up the polygon are not contained by it.
+     *
+     * @param point
+     * @param polygonPoints
+     * @return true if the polygon contains the coordinate
+     */
     public static boolean polygonContains(double[] point, double[]... polygonPoints) {
         return polygonContains(point[1], point[0], polygonPoints);
+    }
+
+    /**
+     * Determine whether a point is contained in a polygon. Note, technically
+     * the points that make up the polygon are not contained by it.
+     *
+     * @param latitude
+     * @param longitude
+     * @param polygonPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
+     * @return true if the polygon contains the coordinate
+     */
+    public static boolean polygonContains(double latitude, double longitude, double[][][] polygonPoints) {
+        return polygonContains(latitude, longitude, polygonPoints[0]);
     }
 
     /**
@@ -127,7 +160,7 @@ public class GeoGeometry {
             throw new IllegalArgumentException("a polygon must have at least three points");
         }
 
-        double[] bbox = getBbox(polygonPoints);
+        double[] bbox = boundingBox(polygonPoints);
         if (!bboxContains(bbox, latitude, longitude)) {
             // outside the containing bbox
             return false;
@@ -208,6 +241,18 @@ public class GeoGeometry {
         return Math.round(d * factor) / factor;
     }
 
+    /**
+     * Check if the lines defined by  (x1,y1) (x2,y2) and (u1,v1) (u2,v2) cross each other or not.
+     * @param x1
+     * @param y1
+     * @param x2
+     * @param y2
+     * @param u1
+     * @param v1
+     * @param u2
+     * @param v2
+     * @return true if they cross each other
+     */
     public static boolean linesCross(double x1, double y1, double x2, double y2, double u1, double v1, double u2, double v2) {
         // formula for line: y= a+bx
 
@@ -399,10 +444,10 @@ public class GeoGeometry {
      *
      * @param polygonPoints
      *            polygonPoints points that make up the polygon as arrays of
-     *            [latitude,longitude]
-     * @return the average latitude and longitude.
+     *            [longitude,latitude]
+     * @return the average longitude and latitude an array.
      */
-    public static double[] getPolygonCenter(double[]... polygonPoints) {
+    public static double[] polygonCenter(double[]... polygonPoints) {
         double cumLon = 0;
         double cumLat = 0;
         for (double[] coordinate : polygonPoints) {
@@ -427,7 +472,7 @@ public class GeoGeometry {
      * @param latitude
      * @param longitude
      * @param radius
-     * @return an array of the points [latitude,longitude] that make up the
+     * @return an array of the points [longitude,latitude] that make up the
      *         polygon.
      */
     public static double[][] circle2polygon(int segments, double latitude, double longitude, double radius) {
@@ -479,11 +524,16 @@ public class GeoGeometry {
         return points;
     }
 
+    /**
+     * @param left a 2d array representing a polygon
+     * @param right a 2d array representing a polygon
+     * @return true if the two polygons overlap
+     */
     public static boolean overlap(double[][] left, double[][] right) {
-        if(polygonContains(getPolygonCenter(right), left)) {
+        if(polygonContains(polygonCenter(right), left)) {
             return true;
         }
-        if(polygonContains(getPolygonCenter(left), right)) {
+        if(polygonContains(polygonCenter(left), right)) {
             return true;
         }
 
@@ -501,6 +551,11 @@ public class GeoGeometry {
         return false;
     }
 
+    /**
+     * @param containingPolygon
+     * @param containedPolygon
+     * @return true if the containing polygon fully contains the contained polygon
+     */
     public static boolean contains(double[][] containingPolygon, double[][] containedPolygon) {
         for (double[] p : containedPolygon) {
             if(!polygonContains(p, containingPolygon)) {
@@ -510,6 +565,17 @@ public class GeoGeometry {
         return true;
     }
 
+    /**
+     * Attempts to expand the polygon by calculating points around each of the polygon points that are translated the
+     * specified amount of meters away. A new polygon is constructed from the resulting point cloud.
+     *
+     * Given that the contains algorithm disregards polygon points as not contained in the polygon, it is useful to
+     * expand the polygon a little if you do require this.
+     *
+     * @param meters
+     * @param points
+     * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
+     */
     public static double[][] expandPolygon(int meters, double[][] points) {
         double[][] expanded = new double[points.length*8][0];
         for (int i = 0; i < points.length; i++) {
@@ -528,11 +594,16 @@ public class GeoGeometry {
             expanded[i*8+6]=new double[] {p[0],latPos};
             expanded[i*8+7]=new double[] {p[1],latNeg};
         }
-        return getPolygonForPoints(expanded);
+        return polygonForPoints(expanded);
     }
 
+    /**
+     * Calculate a polygon for the specified points.
+     * @param points
+     * @return a convex polygon for the points
+     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static double[][] getPolygonForPoints(double[][] points) {
+    public static double[][] polygonForPoints(double[][] points) {
         if (points.length < 3) {
             throw new IllegalStateException("need at least 3 pois for a polygon");
         }
@@ -633,6 +704,10 @@ public class GeoGeometry {
         return (degrees + minutes / 60 + seconds / 60 / 60) * factor;
     }
 
+    /**
+     * @param point
+     * @return a json representation of the point
+     */
     public static String toJson(double[] point) {
         if(point.length==0) {
             return "[]";
@@ -641,6 +716,10 @@ public class GeoGeometry {
         }
     }
 
+    /**
+     * @param points
+     * @return a json representation of the points
+     */
     public static String toJson(double[][] points) {
         StringBuilder buf = new StringBuilder("[");
         for (int i = 0; i < points.length; i++) {
@@ -653,6 +732,10 @@ public class GeoGeometry {
         return buf.toString();
     }
 
+    /**
+     * @param points
+     * @return a json representation of the points
+     */
     public static String toJson(double[][][] points) {
         StringBuilder buf = new StringBuilder("[");
         for (int i = 0; i < points.length; i++) {
@@ -665,6 +748,10 @@ public class GeoGeometry {
         return buf.toString();
     }
 
+    /**
+     * @param points
+     * @return a json representation of the points
+     */
     public static String toJson(double[][][][] points) {
         StringBuilder buf = new StringBuilder("[");
         for (int i = 0; i < points.length; i++) {

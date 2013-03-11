@@ -397,7 +397,7 @@ public class GeoHashUtils {
      * @return a set of geo hashes that cover the polygon area.
      */
     public static Set<String> geoHashesForPolygon(double[]... polygonPoints) {
-        double[] bbox = GeoGeometry.getBbox(polygonPoints);
+        double[] bbox = GeoGeometry.boundingBox(polygonPoints);
         // first lets figure out an appropriate geohash length
         double diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3]);
         int hashLength = suitableHashLength(diagonal, bbox[0], bbox[2]);
@@ -425,7 +425,7 @@ public class GeoHashUtils {
             throw new IllegalArgumentException("maxLength should be between 2 and " + DEFAULT_PRECISION + " was " + maxLength);
         }
 
-        double[] bbox = GeoGeometry.getBbox(polygonPoints);
+        double[] bbox = GeoGeometry.boundingBox(polygonPoints);
         // first lets figure out an appropriate geohash length
         double diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3]);
         int hashLength = suitableHashLength(diagonal, bbox[0], bbox[2]);

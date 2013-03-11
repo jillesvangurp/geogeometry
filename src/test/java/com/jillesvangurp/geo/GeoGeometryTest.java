@@ -100,7 +100,7 @@ public class GeoGeometryTest {
 	}
 
 	public void shouldGetCorrectBboxForPolygon() {
-		double[] bbox = GeoGeometry.getBbox(samplePolygon);
+		double[] bbox = GeoGeometry.boundingBox(samplePolygon);
 		assertThat("should be contained", bboxContains(bbox, 0, 0));
 		for (double[] coordinate : samplePolygon) {
 			assertThat("should contain point", bboxContains(bbox, coordinate[1], coordinate[0]));
@@ -150,7 +150,7 @@ public class GeoGeometryTest {
 	    double[][] placesInMitte = new double[][] {
 	            brandenBurgerGate,potsDammerPlatz,moritzPlatz,senefelderPlatz,naturkundeMuseum
 	    };
-	    double[][] polygon = GeoGeometry.getPolygonForPoints(placesInMitte);
+	    double[][] polygon = GeoGeometry.polygonForPoints(placesInMitte);
 
         assertThat("should be inside", polygonContains(rosenthalerPlatz, polygon));
         assertThat("should be inside", polygonContains(oranienburgerTor, polygon));
@@ -181,7 +181,7 @@ public class GeoGeometryTest {
 	    };
 	    //,{52.49939,13.30523},{52.5004,13.312},{52.50011,13.30723},{52.49907,13.31225},{52.50019,13.30983},{52.49984,13.30646},{52.4968,13.3053},{52.5002,13.3103},{52.50083333333333,13.312777777777779},{52.5,13.307222222222222}};
 
-        double[][] polygon = GeoGeometry.getPolygonForPoints(polygonPoints);
+        double[][] polygon = GeoGeometry.polygonForPoints(polygonPoints);
 //        double[][] polygon = ConvexHull.cvxHull(polygonPoints);
 
 	    StringBuilder buf = new StringBuilder();
@@ -196,7 +196,7 @@ public class GeoGeometryTest {
 	}
 
 	public void polygonForPointsInFourQuadrantsShouldContainStuffInside() {
-	    double[][] polygon = GeoGeometry.getPolygonForPoints(new double[][]{sydney,newyork,amsterdam,buenosaires});
+	    double[][] polygon = GeoGeometry.polygonForPoints(new double[][]{sydney,newyork,amsterdam,buenosaires});
         assertThat("should be inside", polygonContains(london, polygon));
         assertThat("should NOT be inside", !polygonContains(berlin, polygon));
 	}
@@ -262,7 +262,7 @@ public class GeoGeometryTest {
         double[][] filtered = GeoGeometry.filterNoiseFromPointCloud(points, 0.005f);
 
         assertThat(filtered.length, is(996));
-        double[] bbox = GeoGeometry.getBbox(filtered);
+        double[] bbox = GeoGeometry.boundingBox(filtered);
 
         // the four bad pois should be gone
         assertThat(bbox[0], allOf(greaterThan(52.0), lessThan(53.0)));
@@ -314,7 +314,7 @@ public class GeoGeometryTest {
 
     @Test(dataProvider="clouds")
     public void shouldCalculatePolygonForPointCloud(double[][] points, double[][] contained) {
-        double[][] polygonForPoints = GeoGeometry.getPolygonForPoints(points);
+        double[][] polygonForPoints = GeoGeometry.polygonForPoints(points);
         for (int i = 0; i < contained.length; i++) {
             assertThat("point in the middle should be contained", polygonContains(contained[i], polygonForPoints));
         }
