@@ -506,10 +506,10 @@ public class GeoHashUtils {
         for (String hash : partiallyContained) {
             for (String h : subHashes(hash)) {
                 double[] hashBbox = decode_bbox(h);
-                boolean nw = GeoGeometry.polygonContains(new double[] { hashBbox[0], hashBbox[2] }, polygonPoints);
-                boolean ne = GeoGeometry.polygonContains(new double[] { hashBbox[0], hashBbox[3] }, polygonPoints);
-                boolean sw = GeoGeometry.polygonContains(new double[] { hashBbox[1], hashBbox[2] }, polygonPoints);
-                boolean se = GeoGeometry.polygonContains(new double[] { hashBbox[1], hashBbox[3] }, polygonPoints);
+                boolean nw = GeoGeometry.polygonContains(new double[] { hashBbox[2], hashBbox[0] }, polygonPoints);
+                boolean ne = GeoGeometry.polygonContains(new double[] { hashBbox[3], hashBbox[0] }, polygonPoints);
+                boolean sw = GeoGeometry.polygonContains(new double[] { hashBbox[2], hashBbox[1] }, polygonPoints);
+                boolean se = GeoGeometry.polygonContains(new double[] { hashBbox[3], hashBbox[1] }, polygonPoints);
                 if (nw && ne && sw && se) {
                     fullyContained.add(h);
                 } else if (nw || ne || sw || se) {
@@ -518,16 +518,16 @@ public class GeoHashUtils {
                     double[] last = polygonPoints[0];
                     for (int i = 1; i < polygonPoints.length; i++) {
                         double[] current = polygonPoints[i];
-                        if (GeoGeometry.linesCross(hashBbox[0], hashBbox[2], hashBbox[0], hashBbox[3], last[0], last[1], current[0], current[1])) {
+                        if (GeoGeometry.linesCross(hashBbox[0], hashBbox[2], hashBbox[0], hashBbox[3], last[1], last[0], current[1], current[0])) {
                             stillPartial.add(h);
                             break;
-                        } else if (GeoGeometry.linesCross(hashBbox[0], hashBbox[3], hashBbox[1], hashBbox[3], last[0], last[1], current[0], current[1])) {
+                        } else if (GeoGeometry.linesCross(hashBbox[0], hashBbox[3], hashBbox[1], hashBbox[3], last[1], last[0], current[1], current[0])) {
                             stillPartial.add(h);
                             break;
-                        } else if (GeoGeometry.linesCross(hashBbox[1], hashBbox[3], hashBbox[1], hashBbox[2], last[0], last[1], current[0], current[1])) {
+                        } else if (GeoGeometry.linesCross(hashBbox[1], hashBbox[3], hashBbox[1], hashBbox[2], last[1], last[0], current[1], current[0])) {
                             stillPartial.add(h);
                             break;
-                        } else if (GeoGeometry.linesCross(hashBbox[1], hashBbox[2], hashBbox[0], hashBbox[2], last[0], last[1], current[0], current[1])) {
+                        } else if (GeoGeometry.linesCross(hashBbox[1], hashBbox[2], hashBbox[0], hashBbox[2], last[1], last[0], current[1], current[0])) {
                             stillPartial.add(h);
                             break;
                         }

@@ -316,4 +316,14 @@ public class GeoHashUtilsTest {
         assertThat(distance, lessThan(m));
 	}
 
+    public void shouldGenerateCircleHashesThatAreAllWithinRadiusOfCircle() {
+        double latitude = 52.529731;
+        double longitude = 13.401284;
+        int radius = 500;
+        Set<String> hashes = GeoHashUtils.geoHashesForCircle(8, latitude,longitude, radius);
+        for (String hash : hashes) {
+            assertThat(distance(decode(hash), new double[] {longitude,latitude}), lessThan(500.0));
+        }
+        assertThat(hashes.size(), greaterThan(radius));
+    }
 }
