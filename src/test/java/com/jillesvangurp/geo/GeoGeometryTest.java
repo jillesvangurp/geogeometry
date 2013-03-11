@@ -41,21 +41,21 @@ import org.testng.annotations.Test;
 @Test
 public class GeoGeometryTest {
 
-    double[] sydney=new double[] {-33.872796,151.206146};
-    double[] buenosaires=new double[] {-34.602875,-58.380449};
-    double[] newyork=new double[] {40.721119,-74.011237};
-    double[] amsterdam=new double[] {52.372103,4.894252};
-    double[] berlin=new double[] {52.527109,13.385721};
-    double[] london=new double[] {51.51283,-0.123656};
+    double[] sydney=new double[] {151.206146,-33.872796};
+    double[] buenosaires=new double[] {-58.380449,-34.602875};
+    double[] newyork=new double[] {-74.011237,40.721119};
+    double[] amsterdam=new double[] {4.894252,52.372103};
+    double[] berlin=new double[] {13.385721,52.527109};
+    double[] london=new double[] {-0.123656,51.51283};
 
 
-    double[] brandenBurgerGate=new double[] {52.516279,13.377157};
-    double[] potsDammerPlatz=new double[] {52.509515,13.376599};
-    double[] moritzPlatz=new double[] {52.503663,13.410717};
-    double[] senefelderPlatz=new double[] {52.532755,13.412949};
-    double[] naturkundeMuseum=new double[] {52.531188,13.381921};
-    double[] rosenthalerPlatz=new double[] {52.529948,13.401361};
-    double[] oranienburgerTor=new double[] {52.525339,13.38707};
+    double[] brandenBurgerGate=new double[] {13.377157,52.516279};
+    double[] potsDammerPlatz=new double[] {13.376599,52.509515};
+    double[] moritzPlatz=new double[] {13.410717,52.503663};
+    double[] senefelderPlatz=new double[] {13.412949,52.532755};
+    double[] naturkundeMuseum=new double[] {13.381921,52.531188};
+    double[] rosenthalerPlatz=new double[] {13.401361,52.529948};
+    double[] oranienburgerTor=new double[] {13.38707,52.525339};
 
 
 	double[][] samplePolygon = new double[][] {
@@ -120,14 +120,14 @@ public class GeoGeometryTest {
 	public void shouldTranslateCorrectly() {
 	    double[] translated = GeoGeometry.translate(52.530564,13.394964, 1000, 3000);
 	    double pythagorasDistance = Math.sqrt(pow(1000, 2)+pow(3000,2));
-	    double distance = distance(new double[]{52.530564,13.394964}, translated);
+	    double distance = distance(new double[]{13.394964,52.530564}, translated);
         assertThat("distance should be correct for translated coordinate", abs(distance - pythagorasDistance) < 1.0);
 	}
 
 	public void shouldHaveDistanceOfRadiusForEachPoint() {
 	    int radius = 50000;
         int segments = 500;
-        double[][] polygon = GeoGeometry.circle2polygon(segments, london[0],london[1], radius);
+        double[][] polygon = GeoGeometry.circle2polygon(segments, london[1],london[0], radius);
 	    double d=0;
 	    double[] last = null;
 
@@ -156,7 +156,7 @@ public class GeoGeometryTest {
         assertThat("should be inside", polygonContains(oranienburgerTor, polygon));
         assertThat("should NOT be inside", !polygonContains(1,1, polygon));
 	}
-	
+
 	public void shouldCreateSensiblePolygon() {
 	    /*
 	     * [[[52.49768,13.31191],[52.499,13.313],[52.5007,13.3065],[52.4957,13.3033],[52.49939,13.30523],[52.5004,13.312],[52.50011,13.30723],[52.49907,13.31225],[52.50019,13.30983],[52.49984,13.30646],[52.4968,13.3053],[52.5002,13.3103],[52.50083333333333,13.312777777777779],[52.5,13.307222222222222]],
@@ -175,23 +175,23 @@ public class GeoGeometryTest {
 	            {52.50011,13.30723},
 	            {52.49632,13.32024},
 	            {52.4957,13.3033}
-	            
+
 	            // not in the area
-	            
+
 	    };
 	    //,{52.49939,13.30523},{52.5004,13.312},{52.50011,13.30723},{52.49907,13.31225},{52.50019,13.30983},{52.49984,13.30646},{52.4968,13.3053},{52.5002,13.3103},{52.50083333333333,13.312777777777779},{52.5,13.307222222222222}};
-	    
+
         double[][] polygon = GeoGeometry.getPolygonForPoints(polygonPoints);
 //        double[][] polygon = ConvexHull.cvxHull(polygonPoints);
-	    
+
 	    StringBuilder buf = new StringBuilder();
 	    buf.append("[");
 	    for (double[] p : polygon) {
-	        buf.append("["+p[0]+","+p[1]+"],");            
+	        buf.append("["+p[0]+","+p[1]+"],");
         }
 	    buf.deleteCharAt(buf.length()-1);
 	    buf.append("]");
-	    
+
 	    // FIXME complete test
 	}
 
@@ -205,9 +205,9 @@ public class GeoGeometryTest {
         double[][] circle2polygon = GeoGeometry.circle2polygon(6, -18, 180, 1000);
         int countEast=0;
         for (double[] point : circle2polygon) {
-            double distance = distance(-18, 180,point[0],point[1]);
+            double distance = distance(-18, 180,point[1],point[0]);
             assertThat(abs(1000-distance), lessThan(1.0));
-            if(GeoHashUtils.isWest(180, point[1])) {
+            if(GeoHashUtils.isWest(180, point[0])) {
                 countEast++;
             }
         }
@@ -221,9 +221,9 @@ public class GeoGeometryTest {
         double[][] circle2polygon = GeoGeometry.circle2polygon(6, lat, lon, 1000);
         int countEast=0;
         for (double[] point : circle2polygon) {
-            double distance = distance(lat, lon,point[0],point[1]);
+            double distance = distance(lat, lon,point[1],point[0]);
             assertThat(abs(1000-distance), lessThan(20.0));
-            if(GeoHashUtils.isWest(180, point[1])) {
+            if(GeoHashUtils.isWest(180, point[0])) {
                 countEast++;
             }
         }
@@ -244,7 +244,7 @@ public class GeoGeometryTest {
         double decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds);
         assertThat(decimalDegree, is(expected));
     }
-    
+
     public void shouldFilterPoints() {
         double latitude=52.0;
         double longitude=13.0;
@@ -258,35 +258,35 @@ public class GeoGeometryTest {
         points[100]=new double[]{-100,100};
         points[150]=new double[]{100,-100};
         points[200]=new double[]{-100,-100};
-        
+
         double[][] filtered = GeoGeometry.filterNoiseFromPointCloud(points, 0.005f);
-        
+
         assertThat(filtered.length, is(996));
         double[] bbox = GeoGeometry.getBbox(filtered);
-        
+
         // the four bad pois should be gone
         assertThat(bbox[0], allOf(greaterThan(52.0), lessThan(53.0)));
         assertThat(bbox[1], allOf(greaterThan(52.0), lessThan(53.0)));
         assertThat(bbox[2], allOf(greaterThan(13.0), lessThan(14.0)));
         assertThat(bbox[3], allOf(greaterThan(13.0), lessThan(14.0)));
     }
-    
+
     public void shouldOverLapWithSelf() {
         assertThat("should overlap with itself",GeoGeometry.overlap(samplePolygon, samplePolygon));
     }
-    
+
     @DataProvider
     public Object[][] overlappingPolygons() {
         return new Object[][] {
-                {new double[][]{berlin, amsterdam, newyork}, new double[][]{london,potsDammerPlatz,moritzPlatz}},      
-                {new double[][]{rosenthalerPlatz,moritzPlatz,brandenBurgerGate}, new double[][]{oranienburgerTor,potsDammerPlatz,senefelderPlatz}}      
+                {new double[][]{berlin, amsterdam, newyork}, new double[][]{london,potsDammerPlatz,moritzPlatz}},
+                {new double[][]{rosenthalerPlatz,moritzPlatz,brandenBurgerGate}, new double[][]{oranienburgerTor,potsDammerPlatz,senefelderPlatz}}
         };
     }
-    
+
     @Test(dataProvider="overlappingPolygons")
     public void shouldOverlap(double[][] left, double[][] right) {
-        assertThat("left should overlap with right",GeoGeometry.overlap(left,right));        
-        assertThat("right should overlap with left",GeoGeometry.overlap(right, left));        
+        assertThat("left should overlap with right",GeoGeometry.overlap(left,right));
+        assertThat("right should overlap with left",GeoGeometry.overlap(right, left));
     }
-    
+
 }

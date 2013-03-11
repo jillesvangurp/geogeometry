@@ -296,7 +296,7 @@ public class GeoGeometry {
      * @return the translated coordinate.
      */
     public static double[] translateLongitude(double latitude, double longitude, double meters) {
-        return new double[] { latitude, roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6) };
+        return new double[] { roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6),latitude };
     }
 
     /**
@@ -310,7 +310,7 @@ public class GeoGeometry {
      * @return the translated coordinate.
      */
     public static double[] translateLatitude(double latitude, double longitude, double meters) {
-        return new double[] { roundToDecimals(latitude + meters / DEGREE_LATITUDE_METERS,6), longitude };
+        return new double[] { longitude,roundToDecimals(latitude + meters / DEGREE_LATITUDE_METERS,6) };
     }
 
     /**
@@ -326,7 +326,7 @@ public class GeoGeometry {
      */
     public static double[] translate(double latitude, double longitude, double lateralMeters, double longitudalMeters) {
         double[] longitudal = translateLongitude(latitude, longitude, longitudalMeters);
-        return translateLatitude(longitudal[0], longitudal[1], lateralMeters);
+        return translateLatitude(longitudal[1], longitudal[0], lateralMeters);
     }
 
     /**
@@ -387,7 +387,7 @@ public class GeoGeometry {
      * @return the distance in meters
      */
     public static double distance(double[] firstCoordinate, double[] secondCoordinate) {
-        return distance(firstCoordinate[0], firstCoordinate[1], secondCoordinate[0], secondCoordinate[1]);
+        return distance(firstCoordinate[1], firstCoordinate[0], secondCoordinate[1], secondCoordinate[0]);
     }
 
     /**
@@ -472,7 +472,7 @@ public class GeoGeometry {
                 latOnCircle = -90 - (latOnCircle + 90);
             }
 
-            points[i] = new double[] { latOnCircle, lonOnCircle };
+            points[i] = new double[] { lonOnCircle,latOnCircle };
         }
         // should end with same point as the origin
         points[points.length-1] = new double[] {points[0][0],points[0][1]};
