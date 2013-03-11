@@ -1,10 +1,12 @@
 h1. Introduction
 
-GeoTools is a set of tools for manipulating geo hashes and geometric shapes in the wgs 84 coordinate system. A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
+GeoGeometry is a set of tools for manipulating geometric shapes in the wgs 84 coordinate system and for covering them with geo hashes for indexing purposes. 
 
-The algorithms used for implementing the functionality in GeoTools are mostly well known and commonly used in 2D graphics. However, I have not found any comprehensive open sourced implementation for the wgs 84 coordinate system. 
+A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
 
-The key functionality that motivated the creation of this library was the ability to cover shapes on a map with geo hashes for indexing purposes. To support that, I needed some elementary geometric operations implemented.
+The algorithms used for implementing the functionality in GeoGeometry are mostly well known and commonly used in 2D graphics. Despite the existence of many libraries, most come with complicated, object oriented frameworks. This is fine when used in isolation but I found myself needing to translate between different frameworks quite a bit and was looking for something without the OO cruft and more in line with the geojson style of representing different shapes as double arrays.
+
+Note. geometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
 
 h1. Features
 
@@ -26,9 +28,9 @@ h1. Features
 ** convert geo hash to a BitSet and a BitSet to a geo hash
 ** cover lines, paths, polygons, or circles with geo hashes
 
-I've deliberately kept the design simple and non object oriented. These classes have no external dependencies and only use the java.util package and the java.lang.Math class. Consequently it should be easy to port this functionality to whatever other language. Also, I've not attempted to implement Point, Polygon, Path, Circle, or other classes to support this library. The reason for this is very simple: these things are commonly implemented in other frameworks and any attempt from my side to impose my own implementation would conflict with the need of others to reuse their own classes. I think it is somewhat of a design smell that world + dog feels compelled to implement their own Point class. 
+I've deliberately kept the design simple and non object oriented. These classes have no external dependencies and only use the java.util package and the java.lang.Math class. Consequently it should be easy to port this functionality to whatever other language. Especially, I've not attempted to implement Point, Polygon, Path, Circle, or other classes to support this library. The reason for this is very simple: these things are commonly implemented in other frameworks and any attempt from my side to impose my own implementation would conflict with the need of others to reuse their own classes. I think it is somewhat of a design smell that world + dog feels compelled to implement their own Point class. 
 
-So instead, a point is represented as a latitude, longitude pair of doubles or as an array of two doubles (like in geo json). Likewise, paths and polygons are represented as arrays of points. A circle is a point and a radius. This should enable anyone to integrate this functionality easily.
+So instead, a point is represented as a latitude, longitude pair of doubles or as an array of two doubles (like in geojson). Likewise, paths and polygons are represented as arrays of points. A circle is a point and a radius. This should enable anyone to integrate this functionality easily.
 
 h1. Caveats
 
@@ -40,7 +42,7 @@ h1. Installation
 
 It's a maven project. So, checking it out and doing a mvn clean install should do the trick.
 
-Alternatively, you can exercise your rights under the license and simply copy and adapt as needed. The "license":https://github.com/jillesvangurp/xmltools/blob/master/LICENSE allows you to do this and I have no problems with this although I do appreciate attribution.
+Alternatively, you can exercise your rights under the license and simply copy and adapt as needed. The "license":https://github.com/jillesvangurp/geogeometry/blob/master/LICENSE allows you to do this and I have no problems with this although I do appreciate attribution.
 
 Should anyone like this licensed differently, please contact me.
 
@@ -50,16 +52,16 @@ If anyone wants to fix stuff just send me a pull request.
 
 h1. License
 
-Like all my other projects, this project is licensed under the so-called MIT license. However, GeoHashUtils.java was copied and 
-adapted from Apache Lucene and I have retained the Apache License for that file, as required in that license. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
+Like all my other projects, this project is licensed under the so-called MIT license. However, GeoHashUtils.java was copied and adapted from Apache Lucene and I have retained the Apache License for that file, as required in that license. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
 
 For more details see the LICENSE file
 
 h1. Changelog
 
-* 2.0 - Geojsonify & project rename
+* 2.0 - Geojson & project rename: geotools becomse geogeometry
 ** There was an existing, high profile project out there called geotools. So I renamed my project to geogeometry.
-** Adapt the API to comply with geojson wherever possible. This means polygons are 3d arrays and points are [longitude,latitude] instead of the other way around. This is a major, API breaking change.
+** Adapt the API to comply with geojson wherever possible. This means polygons are 3d arrays and points are [longitude,latitude] instead of the other way around. This is a major, API breaking change that mostly affects GeoGeometry.
+** Clean up API
 * 1.5
 ** misc bug fixes
 ** close circle polygon with start coordinate
