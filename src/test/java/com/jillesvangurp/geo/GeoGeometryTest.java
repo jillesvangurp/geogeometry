@@ -103,8 +103,8 @@ public class GeoGeometryTest {
 		double[] bbox = GeoGeometry.getBbox(samplePolygon);
 		assertThat("should be contained", bboxContains(bbox, 0, 0));
 		for (double[] coordinate : samplePolygon) {
-			assertThat("should contain point", bboxContains(bbox, coordinate[0], coordinate[1]));
-			assertThat("should not contain point", !bboxContains(bbox, 20*coordinate[0], 20*coordinate[1]));
+			assertThat("should contain point", bboxContains(bbox, coordinate[1], coordinate[0]));
+			assertThat("should not contain point", !bboxContains(bbox, 20*coordinate[1], 20*coordinate[0]));
 		}
 	}
 
@@ -251,7 +251,7 @@ public class GeoGeometryTest {
         double points[][] = new double[1000][2];
         Random random = new Random();
         for(int i=0;i<1000;i++) {
-            points[i]=new double[] {latitude+random.nextDouble(), longitude+random.nextDouble()};
+            points[i]=new double[] {longitude+random.nextDouble(),latitude+random.nextDouble()};
         }
         // insert a few 'bad' points
         points[50]=new double[]{100,100};

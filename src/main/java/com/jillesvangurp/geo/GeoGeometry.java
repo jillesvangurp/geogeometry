@@ -48,10 +48,10 @@ public class GeoGeometry {
         double maxLon = Integer.MIN_VALUE;
 
         for (int i = 0; i < polygonPoints.length; i++) {
-            minLat = min(minLat, polygonPoints[i][0]);
-            minLon = min(minLon, polygonPoints[i][1]);
-            maxLat = max(maxLat, polygonPoints[i][0]);
-            maxLon = max(maxLon, polygonPoints[i][1]);
+            minLat = min(minLat, polygonPoints[i][1]);
+            minLon = min(minLon, polygonPoints[i][0]);
+            maxLat = max(maxLat, polygonPoints[i][1]);
+            maxLon = max(maxLon, polygonPoints[i][0]);
         }
 
         return new double[] { minLat, maxLat, minLon, maxLon };
@@ -107,7 +107,7 @@ public class GeoGeometry {
     }
 
     public static boolean polygonContains(double[] point, double[]... polygonPoints) {
-        return polygonContains(point[0], point[1], polygonPoints);
+        return polygonContains(point[1], point[0], polygonPoints);
     }
 
     /**
@@ -135,14 +135,14 @@ public class GeoGeometry {
 
         int hits = 0;
 
-        double lastLatitude = polygonPoints[polygonPoints.length - 1][0];
-        double lastLongitude = polygonPoints[polygonPoints.length - 1][1];
+        double lastLatitude = polygonPoints[polygonPoints.length - 1][1];
+        double lastLongitude = polygonPoints[polygonPoints.length - 1][0];
         double currentLatitude, currentLongitude;
 
         // Walk the edges of the polygon
         for (int i = 0; i < polygonPoints.length; lastLatitude = currentLatitude, lastLongitude = currentLongitude, i++) {
-            currentLatitude = polygonPoints[i][0];
-            currentLongitude = polygonPoints[i][1];
+            currentLatitude = polygonPoints[i][1];
+            currentLongitude = polygonPoints[i][0];
 
             if (currentLongitude == lastLongitude) {
                 continue;
