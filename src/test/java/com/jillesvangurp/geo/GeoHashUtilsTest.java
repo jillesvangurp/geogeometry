@@ -28,9 +28,7 @@ import static com.jillesvangurp.geo.GeoHashUtils.decode;
 import static com.jillesvangurp.geo.GeoHashUtils.decode_bbox;
 import static com.jillesvangurp.geo.GeoHashUtils.east;
 import static com.jillesvangurp.geo.GeoHashUtils.encode;
-import static com.jillesvangurp.geo.GeoHashUtils.fromBitSet;
 import static com.jillesvangurp.geo.GeoHashUtils.south;
-import static com.jillesvangurp.geo.GeoHashUtils.toBitSet;
 import static java.lang.Math.abs;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -38,7 +36,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 
-import java.util.BitSet;
 import java.util.Set;
 
 import org.testng.annotations.DataProvider;
@@ -56,23 +53,11 @@ public class GeoHashUtilsTest {
 		};
 	}
 
-    public void shouldEncodeLong() {
-        double[][] poly = GeoGeometry.circle2polygon(40, 52.530888, 13.394904, 1);
-        for (double[] c : poly) {
-            String hash = encode(c[0], c[1]);
-            long longValue = GeoHashUtils.toLong(hash);
-//            System.out.println(hash + " - " + longValue);
-            // last
-            assertThat(longValue, greaterThan(424189746490000000l));
-            assertThat(longValue, lessThan(424189746500000000l));
-        }
-    }
-
 	@Test(dataProvider = "coordinates")
 	public void shouldDecode(Double lat, Double lon, String geoHash) {
 		double[] decoded = decode(geoHash);
-		assertSimilar(lat, decoded[0]);
-		assertSimilar(lon, decoded[1]);
+		assertSimilar(lat, decoded[1]);
+		assertSimilar(lon, decoded[0]);
 	}
 
 	@Test(dataProvider = "coordinates")
@@ -208,16 +193,6 @@ public class GeoHashUtilsTest {
 		System.out.print("</tr>\n");
     }
 
-	public void shouldConvertToAndFromBitset() {
-		String hash = "u33dbfcyegk2";
-		for (int i = 0; i < hash.length() - 2; i++) {
-			String prefix = hash.substring(0, hash.length() - i);
-			BitSet bitSet = toBitSet(prefix);
-			assertThat(bitSet.length(), lessThan(5 * prefix.length() + 1));
-			assertThat(fromBitSet(bitSet), is(prefix));
-		}
-	}
-
 	@Test(enabled=false)
 	public void shouldCalculateSubHashesForHash() {
 		String hash = "u33dbfc";
@@ -252,10 +227,10 @@ public class GeoHashUtilsTest {
 	}
 
 	public void shouldCalculateHashesForCircle() {
-	    Set<String> hashesForCircle = GeoHashUtils.geoHashesForCircle(8, 50, 15, 2000);
+	    Set<String> hashesForCircle = GeoHashUtils.geoHashesForCircle(8, 52, 13, 2000);
 	    for (String hash : hashesForCircle) {
             double[] point = GeoHashUtils.decode(hash);
-            double distance = GeoGeometry.distance(point, new double[]{50,15});
+            double distance = GeoGeometry.distance(point, new double[]{13,52});
             assertThat(distance, lessThan(2000.0));
         }
 	}

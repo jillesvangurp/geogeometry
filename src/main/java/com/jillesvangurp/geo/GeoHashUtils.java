@@ -19,7 +19,6 @@
 package com.jillesvangurp.geo;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -170,7 +169,7 @@ public class GeoHashUtils {
         double latitude = (bbox[0] + bbox[1]) / 2;
         double longitude = (bbox[2] + bbox[3]) / 2;
 
-        return new double[] { latitude, longitude };
+        return new double[] { longitude, latitude };
     }
 
     /**
@@ -234,81 +233,6 @@ public class GeoHashUtils {
      */
     public static boolean contains(String geoHash, double latitude, double longitude) {
         return GeoGeometry.bboxContains(decode_bbox(geoHash), latitude, longitude);
-    }
-
-    /**
-     * @param geoHash
-     * @return a BitSet for the given geoHash
-     */
-    public static BitSet toBitSet(String geoHash) {
-        BitSet bitSet = new BitSet();
-        int b = 0;
-        for (int i = geoHash.length()-1; i >=0; i--) {
-            int currentCharacter = BASE32_DECODE_MAP.get(geoHash.charAt(i));
-            for (int z = 0; z < BITS.length; z++) {
-                if ((currentCharacter & BITS[z]) != 0) {
-                    bitSet.set(b);
-                }
-                b++;
-            }
-        }
-
-        return bitSet;
-    }
-
-    public static long toLong(String geoHash) {
-        return convert(toBitSet(geoHash));
-    }
-
-    public static long convert(BitSet bits) {
-        long value = 0L;
-        for (int i = 0; i < bits.length(); ++i) {
-            value += bits.get(i) ? (1L << i) : 0L;
-        }
-        return value;
-    }
-
-    public static BitSet convert(long value) {
-        BitSet bits = new BitSet();
-        int index = 0;
-        while (value != 0L) {
-            if (value % 2L != 0) {
-                bits.set(index);
-            }
-            ++index;
-            value = value >>> 1;
-        }
-        return bits;
-    }
-
-    /**
-     * @param bitSet
-     * @return a base32 encoded geo hash for a bitset representing a geo hash.
-     */
-    public static String fromBitSet(BitSet bitSet) {
-        StringBuilder encoded = new StringBuilder();
-        int ch = 0;
-        int b = 1;
-        if (bitSet.length() == 0) {
-            return "0";
-        }
-        for (; b <= bitSet.length(); b++) {
-            if (bitSet.get(b - 1)) {
-                ch += BITS[(b - 1) % BITS.length];
-            }
-
-            if (b % BITS.length == 0 && b != 1) {
-                encoded.append(BASE32_CHARS[ch]);
-                ch = 0;
-            }
-        }
-        // b will have incremented despite failing the check in the for loop; so
-        // compensate
-        if ((b - 1) % BITS.length != 0) {
-            encoded.append(BASE32_CHARS[ch]);
-            ch = 0;
-        }
-        return encoded.toString();
     }
 
     /**
