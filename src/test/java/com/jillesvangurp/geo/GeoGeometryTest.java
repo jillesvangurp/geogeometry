@@ -59,10 +59,10 @@ public class GeoGeometryTest {
 
 
 	double[][] samplePolygon = new double[][] {
-		{ -1, 1 },
-		{ 2, 2 },
-		{ 3, -1 },
-		{ -2, -4 }
+	        {1,1},
+	        {1,-1},
+	        {-1,-1},
+	        {-1,1}
 	};
 
 
@@ -289,4 +289,34 @@ public class GeoGeometryTest {
         assertThat("right should overlap with left",GeoGeometry.overlap(right, left));
     }
 
+    public void shouldExpandPolygon() {
+        double[][] expandPolygon = GeoGeometry.expandPolygon(2000, samplePolygon);
+//        System.out.println(GeoGeometry.toJson(expandPolygon));
+//        System.out.println(GeoGeometry.toJson(samplePolygon));
+        assertThat("expanded polygon should contain polygon", GeoGeometry.contains(expandPolygon, samplePolygon));
+    }
+
+    public void shouldBeRight() {
+         assertThat("should be right", GeoGeometry.rightTurn(new double[]{1,1},new double[] {2,2}, new double[] {1,10}));
+         assertThat("should be right", GeoGeometry.rightTurn(new double[]{1,1},new double[] {2,2}, new double[] {3,4}));
+         assertThat("should not be right", !GeoGeometry.rightTurn(new double[]{1,1},new double[] {0,2}, new double[] {1,10}));
+         assertThat("should not be right", !GeoGeometry.rightTurn(new double[]{1,1},new double[] {1,2}, new double[] {1,10}));
+    }
+
+    @DataProvider
+    public Object[][] clouds() {
+        return new Object[][] {
+                {new double[][] {{1,1},{2,2},{3,3},{3,0},{0,3}}, new double[][] {{2,2}} },
+                {new double[][] {{1,1},{-1,-1},{-1,1},{1,-1},{0,0}}, new double[][] {{0,0}} }
+        };
+    }
+
+
+    @Test(dataProvider="clouds")
+    public void shouldCalculatePolygonForPointCloud(double[][] points, double[][] contained) {
+        double[][] polygonForPoints = GeoGeometry.getPolygonForPoints(points);
+        for (int i = 0; i < contained.length; i++) {
+            assertThat("point in the middle should be contained", polygonContains(contained[i], polygonForPoints));
+        }
+    }
 }

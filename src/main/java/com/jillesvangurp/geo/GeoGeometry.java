@@ -511,15 +511,23 @@ public class GeoGeometry {
     }
 
     public static double[][] expandPolygon(int meters, double[][] points) {
-        double[][] expanded = new double[points.length*4][0];
+        double[][] expanded = new double[points.length*8][0];
         for (int i = 0; i < points.length; i++) {
             double[] p = points[i];
-            expanded[i*4]=new double[] {translateLatitude(p[0], p[1], meters)[0], p[1]};
-            expanded[i*4+1]=new double[] {translateLatitude(p[0], p[1], -1*meters)[0], p[1]};
-            expanded[i*4+2]=new double[] {p[0],translateLongitude(p[0], p[1], meters)[1]};
-            expanded[i*4+3]=new double[] {p[0],translateLongitude(p[0], p[1], -1*meters)[1]};
-        }
+            double lonPos = translateLongitude(p[0], p[1], meters)[0];
+            double lonNeg = translateLongitude(p[0], p[1], -1*meters)[0];
+            double latPos = translateLatitude(p[0], p[1], meters)[1];
+            double latNeg = translateLatitude(p[0], p[1], -1*meters)[1];
+            expanded[i*8]=new double[] {lonPos,latPos};
+            expanded[i*8+1]=new double[] {lonPos,latNeg};
+            expanded[i*8+2]=new double[] {lonNeg,latPos};
+            expanded[i*8+3]=new double[] {lonNeg,latNeg};
 
+            expanded[i*8+4]=new double[] {lonPos,p[1]};
+            expanded[i*8+5]=new double[] {lonNeg,p[1]};
+            expanded[i*8+6]=new double[] {p[0],latPos};
+            expanded[i*8+7]=new double[] {p[1],latNeg};
+        }
         return getPolygonForPoints(expanded);
     }
 
@@ -528,8 +536,8 @@ public class GeoGeometry {
         if (points.length < 3) {
             throw new IllegalStateException("need at least 3 pois for a polygon");
         }
-        double[][] xSorted = Arrays.copyOf(points, points.length);
-        Arrays.sort(xSorted, new Comparator() {
+        double[][] sorted = Arrays.copyOf(points, points.length);
+        Arrays.sort(sorted, new Comparator() {
             @Override
             public int compare(Object o1, Object o2) {
                 double[] p1 = (double[]) o1;
@@ -543,17 +551,19 @@ public class GeoGeometry {
             }
         });
 
-        int n = xSorted.length;
+        int n = sorted.length;
 
         double[][] lUpper = new double[n][0];
 
-        lUpper[0] = xSorted[0];
-        lUpper[1] = xSorted[1];
+        lUpper[0] = sorted[0];
+        lUpper[1] = sorted[1];
 
         int lUpperSize = 2;
 
+        System.out.println(toJson(sorted));
+
         for (int i = 2; i < n; i++) {
-            lUpper[lUpperSize] = xSorted[i];
+            lUpper[lUpperSize] = sorted[i];
             lUpperSize++;
 
             while (lUpperSize > 2 && !rightTurn(lUpper[lUpperSize - 3], lUpper[lUpperSize - 2], lUpper[lUpperSize - 1])) {
@@ -565,13 +575,13 @@ public class GeoGeometry {
 
         double[][] lLower = new double[n][0];
 
-        lLower[0] = xSorted[n - 1];
-        lLower[1] = xSorted[n - 2];
+        lLower[0] = sorted[n - 1];
+        lLower[1] = sorted[n - 2];
 
         int lLowerSize = 2;
 
         for (int i = n - 3; i >= 0; i--) {
-            lLower[lLowerSize] = xSorted[i];
+            lLower[lLowerSize] = sorted[i];
             lLowerSize++;
 
             while (lLowerSize > 2 && !rightTurn(lLower[lLowerSize - 3], lLower[lLowerSize - 2], lLower[lLowerSize - 1])) {
@@ -581,14 +591,15 @@ public class GeoGeometry {
             }
         }
 
-        double[][] result = new double[lUpperSize + lLowerSize - 2][0];
+        double[][] result = new double[lUpperSize + lLowerSize-2][0];
         int idx = 0;
         for (int i = 0; i < lUpperSize; i++) {
             result[idx] = (lUpper[i]);
             idx++;
         }
 
-        for (int i = 1; i < lLowerSize - 1; i++) {
+        for (int i = 1; i < lLowerSize-1; i++) {
+            // first and last coordinate are also part of lUpper; but polygon should end with itself
             result[idx] = (lLower[i]);
             idx++;
         }
@@ -596,7 +607,13 @@ public class GeoGeometry {
         return result;
     }
 
-    private static boolean rightTurn(double[] a, double[] b, double[] c) {
+    /**
+     * @param a
+     * @param b
+     * @param c
+     * @return true if b is right of the line defined by a and c
+     */
+    static boolean rightTurn(double[] a, double[] b, double[] c) {
         return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0;
     }
 
@@ -614,5 +631,49 @@ public class GeoGeometry {
             factor = -1;
         }
         return (degrees + minutes / 60 + seconds / 60 / 60) * factor;
+    }
+
+    public static String toJson(double[] point) {
+        if(point.length==0) {
+            return "[]";
+        } else {
+            return "["+point[0]+','+point[1]+"]";
+        }
+    }
+
+    public static String toJson(double[][] points) {
+        StringBuilder buf = new StringBuilder("[");
+        for (int i = 0; i < points.length; i++) {
+            buf.append(toJson(points[i]));
+            if(i<points.length-1) {
+                buf.append(',');
+            }
+        }
+        buf.append("]");
+        return buf.toString();
+    }
+
+    public static String toJson(double[][][] points) {
+        StringBuilder buf = new StringBuilder("[");
+        for (int i = 0; i < points.length; i++) {
+            buf.append(toJson(points[i]));
+            if(i<points.length-1) {
+                buf.append(',');
+            }
+        }
+        buf.append("]");
+        return buf.toString();
+    }
+
+    public static String toJson(double[][][][] points) {
+        StringBuilder buf = new StringBuilder("[");
+        for (int i = 0; i < points.length; i++) {
+            buf.append(toJson(points[i]));
+            if(i<points.length-1) {
+                buf.append(',');
+            }
+        }
+        buf.append("]");
+        return buf.toString();
     }
 }
