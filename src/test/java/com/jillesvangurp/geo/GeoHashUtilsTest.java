@@ -216,7 +216,7 @@ public class GeoHashUtilsTest {
 
 	public void shouldCalculateHashesForPolygon() {
 		int min = 10;
-		Set<String> geoHashesForPolygon = GeoHashUtils.getGeoHashesForPolygon(
+		Set<String> geoHashesForPolygon = GeoHashUtils.geoHashesForPolygon(
 				8, polygon);
 		for (String h : geoHashesForPolygon) {
 			min = Math.min(min, h.length());
@@ -309,7 +309,7 @@ public class GeoHashUtilsTest {
 
     @Test(dataProvider="samplePoints")
 	public void shouldCalculateHashLength(double m, double latitude, double longitude) {
-        int length = GeoHashUtils.getSuitableHashLength(m, latitude, longitude);
+        int length = GeoHashUtils.suitableHashLength(m, latitude, longitude);
         String hash = encode(latitude, longitude, length);
         double[] bbox = decode_bbox(hash);
         double distance = GeoGeometry.distance(bbox[0], bbox[2], bbox[0], bbox[3]);

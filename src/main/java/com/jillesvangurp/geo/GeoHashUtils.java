@@ -125,7 +125,7 @@ public class GeoHashUtils {
 
     /**
      * @param geohash
-     * @return double array representing the bounding box for the geohash of [nort latitude, south latitude, east
+     * @return double array representing the bounding box for the geohash of [north latitude, south latitude, east
      *         longitude, west longitude]
      */
     public static double[] decode_bbox(String geohash) {
@@ -171,7 +171,7 @@ public class GeoHashUtils {
      * Should you wish to apply some rounding, you can use the GeoGeometry.roundToDecimals method.
      *
      * @param geohash
-     * @return a coordinate representing the center of the geohash as a double array of [latitude,longitude]
+     * @return a coordinate representing the center of the geohash as a double array of [longitude,latitude]
      */
     public static double[] decode(String geohash) {
         double[] bbox = decode_bbox(geohash);
@@ -396,12 +396,12 @@ public class GeoHashUtils {
      *            polygonPoints points that make up the polygon as arrays of [latitude,longitude]
      * @return a set of geo hashes that cover the polygon area.
      */
-    public static Set<String> getGeoHashesForPolygon(double[]... polygonPoints) {
+    public static Set<String> geoHashesForPolygon(double[]... polygonPoints) {
         double[] bbox = GeoGeometry.getBbox(polygonPoints);
         // first lets figure out an appropriate geohash length
         double diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3]);
-        int hashLength = getSuitableHashLength(diagonal, bbox[0], bbox[2]);
-        return getGeoHashesForPolygon(hashLength + 1, polygonPoints);
+        int hashLength = suitableHashLength(diagonal, bbox[0], bbox[2]);
+        return geoHashesForPolygon(hashLength + 1, polygonPoints);
     }
 
     /**
@@ -413,10 +413,10 @@ public class GeoHashUtils {
      *            polygonPoints points that make up the polygon as arrays of [latitude,longitude]
      * @return a set of geo hashes that cover the polygon area.
      */
-    public static Set<String> getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) {
+    public static Set<String> geoHashesForPolygon(int maxLength, double[]... polygonPoints) {
         for (double[] ds : polygonPoints) {
             // basically the algorithm can go into an endless loop. Best to avoid the poles.
-            if(ds[0] < -89.5 || ds[0] > 89.5) {
+            if(ds[1] < -89.5 || ds[1] > 89.5) {
                 throw new IllegalArgumentException(
                         "please stay away from the north pole or the south pole; there are some known issues there. Besides, nothing there but snow and ice.");
             }
@@ -428,7 +428,7 @@ public class GeoHashUtils {
         double[] bbox = GeoGeometry.getBbox(polygonPoints);
         // first lets figure out an appropriate geohash length
         double diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3]);
-        int hashLength = getSuitableHashLength(diagonal, bbox[0], bbox[2]);
+        int hashLength = suitableHashLength(diagonal, bbox[0], bbox[2]);
 
         Set<String> partiallyContained = new HashSet<String>();
         // now lets generate all geohashes for the containing bounding box
@@ -575,7 +575,7 @@ public class GeoHashUtils {
             throw new IllegalArgumentException("identical begin and end coordinate: line must have two different points");
         }
 
-        int hashLength = getSuitableHashLength(width, lat1, lon1);
+        int hashLength = suitableHashLength(width, lat1, lon1);
 
         Object[] result1 = encodeWithBbox(lat1, lon1, hashLength);
         double[] bbox1 = (double[]) result1[1];
@@ -588,10 +588,10 @@ public class GeoHashUtils {
             results.add((String) result1[0]);
             return results;
         } else if (lat1 != lat2) {
-            return getGeoHashesForPolygon(hashLength, new double[][] { { bbox1[0], bbox1[2] }, { bbox1[1], bbox1[2] }, { bbox2[1], bbox2[3] },
+            return geoHashesForPolygon(hashLength, new double[][] { { bbox1[0], bbox1[2] }, { bbox1[1], bbox1[2] }, { bbox2[1], bbox2[3] },
                     { bbox2[0], bbox2[3] } });
         } else {
-            return getGeoHashesForPolygon(hashLength, new double[][] { { bbox1[0], bbox1[2] }, { bbox1[0], bbox1[3] }, { bbox2[1], bbox2[2] },
+            return geoHashesForPolygon(hashLength, new double[][] { { bbox1[0], bbox1[2] }, { bbox1[0], bbox1[3] }, { bbox2[1], bbox2[2] },
                     { bbox2[1], bbox2[3] } });
         }
     }
@@ -645,7 +645,7 @@ public class GeoHashUtils {
         // bit of a wet finger approach here: it doesn't make much sense to have
         // lots of segments unless we have a long geohash or a large radius
         int segments;
-        int suitableHashLength = getSuitableHashLength(radius, latitude, longitude);
+        int suitableHashLength = suitableHashLength(radius, latitude, longitude);
         if (length > suitableHashLength - 3) {
             segments = 200;
         } else if (length > suitableHashLength - 2) {
@@ -658,7 +658,7 @@ public class GeoHashUtils {
         }
 
         double[][] circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius);
-        return getGeoHashesForPolygon(length, circle2polygon);
+        return geoHashesForPolygon(length, circle2polygon);
     }
 
     /**
@@ -667,7 +667,7 @@ public class GeoHashUtils {
      * @param longitude
      * @return the largest hash length where the hash bbox has a width < granularityInMeters.
      */
-    public static int getSuitableHashLength(double granularityInMeters, double latitude, double longitude) {
+    public static int suitableHashLength(double granularityInMeters, double latitude, double longitude) {
         if (granularityInMeters < 5) {
             return 10;
         }
@@ -684,5 +684,4 @@ public class GeoHashUtils {
 
         return Math.min(length + 1, DEFAULT_PRECISION);
     }
-
 }
