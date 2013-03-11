@@ -403,13 +403,13 @@ public class GeoGeometry {
      * @return the average latitude and longitude.
      */
     public static double[] getPolygonCenter(double[]... polygonPoints) {
-        double cumLat = 0;
         double cumLon = 0;
+        double cumLat = 0;
         for (double[] coordinate : polygonPoints) {
-            cumLat += coordinate[0];
-            cumLon += coordinate[1];
+            cumLon += coordinate[0];
+            cumLat += coordinate[1];
         }
-        return new double[] { cumLat / polygonPoints.length, cumLon / polygonPoints.length };
+        return new double[] { cumLon / polygonPoints.length, cumLat / polygonPoints.length };
     }
 
     public static double[][] bbox2polygon(double[] bbox) {
