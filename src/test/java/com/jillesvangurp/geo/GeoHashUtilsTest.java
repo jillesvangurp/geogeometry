@@ -161,7 +161,7 @@ public class GeoHashUtilsTest {
 				lessThan(0.0000001));
 	}
 
-	@Test(enabled=true)
+	@Test(enabled=false)
 	public void shouldCalculateBboxSizes() {
 	    System.out.println("<table border=\"1\">");
 	    System.out.println("<th><td>latitude</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></th>");

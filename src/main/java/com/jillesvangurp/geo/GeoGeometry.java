@@ -631,8 +631,6 @@ public class GeoGeometry {
 
         int lUpperSize = 2;
 
-        System.out.println(toJson(sorted));
-
         for (int i = 2; i < n; i++) {
             lUpper[lUpperSize] = sorted[i];
             lUpperSize++;

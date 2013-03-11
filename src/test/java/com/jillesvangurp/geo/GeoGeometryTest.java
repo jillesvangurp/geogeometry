@@ -291,8 +291,6 @@ public class GeoGeometryTest {
 
     public void shouldExpandPolygon() {
         double[][] expandPolygon = GeoGeometry.expandPolygon(2000, samplePolygon);
-//        System.out.println(GeoGeometry.toJson(expandPolygon));
-//        System.out.println(GeoGeometry.toJson(samplePolygon));
         assertThat("expanded polygon should contain polygon", GeoGeometry.contains(expandPolygon, samplePolygon));
     }
 
