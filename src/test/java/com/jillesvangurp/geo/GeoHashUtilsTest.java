@@ -62,8 +62,8 @@ public class GeoHashUtilsTest {
 
 	@Test(dataProvider = "coordinates")
 	public void shouldEncode(Double lat, Double lon, String expectedGeoHash) {
-		String geoHash = encode(lat, lon);
-		assertThat(geoHash, is(expectedGeoHash));
+		assertThat(encode(lat, lon), is(expectedGeoHash));
+        assertThat(encode(new double[]{lon,lat}), is(expectedGeoHash));
 	}
 
 	@Test(dataProvider = "coordinates")

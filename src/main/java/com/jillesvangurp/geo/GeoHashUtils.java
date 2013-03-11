@@ -114,6 +114,16 @@ public class GeoHashUtils {
     }
 
     /**
+     * Encode a geojson style point of [longitude,latitude]
+     * @param point
+     * @return geohash
+     */
+    public static String encode(double[] point) {
+        return encode(point[1], point[0], DEFAULT_PRECISION);
+    }
+
+
+    /**
      * @param geohash
      * @return double array representing the bounding box for the geohash of [nort latitude, south latitude, east
      *         longitude, west longitude]
