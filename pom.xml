@@ -28,7 +28,7 @@
     <artifactId>geogeometry</artifactId>
     <version>2.0-SNAPSHOT</version>
 
-    <name>GeoTools</name>
+    <name>GeoGeometry</name>
     <description>Misc tools for working with wgs 84 coordinates and geohashes</description>
 
     <url>http://www.jillesvangurp.com</url>
@@ -36,15 +36,15 @@
     <licenses>
         <license>
             <name>MIT license</name>
-            <url>https://github.com/jillesvangurp/geotools/blob/master/LICENSE</url>
+            <url>https://github.com/jillesvangurp/geogeometry/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <url>git@github.com:jillesvangurp/geotools.git</url>
-        <connection>scm:git:git@github.com:jillesvangurp/geotools.git</connection>
-        <developerConnection>scm:git:git@github.com:jillesvangurp/geotools.git</developerConnection>
+        <url>git@github.com:jillesvangurp/geogeometry.git</url>
+        <connection>scm:git:git@github.com:jillesvangurp/geogeometry.git</connection>
+        <developerConnection>scm:git:git@github.com:jillesvangurp/geogeometry.git</developerConnection>
     </scm>
 
 	<distributionManagement>
