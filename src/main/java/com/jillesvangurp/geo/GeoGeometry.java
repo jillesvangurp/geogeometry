@@ -436,6 +436,96 @@ public class GeoGeometry {
     }
 
     /**
+     * Calculate distance of a point (pLat,pLon) to a line defined by two other points (lat1,lon1) and (lat2,lon2)
+     * @param lat1
+     * @param lon1
+     * @param lat2
+     * @param lon2
+     * @param pLat
+     * @param pLon
+     * @return the distance
+     */
+    public static double distance(double lat1,double lon1,double lat2, double lon2, double pLat, double pLon) {
+        if(lon1==lon2) {
+            // horizontal line
+            return distance(pLat,pLon,pLat,lon1);
+        } else if(lat1==lat2) {
+            // vertical line
+            return distance(pLat,pLon,lat1,pLon);
+        } else {
+            // y=s*x  +c
+            double s= (lon2-lon1)/(lat2-lat1);
+            double c=lon1-s*lat1;
+
+            // y=ps*x + pc
+            double ps = -1/s;
+            double pc=pLon-ps*pLat;
+
+            // solve    ps*x +pc = s*x + c
+            //          (ps-s) *x = c -pc
+            //          x= (c-pc)/(ps-s)
+            double xx=(c-pc)/(ps-s);
+            double yy=s*xx+c;
+
+            return distance(pLat,pLon,xx,yy);
+        }
+    }
+
+    /**
+     * Calculate distance of a point p to a line defined by two other points l1 and l2.
+     * @param l1
+     * @param l2
+     * @param p
+     * @return the distance
+     */
+    public static double distance(double[] l1, double[] l2, double[] p ) {
+        return distance(l1[1],l1[0],l2[1],l2[0],p[1],p[0]);
+    }
+
+    public static double distanceToLineString(double[] point, double[][] lineString) {
+        if(lineString.length<2) {
+            throw new IllegalArgumentException("not enough segments in line");
+        }
+        double minDistance=Double.MAX_VALUE;
+        double[] last=lineString[0];
+        for (int i = 1; i < lineString.length; i++) {
+            double[] current=lineString[i];
+            double distance = distance(last,current,point);
+            minDistance = Math.min(minDistance, distance);
+            last=current;
+        }
+        return minDistance;
+    }
+
+    /**
+     * @param point
+     * @param polygon
+     * @return distance to polygon
+     */
+    public static double distanceToPolygon(double[] point, double[][] polygon) {
+        if(polygon.length<3) {
+            throw new IllegalArgumentException("not enough segments in polygon");
+        }
+        if(polygonContains(point, polygon)) {
+            return 0;
+        }
+        return distanceToLineString(point, polygon);
+    }
+
+    /**
+     * @param point
+     * @param polygon
+     * @return distance to polygon
+     */
+    public static double distanceToPolygon(double[] point, double[][][] polygon) {
+        if(polygon.length==0) {
+            throw new IllegalArgumentException("empty polygon");
+        }
+        return distanceToPolygon(point, polygon[0]);
+    }
+
+
+    /**
      * Simple/naive method for calculating the center of a polygon based on
      * averaging the latitude and longitude. Better algorithms exist but this
      * may be good enough for most purposes.

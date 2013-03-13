@@ -336,4 +336,45 @@ public class GeoGeometryTest {
         assertThat(polygon[0][0], is(polygon[polygon.length-1][0]));
         assertThat(polygon[0][1], is(polygon[polygon.length-1][1]));
     }
+
+    @DataProvider
+    public Object[][] linesNPoints() {
+        return new Object[][] {
+                {52.520316,13.414654, 52.528149,13.423709, 52.52392,13.412122, 416l},
+                {52.521337,13.403108,52.517002,13.409073,52.519039,13.408665,138l},
+                {52.471551,13.385791,52.478139,13.385791,52.476244,13.384718,73l},//vertical
+                {52.476244,13.384718,52.476244,14,52.478139,13.385062,211l}// horizontal
+        };
+    }
+
+    @Test(dataProvider="linesNPoints")
+    public void shouldCalculateDistanceToLine(double x1, double y1, double x2, double y2, double px, double py, long expectedDistance) {
+        double distance = GeoGeometry.distance(x1,y1,x2,y2,px,py);
+        double distance2 = GeoGeometry.distance(new double[]{y1,x1},new double[]{y2,x2},new double[]{py,px});
+        assertThat(distance, is(distance2));
+        assertThat(Math.round(distance), is(expectedDistance));
+    }
+
+    public void shouldCalculateDistanceToLineString() {
+        double[][] ls = new double[][] {{13.414654,52.520316},{13.423709,52.528149},{13.425724,52.524992}};
+        long d = Math.round(GeoGeometry.distanceToLineString(new double[] {13.412122,52.52392}, ls));
+        assertThat(d, is(416l));
+        double[][] ls2 = new double[][] {{13.425724,52.524992},{13.414654,52.520316},{13.423709,52.528149}};
+        d = Math.round(GeoGeometry.distanceToLineString(new double[] {13.412122,52.52392}, ls2));
+        assertThat(d, is(416l));
+    }
+
+    public void shouldCalculateDistanceToPolygon() {
+        double[][] polygon = new double[][] {{13.414654,52.520316},{13.423709,52.528149},{13.425724,52.524992},{13.414654,52.520316}};
+        long d = Math.round(GeoGeometry.distanceToPolygon(new double[] {13.412122,52.52392}, polygon));
+        assertThat(d, is(416l));
+        double[][] polygon2 = new double[][] {{13.425724,52.524992},{13.414654,52.520316},{13.423709,52.528149},{13.425724,52.524992}};
+        d = Math.round(GeoGeometry.distanceToPolygon(new double[] {13.412122,52.52392}, polygon2));
+        assertThat(d, is(416l));
+        d = Math.round(GeoGeometry.distanceToPolygon(new double[] {13.412122,52.52392}, new double[][][] {polygon2}));
+        assertThat(d, is(416l));
+        double[] center = GeoGeometry.polygonCenter(polygon);
+        d = Math.round(GeoGeometry.distanceToPolygon(center, polygon2));
+        assertThat(d, is(0l));
+    }
 }
