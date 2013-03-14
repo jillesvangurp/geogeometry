@@ -12,6 +12,7 @@ h1. Features
 
 * GeoGeometry class with methods that allow you to:
 ** Calculate distance between two coordinates using the haversine algorithm.
+** Calculate distance of a point to a line. lineString, and polygon
 ** check bounding box containment for a point
 ** check polygon containment for a point
 ** get the center for a polygon
@@ -25,7 +26,6 @@ h1. Features
 ** find out the boundingbox of a geohash
 ** find out neighboring geohashes east, west, south, or north of a geohash
 ** get the 32 sub geo hashes for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
-** convert geo hash to a BitSet and a BitSet to a geo hash
 ** cover lines, paths, polygons, or circles with geo hashes
 
 I've deliberately kept the design simple and non object oriented. These classes have no external dependencies and only use the java.util package and the java.lang.Math class. Consequently it should be easy to port this functionality to whatever other language. Especially, I've not attempted to implement Point, Polygon, Path, Circle, or other classes to support this library. The reason for this is very simple: these things are commonly implemented in other frameworks and any attempt from my side to impose my own implementation would conflict with the need of others to reuse their own classes. I think it is somewhat of a design smell that world + dog feels compelled to implement their own Point class. 
@@ -58,7 +58,9 @@ For more details see the LICENSE file
 
 h1. Changelog
 
-* 2.0 - Geojson & project rename: geotools becomse geogeometry
+* 2.1
+** Add distance functions for lines, lineStrings, and polygons.
+* 2.0 - Geojson & project rename: geotools becomes geogeometry
 ** There was an existing, high profile project out there called geotools. So I renamed my project to geogeometry.
 ** Adapt the API to comply with geojson wherever possible. This means polygons are 3d arrays and points are [longitude,latitude] instead of the other way around. This is a major, API breaking change that mostly affects GeoGeometry.
 ** Clean up API
