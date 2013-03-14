@@ -377,4 +377,14 @@ public class GeoGeometryTest {
         d = Math.round(GeoGeometry.distanceToPolygon(center, polygon2));
         assertThat(d, is(0l));
     }
+
+    public void shouldCalculateDistanceToMultiPolygon() {
+        double[][] polygon = new double[][] {{13.414654,52.520316},{13.423709,52.528149},{13.425724,52.524992},{13.414654,52.520316}};
+        double[][][][] multiPolygon = new double[][][][] {{polygon},{{{1,1},{1,2},{2,2},{1,1}}}};
+        double[][][][] multiPolygon2 = new double[][][][] {{{{1,1},{1,2},{2,2},{1,1}}},{polygon}};
+        long d = Math.round(GeoGeometry.distanceToMultiPolygon(new double[] {13.412122,52.52392}, multiPolygon));
+        assertThat(d, is(416l));
+        d = Math.round(GeoGeometry.distanceToMultiPolygon(new double[] {13.412122,52.52392}, multiPolygon2));
+        assertThat(d, is(416l));
+    }
 }

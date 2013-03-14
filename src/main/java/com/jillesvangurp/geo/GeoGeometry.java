@@ -524,6 +524,19 @@ public class GeoGeometry {
         return distanceToPolygon(point, polygon[0]);
     }
 
+    /**
+     * @param point
+     * @param multiPolygon
+     * @return distance to the nearest of the polygons in the multipolygon
+     */
+    public static double distanceToMultiPolygon(double[] point, double[][][][] multiPolygon) {
+        double distance = Double.MAX_VALUE;
+        for(double[][][] polygon: multiPolygon) {
+            distance=Math.min(distance, distanceToPolygon(point, polygon));
+        }
+        return distance;
+    }
+
 
     /**
      * Simple/naive method for calculating the center of a polygon based on
