@@ -103,6 +103,7 @@ public class GeoGeometry {
      * @return true if the latitude and longitude are contained in the bbox
      */
     public static boolean bboxContains(double[] bbox, double latitude, double longitude) {
+        validate(latitude, longitude);
         return bbox[0] <= latitude && latitude <= bbox[1] && bbox[2] <= longitude && longitude <= bbox[3];
     }
 
@@ -115,6 +116,7 @@ public class GeoGeometry {
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double[] point, double[][][] polygonPoints) {
+        validate(point);
         return polygonContains(point[1], point[0], polygonPoints[0]);
     }
 
@@ -127,6 +129,7 @@ public class GeoGeometry {
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double[] point, double[]... polygonPoints) {
+        validate(point);
         return polygonContains(point[1], point[0], polygonPoints);
     }
 
@@ -140,6 +143,7 @@ public class GeoGeometry {
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double latitude, double longitude, double[][][] polygonPoints) {
+        validate(latitude, longitude);
         return polygonContains(latitude, longitude, polygonPoints[0]);
     }
 
@@ -155,6 +159,7 @@ public class GeoGeometry {
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double latitude, double longitude, double[]... polygonPoints) {
+        validate(latitude, longitude);
 
         if (polygonPoints.length <= 2) {
             throw new IllegalArgumentException("a polygon must have at least three points");
@@ -341,6 +346,7 @@ public class GeoGeometry {
      * @return the translated coordinate.
      */
     public static double[] translateLongitude(double latitude, double longitude, double meters) {
+        validate(latitude, longitude);
         return new double[] { roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6),latitude };
     }
 
@@ -370,6 +376,7 @@ public class GeoGeometry {
      * @return the translated coordinate.
      */
     public static double[] translate(double latitude, double longitude, double lateralMeters, double longitudalMeters) {
+        validate(latitude, longitude);
         double[] longitudal = translateLongitude(latitude, longitude, longitudalMeters);
         return translateLatitude(longitudal[1], longitudal[0], lateralMeters);
     }
@@ -383,6 +390,8 @@ public class GeoGeometry {
      * @return [minlat,maxlat,minlon,maxlon]
      */
     public static double[] bbox(double latitude, double longitude, double latitudalMeters,double longitudalMeters) {
+        validate(latitude, longitude);
+
         double[] tr = translate(latitude, longitude, latitudalMeters/2, longitudalMeters/2);
         double[] br = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
         double[] bl = translate(latitude, longitude, -latitudalMeters/2, -longitudalMeters/2);
@@ -410,6 +419,8 @@ public class GeoGeometry {
      * @return the distance in meters
      */
     public static double distance(final double lat1, final double long1, final double lat2, final double long2) {
+        validate(lat1, long1);
+        validate(lat2, long2);
 
         final double deltaLat = toRadians(lat2 - lat1);
         final double deltaLon = toRadians(long2 - long1);
@@ -446,6 +457,10 @@ public class GeoGeometry {
      * @return the distance
      */
     public static double distance(double lat1,double lon1,double lat2, double lon2, double pLat, double pLon) {
+        validate(lat1, lon1);
+        validate(lat2, lon2);
+        validate(pLat, pLon);
+
         if(lon1==lon2) {
             // horizontal line
             return distance(pLat,pLon,pLat,lon1);
@@ -579,6 +594,8 @@ public class GeoGeometry {
      *         polygon.
      */
     public static double[][] circle2polygon(int segments, double latitude, double longitude, double radius) {
+        validate(latitude, longitude);
+
         if (segments < 5) {
             throw new IllegalArgumentException("you need a minimum of 5 segments");
         }
@@ -864,4 +881,18 @@ public class GeoGeometry {
         buf.append("]");
         return buf.toString();
     }
+
+    public static void validate(double latitude, double longitude) {
+        if(latitude < -90.0 || latitude > 90.0) {
+            throw new IllegalArgumentException("Latitude " + latitude + " is outside legal range of -90,90");
+        }
+        if(longitude < -180.0 || longitude > 180.0) {
+            throw new IllegalArgumentException("Longitude " + longitude + " is outside legal range of -180,180");
+        }
+    }
+
+    public static void validate(double[] point) {
+        validate(point[1],point[0]);
+    }
+
 }

@@ -18,6 +18,8 @@
  */
 package com.jillesvangurp.geo;
 
+import static com.jillesvangurp.geo.GeoGeometry.validate;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,6 +62,7 @@ public class GeoHashUtils {
         if (length < 1 || length > 12) {
             throw new IllegalArgumentException("length must be between 1 and 12");
         }
+        validate(latitude, longitude);
         double[] latInterval = { -90.0, 90.0 };
         double[] lonInterval = { -180.0, 180.0 };
 
@@ -295,6 +298,7 @@ public class GeoHashUtils {
      * @param geoHash
      * @return String array with the geo hashes.
      */
+
     public static String[] subHashes(String geoHash) {
         ArrayList<String> list = new ArrayList<String>();
         for (char c : BASE32_CHARS) {
@@ -302,6 +306,21 @@ public class GeoHashUtils {
         }
         return list.toArray(new String[0]);
     }
+
+    /**
+     * 2d array with the 32 possible geohash endings layed out as they would if you would break down a geohash into
+     * its subhashes.
+     */
+    public static final char[][] GEOHASH_ENDINGS = new char[][]{
+        {'0','2','8','b'},
+        {'1','3','9','c'},
+        {'4','6','d','f'},
+        {'5','7','e','g'},
+        {'h','k','s','u'},
+        {'j','m','t','v'},
+        {'n','q','w','y'},
+        {'p','r','x','z'}
+    };
 
     /**
      * @param geoHash
@@ -392,8 +411,15 @@ public class GeoHashUtils {
      * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
      * boxes, specify your own maxLength.
      *
+     * Note, the algorithm 'fills' the polygon from the inside with hashes. So, if a geohash partially falls outside the
+     * polygon, it is omitted. So, if you have a polygon with a lot of detail, this may result in large portions not
+     * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
+     * geohashes around the edges.
+     *
+     * The algorithm works for both convex and concave algorithms.
+     *
      * @param polygonPoints
-     *            polygonPoints points that make up the polygon as arrays of [latitude,longitude]
+     *            2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
      * @return a set of geo hashes that cover the polygon area.
      */
     public static Set<String> geoHashesForPolygon(double[]... polygonPoints) {
@@ -405,12 +431,21 @@ public class GeoHashUtils {
     }
 
     /**
-     * Cover the polygon with geo hashes.
+     * Cover the polygon with geo hashes. Calls getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
+     * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
+     * boxes, specify your own maxLength.
+     *
+     * Note, the algorithm 'fills' the polygon from the inside with hashes. So, if a geohash partially falls outside the
+     * polygon, it is omitted. So, if you have a polygon with a lot of detail, this may result in large portions not
+     * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
+     * geohashes around the edges.
+     *
+     * The algorithm works for both convex and concave algorithms.
      *
      * @param maxLength
      *            maximum length of the geoHash; the more you specify, the more expensive it gets
      * @param polygonPoints
-     *            polygonPoints points that make up the polygon as arrays of [latitude,longitude]
+     *            2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
      * @return a set of geo hashes that cover the polygon area.
      */
     public static Set<String> geoHashesForPolygon(int maxLength, double[]... polygonPoints) {
