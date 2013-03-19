@@ -218,6 +218,9 @@ public class GeoHashUtils {
         if (lon < -180) {
             lon = 180 - (lon + 180);
         }
+        if(lon > 180) {
+            lon=180;
+        }
 
         return encode(lat, lon, geoHash.length());
     }
@@ -233,6 +236,9 @@ public class GeoHashUtils {
 
         if (lon > 180) {
             lon = -180 + (lon - 180);
+        }
+        if(lon<-180) {
+            lon=-180;
         }
 
         return encode(lat, lon, geoHash.length());
