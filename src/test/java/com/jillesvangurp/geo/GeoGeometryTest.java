@@ -387,4 +387,12 @@ public class GeoGeometryTest {
         d = Math.round(GeoGeometry.distanceToMultiPolygon(new double[] {13.412122,52.52392}, multiPolygon2));
         assertThat(d, is(416l));
     }
+
+    public void shouldCalculateArea() {
+        double[][] circle = GeoGeometry.circle2polygon(5000, 52, 13, 1000);
+        double calculatedArea = GeoGeometry.area(circle);
+        double circleArea = Math.PI*1000*1000;
+
+        assertThat("0.005% difference allowed perfect circle area and calculated area",Math.abs(circleArea-calculatedArea), lessThan(calculatedArea/200));
+    }
 }

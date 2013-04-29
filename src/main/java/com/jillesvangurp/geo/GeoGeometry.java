@@ -32,6 +32,8 @@ import static java.lang.Math.toRadians;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import org.apache.commons.lang.Validate;
+
 public class GeoGeometry {
 
     /**
@@ -895,4 +897,37 @@ public class GeoGeometry {
         validate(point[1],point[0]);
     }
 
+    /**
+     * Calculate the approximate area. Like the distance, this is an approximation and you should account for an error
+     * of about half a percent.
+     *
+     * @param polygon
+     * @return approximate area.
+     */
+    public static double area(double[][] polygon) {
+        Validate.isTrue(polygon.length > 3,"polygon should have at least three elements");
+
+        double total=0;
+        double[] previous=polygon[0];
+
+        double[] center = polygonCenter(polygon);
+        double xRef=center[0];
+        double yRef=center[1];
+
+
+        for(int i=1; i< polygon.length;i++) {
+            double[] current = polygon[i];
+            // convert to cartesian coordinates in meters, note this not very exact
+            double x1 = ((previous[0]-xRef)*( 6378137*PI/180 ))*Math.cos( yRef*PI/180 );
+            double y1 = (previous[1]-yRef)*( Math.toRadians( 6378137 ) );
+            double x2 = ((current[0]-xRef)*( 6378137*PI/180 ))*Math.cos( yRef*PI/180 );
+            double y2 = (current[1]-yRef)*( Math.toRadians( 6378137 ) );
+
+            // calculate crossproduct
+            total += x1*y2 - x2*y1;
+            previous=current;
+        }
+
+        return 0.5 * Math.abs(total);
+    }
 }
