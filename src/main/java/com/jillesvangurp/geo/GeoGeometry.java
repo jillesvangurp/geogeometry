@@ -897,6 +897,7 @@ public class GeoGeometry {
         validate(point[1],point[0]);
     }
 
+
     /**
      * Calculate the approximate area. Like the distance, this is an approximation and you should account for an error
      * of about half a percent.
@@ -929,5 +930,35 @@ public class GeoGeometry {
         }
 
         return 0.5 * Math.abs(total);
+    }
+
+    /**
+     * Calculate area of polygon with holes. Assumes geojson style notation where the first 2d array is the outer
+     * polygon and the rest represents the holes.
+     *
+     * @param
+     * @return area
+     */
+    public static double area(double[][][] polygon) {
+        Validate.isTrue(polygon.length > 0,"should have at least outer polygon");
+        double area = area(polygon[0]);
+        for(int i=1;i<polygon.length;i++) {
+            // subtract the holes
+            area = area - area(polygon[i]);
+        }
+        return area;
+    }
+
+    /**
+     * Calculate area of a multi polygon.
+     * @param multiPolygon geojson style multi polygon
+     * @return area
+     */
+    public static double area(double[][][][] multiPolygon) {
+        double area=0;
+        for(int i=0;i<multiPolygon.length;i++) {
+            area += area(multiPolygon[i]);
+        }
+        return area;
     }
 }

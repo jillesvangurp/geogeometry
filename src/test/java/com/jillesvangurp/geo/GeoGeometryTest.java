@@ -21,6 +21,7 @@
  */
 package com.jillesvangurp.geo;
 
+import static com.jillesvangurp.geo.GeoGeometry.area;
 import static com.jillesvangurp.geo.GeoGeometry.bboxContains;
 import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoGeometry.polygonContains;
@@ -394,5 +395,20 @@ public class GeoGeometryTest {
         double circleArea = Math.PI*1000*1000;
 
         assertThat("0.005% difference allowed perfect circle area and calculated area",Math.abs(circleArea-calculatedArea), lessThan(calculatedArea/200));
+    }
+
+    public void shouldCalculateAreaOfPolygonWithHole() {
+        double[][] outer = GeoGeometry.circle2polygon(5000, 52, 13, 1000);
+        double[][] inner = GeoGeometry.circle2polygon(5000, 52, 13, 1000);
+        double[][][] polygon=new double[][][] {outer,inner};
+        assertThat(area(polygon), is(area(outer)-area(inner)));
+    }
+
+    public void shouldCalculateAreaOfMultiPolygon() {
+        double[][] outer = GeoGeometry.circle2polygon(5000, 52, 13, 1000);
+        double[][] inner = GeoGeometry.circle2polygon(5000, 52, 13, 1000);
+        double[][][] polygon=new double[][][] {outer,inner};
+        double[][][][] multiPolygon = new double[][][][] {polygon,polygon};
+        assertThat(area(multiPolygon), is(2*area(polygon)));
     }
 }
