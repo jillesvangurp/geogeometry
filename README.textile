@@ -6,7 +6,7 @@ A geo hash is a representation of a coordinate that interleaves the bit represen
 
 The algorithms used for implementing the functionality in GeoGeometry are mostly well known and commonly used in 2D graphics. Despite the existence of many libraries, most come with complicated, object oriented frameworks. This is fine when used in isolation but I found myself needing to translate between different frameworks quite a bit and was looking for something without the OO cruft and more in line with the geojson style of representing different shapes as double arrays.
 
-Note. geometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
+Note. geogeometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
 
 h1. Features
 
@@ -58,6 +58,10 @@ For more details see the LICENSE file
 
 h1. Changelog
 
+* 2.6
+** add function to calculate polygon area
+** fix distance calculation bug with line segments (was incorrectly using intersection outside segment)
+** fix east/west bug on 180 longitude since encode can no longer work with invalid longitudes
 * 2.1
 ** Add distance functions for lines, lineStrings, and polygons.
 * 2.0 - Geojson & project rename: geotools becomes geogeometry
