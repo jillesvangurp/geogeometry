@@ -26,7 +26,7 @@
 
     <groupId>com.github.jillesvangurp</groupId>
     <artifactId>geogeometry</artifactId>
-    <version>2.6-SNAPSHOT</version>
+    <version>2.6</version>
 
     <name>GeoGeometry</name>
     <description>Misc tools for working with wgs 84 coordinates and geohashes</description>
