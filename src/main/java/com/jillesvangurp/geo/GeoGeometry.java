@@ -450,42 +450,59 @@ public class GeoGeometry {
 
     /**
      * Calculate distance of a point (pLat,pLon) to a line defined by two other points (lat1,lon1) and (lat2,lon2)
-     * @param lat1
-     * @param lon1
-     * @param lat2
-     * @param lon2
-     * @param pLat
-     * @param pLon
+     * @param x1
+     * @param y1
+     * @param x2
+     * @param y2
+     * @param x
+     * @param y
      * @return the distance
      */
-    public static double distance(double lat1,double lon1,double lat2, double lon2, double pLat, double pLon) {
-        validate(lat1, lon1);
-        validate(lat2, lon2);
-        validate(pLat, pLon);
-
-        if(lon1==lon2) {
+    public static double distance(double x1,double y1,double x2, double y2, double x, double y) {
+        validate(x1, y1);
+        validate(x2, y2);
+        validate(x, y);
+        double xx,yy;
+        if(y1==y2) {
             // horizontal line
-            return distance(pLat,pLon,pLat,lon1);
-        } else if(lat1==lat2) {
+            xx=x;
+            yy=y1;
+        } else if(x1==x2) {
             // vertical line
-            return distance(pLat,pLon,lat1,pLon);
+            xx=x1;
+            yy=y;
         } else {
             // y=s*x  +c
-            double s= (lon2-lon1)/(lat2-lat1);
-            double c=lon1-s*lat1;
+            double s= (y2-y1)/(x2-x1);
+            double c=y1-s*x1;
 
             // y=ps*x + pc
             double ps = -1/s;
-            double pc=pLon-ps*pLat;
+            double pc=y-ps*x;
 
             // solve    ps*x +pc = s*x + c
             //          (ps-s) *x = c -pc
             //          x= (c-pc)/(ps-s)
-            double xx=(c-pc)/(ps-s);
-            double yy=s*xx+c;
+            xx=(c-pc)/(ps-s);
+            yy=s*xx+c;
 
-            return distance(pLat,pLon,xx,yy);
         }
+        if(onSegment(xx, yy, x1, y1, x2, y2)) {
+            return distance(x,y,xx,yy);
+        } else {
+            return min(distance(x, y,x1,y1), distance(x,y,x2,y2));
+        }
+    }
+
+    private static boolean onSegment(double x, double y, double x1, double y1, double x2, double y2) {
+        double minx=Math.min(x1, x2);
+        double maxx=Math.max(x1, x2);
+
+        double miny=Math.min(y1, y2);
+        double maxy=Math.max(y1, y2);
+
+
+        return x >= minx && x<=maxx && y >= miny && y < maxy;
     }
 
     /**

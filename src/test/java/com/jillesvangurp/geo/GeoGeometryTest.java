@@ -28,11 +28,13 @@ import static com.jillesvangurp.geo.GeoGeometry.polygonContains;
 import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
+import static java.lang.Math.round;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 import java.util.Random;
 
@@ -343,17 +345,27 @@ public class GeoGeometryTest {
         return new Object[][] {
                 {52.520316,13.414654, 52.528149,13.423709, 52.52392,13.412122, 416l},
                 {52.521337,13.403108,52.517002,13.409073,52.519039,13.408665,138l},
-                {52.471551,13.385791,52.478139,13.385791,52.476244,13.384718,73l},//vertical
-                {52.476244,13.384718,52.476244,14,52.478139,13.385062,211l}// horizontal
+                {52.471551,13.385791,52.478139,13.385791,52.476244,13.384718,223l},//vertical
+                {52.476244,13.384718,52.476244,14,52.478139,13.385062,211l},// horizontal
+                {1,1,3,3,2.1,2.1,0l},
+                {1,1,3,3,2.0,2.1,7860l},
+                {1,1,3,3,90,90,distance(3,3,90,90)},
+                {1,1,3,3,0,0,distance(1,1,0,0)},
         };
     }
 
     @Test(dataProvider="linesNPoints")
-    public void shouldCalculateDistanceToLine(double x1, double y1, double x2, double y2, double px, double py, long expectedDistance) {
+    public void shouldCalculateDistanceToLine(double x1, double y1, double x2, double y2, double px, double py, double expectedDistance) {
         double distance = GeoGeometry.distance(x1,y1,x2,y2,px,py);
         double distance2 = GeoGeometry.distance(new double[]{y1,x1},new double[]{y2,x2},new double[]{py,px});
         assertThat(distance, is(distance2));
-        assertThat(Math.round(distance), is(expectedDistance));
+        assertThat(round(distance), is(round(expectedDistance)));
+        double distToPoint1 = distance(x1,y1,px,py);
+        double distToPoint2 = distance(x1,y1,px,py);
+
+
+        assertThat("",distance, lessThanOrEqualTo(distToPoint1));
+        assertThat("",distance, lessThanOrEqualTo(distToPoint2));
     }
 
     public void shouldCalculateDistanceToLineString() {
