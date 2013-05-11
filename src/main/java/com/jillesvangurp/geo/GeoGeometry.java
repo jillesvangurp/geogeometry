@@ -799,7 +799,7 @@ public class GeoGeometry {
             }
         }
 
-        double[][] result = new double[lUpperSize + lLowerSize-2][0];
+        double[][] result = new double[lUpperSize + lLowerSize-1][0];
         int idx = 0;
         for (int i = 0; i < lUpperSize; i++) {
             result[idx] = (lUpper[i]);
@@ -811,7 +811,8 @@ public class GeoGeometry {
             result[idx] = (lLower[i]);
             idx++;
         }
-
+        // close the polygon
+        result[result.length-1]=result[0];
         return result;
     }
 
