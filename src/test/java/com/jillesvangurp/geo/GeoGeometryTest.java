@@ -23,6 +23,8 @@ package com.jillesvangurp.geo;
 
 import static com.jillesvangurp.geo.GeoGeometry.area;
 import static com.jillesvangurp.geo.GeoGeometry.bboxContains;
+import static com.jillesvangurp.geo.GeoGeometry.boundingBox;
+import static com.jillesvangurp.geo.GeoGeometry.circle2polygon;
 import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoGeometry.polygonContains;
 import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
@@ -332,6 +334,22 @@ public class GeoGeometryTest {
         assertThat(distance(berlin[1],bbox[3],berlin[1],berlin[0]), lessThan(501.0));
     }
 
+    public void shouldCalculateBboxForPoint() {
+        double[] bbox = boundingBox(new double[]{13,52});
+        assertThat(bbox[0], is(52.0));
+        assertThat(bbox[1], is(52.0));
+        assertThat(bbox[2], is(13.0));
+        assertThat(bbox[3], is(13.0));
+    }
+
+    public void shouldCalculateBboxForLinePolygonMultiPolygon() {
+        double[][] line = circle2polygon(5000, 52, 13, 1000);
+        double[][][] polygon = new double[][][] {line};
+        double[][][][] multiPolygon = new double[][][][] {polygon};
+        assertThat(area(boundingBox(line)), is(area(boundingBox(polygon))));
+        assertThat(area(boundingBox(line)), is(area(boundingBox(multiPolygon))));
+    }
+
     public void shouldCalculateCorrectPolygonForBbox() {
         double[] bbox = GeoGeometry.bbox(berlin[1], berlin[0], 1000, 1000);
         double[][] polygon = GeoGeometry.bbox2polygon(bbox);
@@ -407,6 +425,14 @@ public class GeoGeometryTest {
         double circleArea = Math.PI*1000*1000;
 
         assertThat("0.005% difference allowed perfect circle area and calculated area",Math.abs(circleArea-calculatedArea), lessThan(calculatedArea/200));
+    }
+
+    public void shouldCalculateAreaForBbox() {
+        int radius = 1000;
+        double[] bboxForCircle = boundingBox(circle2polygon(5000, 52, 13, radius));
+        double area = area(bboxForCircle);
+        double expectedArea=radius*2*radius*2;
+        assertThat("area should be roughly similar to that of the ideal rectangle of 2000x2000",abs(area-expectedArea), lessThan(expectedArea*0.01));
     }
 
     public void shouldCalculateAreaOfPolygonWithHole() {

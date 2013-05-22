@@ -36,26 +36,78 @@ import org.apache.commons.lang.Validate;
 
 public class GeoGeometry {
 
+
     /**
-     * @param polygonPoints
-     *            points that make up the polygon as arrays of
-     *            [latitude,longitude]
-     * @return bounding box that contains the polygon as a double array of
+     * @param point
+     * @return bounding box that contains the point as a double array of
+     *         [lat,lat,lon,lon}
+     */
+    public static double[] boundingBox(double[] point) {
+        return new double[] {point[1],point[1],point[0],point[0]};
+    }
+
+    /**
+     * @param lineString
+     * @return bounding box that contains the lineString as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
-    public static double[] boundingBox(double[]... polygonPoints) {
+    public static double[] boundingBox(double[][] lineString) {
         double minLat = Integer.MAX_VALUE;
         double minLon = Integer.MAX_VALUE;
         double maxLat = Integer.MIN_VALUE;
         double maxLon = Integer.MIN_VALUE;
 
-        for (int i = 0; i < polygonPoints.length; i++) {
-            minLat = min(minLat, polygonPoints[i][1]);
-            minLon = min(minLon, polygonPoints[i][0]);
-            maxLat = max(maxLat, polygonPoints[i][1]);
-            maxLon = max(maxLon, polygonPoints[i][0]);
+        for (int i = 0; i < lineString.length; i++) {
+            minLat = min(minLat, lineString[i][1]);
+            minLon = min(minLon, lineString[i][0]);
+            maxLat = max(maxLat, lineString[i][1]);
+            maxLon = max(maxLon, lineString[i][0]);
         }
 
+        return new double[] { minLat, maxLat, minLon, maxLon };
+    }
+
+    /**
+     * @param polygon
+     * @return bounding box that contains the polygon as a double array of
+     *         [minLat,maxLat,minLon,maxLon}
+     */
+    public static double[] boundingBox(double[][][] polygon) {
+        double minLat = Integer.MAX_VALUE;
+        double minLon = Integer.MAX_VALUE;
+        double maxLat = Integer.MIN_VALUE;
+        double maxLon = Integer.MIN_VALUE;
+        for (int i = 0; i < polygon.length; i++) {
+            for (int j = 0; j < polygon[i].length; j++) {
+                minLat = min(minLat, polygon[i][j][1]);
+                minLon = min(minLon, polygon[i][j][0]);
+                maxLat = max(maxLat, polygon[i][j][1]);
+                maxLon = max(maxLon, polygon[i][j][0]);
+            }
+        }
+        return new double[] { minLat, maxLat, minLon, maxLon };
+    }
+
+    /**
+     * @param multiPolygon
+     * @return bounding box that contains the multiPolygon as a double array of
+     *         [minLat,maxLat,minLon,maxLon}
+     */
+    public static double[] boundingBox(double[][][][] multiPolygon) {
+        double minLat = Integer.MAX_VALUE;
+        double minLon = Integer.MAX_VALUE;
+        double maxLat = Integer.MIN_VALUE;
+        double maxLon = Integer.MIN_VALUE;
+        for (int i = 0; i < multiPolygon.length; i++) {
+            for (int j = 0; j < multiPolygon[i].length; j++) {
+                for (int k = 0; k < multiPolygon[i][j].length; k++) {
+                    minLat = min(minLat, multiPolygon[i][j][k][1]);
+                    minLon = min(minLon, multiPolygon[i][j][k][0]);
+                    maxLat = max(maxLat, multiPolygon[i][j][k][1]);
+                    maxLon = max(maxLon, multiPolygon[i][j][k][0]);
+                }
+            }
+        }
         return new double[] { minLat, maxLat, minLon, maxLon };
     }
 
@@ -948,6 +1000,17 @@ public class GeoGeometry {
         }
 
         return 0.5 * Math.abs(total);
+    }
+
+    public static double area(double[] bbox) {
+        if(bbox.length != 4) {
+            throw new IllegalArgumentException("Boundingbox should be array of [minLat, maxLat, minLon, maxLon]");
+        }
+
+        double latDist=distance(bbox[0],bbox[2],bbox[1],bbox[2]);
+        double lonDist=distance(bbox[0],bbox[2],bbox[0],bbox[3]);
+
+        return latDist*lonDist;
     }
 
     /**
