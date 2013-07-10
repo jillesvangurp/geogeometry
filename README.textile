@@ -58,6 +58,11 @@ For more details see the LICENSE file
 
 h1. Changelog
 
+* 2.7-2.9
+** fix subtle bug with perpendicular distance to line for horizontal lines and polygons
+** add implementation of Douglas Peucker to simplify polygons with large amounts of segments
+** add methods to calculate bounding boxes for all shape types, add method to calculate area for bounding box
+** close polygon with the starting point when calculating a polygon for a point cloud
 * 2.6
 ** add function to calculate polygon area
 ** fix distance calculation bug with line segments (was incorrectly using intersection outside segment)
