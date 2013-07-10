@@ -200,21 +200,6 @@ public class GeoGeometryTest {
 	    // FIXME complete test
 	}
 
-	public void quicky() {
-        System.out.println(distance(82, 13, 82,13.1));
-        System.out.println(distance(82, 13, 82,13.01));
-        System.out.println(distance(82, 13, 82,13.001));
-        System.out.println(distance(82, 13, 82,13.0001));
-        System.out.println(distance(52, 13, 52,13.1));
-        System.out.println(distance(52, 13, 52,13.01));
-        System.out.println(distance(52, 13, 52,13.001));
-        System.out.println(distance(52, 13, 52,13.0001));
-        System.out.println(distance(2, 13, 2,13.1));
-        System.out.println(distance(2, 13, 2,13.01));
-        System.out.println(distance(2, 13, 2,13.001));
-        System.out.println(distance(2, 13, 2,13.0001));
-	}
-
 	public void polygonForPointsInFourQuadrantsShouldContainStuffInside() {
 	    double[][] polygon = GeoGeometry.polygonForPoints(new double[][]{sydney,newyork,amsterdam,buenosaires});
         assertThat("should be inside", polygonContains(london, polygon));
