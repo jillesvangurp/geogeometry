@@ -553,8 +553,8 @@ public class GeoGeometry {
         double miny=Math.min(y1, y2);
         double maxy=Math.max(y1, y2);
 
-
-        return x >= minx && x<=maxx && y >= miny && y < maxy;
+        boolean result = x >= minx && x<=maxx && y >= miny && y <= maxy;
+        return result;
     }
 
     /**
@@ -1041,5 +1041,101 @@ public class GeoGeometry {
             area += area(multiPolygon[i]);
         }
         return area;
+    }
+
+    public static String pointToString(double[] p) {
+        return "("+p[0]+","+p[1]+")";
+    }
+
+    public static String lineToString(double[][] line) {
+        StringBuilder buf = new StringBuilder();
+        for(double[] p:line) {
+            buf.append(pointToString(p)+ ",");
+        }
+        buf.setLength(buf.length()-1);
+        return buf.toString();
+    }
+
+    /**
+     * Simplifies multi polygon with lots of segments by throwing out in between points with a perpendicular
+     * distance of less than the tolerance (in meters). Implemented using the Douglas Peucker algorithm:
+     * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+     * @param points a 4d array
+     * @param tolerance
+     * @return a simpler polygon
+     */
+    public static double[][][][] simplifyMultiPolygon(double[][][][] points, double tolerance) {
+        double[][][][] result = new double[points.length][0][0][0];
+        int i=0;
+        for(double[][][] polygon:points) {
+            result[i++]=simplifyPolygon(polygon, tolerance);
+        }
+        return result;
+    }
+
+    /**
+     * Simplifies polygon with lots of segments by throwing out in between points with a perpendicular
+     * distance of less than the tolerance (in meters). Implemented using the Douglas Peucker algorithm:
+     * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+     * @param points a 3d array with the outer and inner polygons.
+     * @param tolerance
+     * @return a simpler polygon
+     */
+    public static double[][][] simplifyPolygon(double[][][] points, double tolerance) {
+        double[][][] result = new double[points.length][0][0];
+        int i=0;
+        for(double[][] line:points) {
+            result[i++]=simplifyLine(line, tolerance);
+        }
+        return result;
+    }
+
+    /**
+     * Simplifies lines and polygons with lots of segments by throwing out in between points with a perpendicular
+     * distance of less than the tolerance (in meters). Implemented using the Douglas Peucker algorithm:
+     * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+     * @param points a 2d array that may be either a line or a polygon.
+     * @param tolerance
+     * @return a simpler line
+     */
+    public static double[][] simplifyLine(double[][] points, double tolerance) {
+        double dmax=0;
+        int index=0;
+        if(points.length==3) {
+            dmax=distance(points[0],points[points.length-1],points[1]); // edge case
+        }
+
+        for(int i=2; i<points.length-1;i++) {
+            double d= distance(points[0],points[points.length-1],points[i]);
+            if(d>dmax) {
+                index=i;
+                dmax=d;
+            }
+        }
+        if(dmax > tolerance && points.length>3) {
+            double [][] leftArray=new double[index][0];
+            System.arraycopy(points, 0, leftArray, 0, index);
+
+
+            double[][] left=simplifyLine(leftArray, tolerance);
+
+            double [][] rightArray=new double[points.length-index][0];
+            System.arraycopy(points, index, rightArray, 0, points.length-index);
+
+            double[][] right=simplifyLine(rightArray, tolerance);
+            double[][] result=new double[left.length+right.length][0];
+            System.arraycopy(left, 0, result, 0, left.length);
+            System.arraycopy(right, 0, result, left.length, right.length);
+            return result;
+        } else if(dmax > tolerance && points.length<=3) {
+            return points;
+        } else {
+            double[][] simplified = new double[][]{points[0],points[points.length-1]};
+            if(points.length>2) {
+                return simplified;
+            } else {
+                return points;
+            }
+        }
     }
 }

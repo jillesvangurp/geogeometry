@@ -200,6 +200,21 @@ public class GeoGeometryTest {
 	    // FIXME complete test
 	}
 
+	public void quicky() {
+        System.out.println(distance(82, 13, 82,13.1));
+        System.out.println(distance(82, 13, 82,13.01));
+        System.out.println(distance(82, 13, 82,13.001));
+        System.out.println(distance(82, 13, 82,13.0001));
+        System.out.println(distance(52, 13, 52,13.1));
+        System.out.println(distance(52, 13, 52,13.01));
+        System.out.println(distance(52, 13, 52,13.001));
+        System.out.println(distance(52, 13, 52,13.0001));
+        System.out.println(distance(2, 13, 2,13.1));
+        System.out.println(distance(2, 13, 2,13.01));
+        System.out.println(distance(2, 13, 2,13.001));
+        System.out.println(distance(2, 13, 2,13.0001));
+	}
+
 	public void polygonForPointsInFourQuadrantsShouldContainStuffInside() {
 	    double[][] polygon = GeoGeometry.polygonForPoints(new double[][]{sydney,newyork,amsterdam,buenosaires});
         assertThat("should be inside", polygonContains(london, polygon));
@@ -363,9 +378,11 @@ public class GeoGeometryTest {
         return new Object[][] {
                 {52.520316,13.414654, 52.528149,13.423709, 52.52392,13.412122, 416l},
                 {52.521337,13.403108,52.517002,13.409073,52.519039,13.408665,138l},
-                {52.471551,13.385791,52.478139,13.385791,52.476244,13.384718,223l},//vertical
+                {52.471551,13.385791,52.478139,13.385791,52.476244,13.384718,73l},//vertical
                 {52.476244,13.384718,52.476244,14,52.478139,13.385062,211l},// horizontal
                 {1,1,3,3,2.1,2.1,0l},
+                {1,1,3,1,2,1,0l},
+                {1,1,1,3,1,2,0l},
                 {1,1,3,3,2.0,2.1,7860l},
                 {1,1,3,3,90,90,distance(3,3,90,90)},
                 {1,1,3,3,0,0,distance(1,1,0,0)},
@@ -449,4 +466,39 @@ public class GeoGeometryTest {
         double[][][][] multiPolygon = new double[][][][] {polygon,polygon};
         assertThat(area(multiPolygon), is(2*area(polygon)));
     }
+
+    public void shouldSimplifyLineOnlyOnce() {
+        double[][] line=new double[][] {newyork,moritzPlatz,senefelderPlatz,naturkundeMuseum, buenosaires};
+        double[][] simplified = GeoGeometry.simplifyLine(line, 10000);
+        double[][] superSimplified = GeoGeometry.simplifyLine(simplified,10000);
+        assertThat(simplified.length, lessThan(line.length));
+        assertThat(simplified.length, is(superSimplified.length));
+    }
+
+    @DataProvider
+    public Object[][] straightLines() {
+        return new Object[][] {
+                {new double[][] {{0,1},{1,1},{2,1},{3,1},{4,1}}},
+                {new double[][] {{1,0},{1,1},{1,2},{1,3},{1,4}}},
+                {new double[][] {{0,0},{1,1},{2,2},{3,3},{4,4}}},
+                {new double[][] {{0,0},{1,1},{2,2},{4,4}}},
+                {new double[][] {{0,0},{1,1},{4,4}}},
+                {new double[][] {{0,0},{1,1}}},
+
+        };
+    }
+
+    @Test(dataProvider="straightLines")
+    public void shouldSimplifyStraightLines(double[][] line) {
+        double[][] simplified = GeoGeometry.simplifyLine(line, 1);
+        assertThat(simplified.length, is(2));
+    }
+
+    public void shouldSimplifyCircle() {
+        double[][] poly = GeoGeometry.circle2polygon(10000, 52, 13, 1000); // 10000 segments!
+        double[][] simplified = GeoGeometry.simplifyLine(poly, 100);
+        assertThat(simplified.length, lessThan(poly.length));
+    }
+
+
 }
