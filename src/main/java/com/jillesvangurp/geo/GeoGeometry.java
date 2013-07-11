@@ -955,10 +955,13 @@ public class GeoGeometry {
     }
 
     public static void validate(double latitude, double longitude) {
-        if(latitude < -90.0 || latitude > 90.0) {
+        // this gets rid of rounding errors e.g. 180.00000000000023 will validate
+        double roundedLat = Math.round(latitude*1000000)/1000000.0;
+        double roundedLon = Math.round(longitude*1000000)/1000000.0;
+        if(roundedLat < -90.0 || roundedLat > 90.0) {
             throw new IllegalArgumentException("Latitude " + latitude + " is outside legal range of -90,90");
         }
-        if(longitude < -180.0 || longitude > 180.0) {
+        if(roundedLon < -180.0 || roundedLon > 180.0) {
             throw new IllegalArgumentException("Longitude " + longitude + " is outside legal range of -180,180");
         }
     }

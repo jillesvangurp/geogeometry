@@ -485,5 +485,36 @@ public class GeoGeometryTest {
         assertThat(simplified.length, lessThan(poly.length));
     }
 
+    @DataProvider
+    public Object[][] validPoints() {
+        return new Object[][] {
+                {amsterdam},
+                {berlin},
+                {new double[]{180.0000004999,52}},// allow small rounding 'errors'
+                {new double[]{180.0000004999,90.0000004999}}
+        };
+    }
 
+    @Test(dataProvider="validPoints")
+    public void shouldValidate(double[] point) {
+        // should throw no exceptions
+        GeoGeometry.validate(point);
+    }
+
+    @DataProvider
+    public Object[][] invalidPoints() {
+        return new Object[][] {
+                {new double[]{180.000001,0}},
+                {new double[]{-180.000001,0}},
+                {new double[]{0,90.000001}},
+                {new double[]{0,-90.000001}}
+        };
+    }
+
+
+    @Test(dataProvider="invalidPoints", expectedExceptions=IllegalArgumentException.class)
+    public void shouldNotValidate(double[] point) {
+        // should throw exceptions
+        GeoGeometry.validate(point);
+    }
 }

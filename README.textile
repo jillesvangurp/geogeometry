@@ -57,7 +57,8 @@ Like all my other projects, this project is licensed under the so-called MIT lic
 For more details see the LICENSE file
 
 h1. Changelog
-
+* 2.10
+** relax coordinate validation to not fail on very small rounding errors
 * 2.7-2.9
 ** fix subtle bug with perpendicular distance to line for horizontal lines and polygons
 ** add implementation of Douglas Peucker to simplify polygons with large amounts of segments
