@@ -1,31 +1,36 @@
 h1. Introduction
 
-GeoGeometry is a set of tools for manipulating geometric shapes in the wgs 84 coordinate system and for covering them with geo hashes for indexing purposes. 
+GeoGeometry started out as a simple side project to help me come up with a list of geohashes that cover a particular geo shape. However, most of the recent work has actually gone into adding several implementations of common geometry algorithms.
+
+GeoGeometry is not the only implementation of these algorithms. However, it is unique in the way it has been designed and the simplicity of using it.
+
+There are two driving design principles:
+
+- It assumes you are using something like geojson, which is a convention for representing geometric shapes on the web. One key feature of *geojson* is that all shapes are represented as muli dimensional arrays of doubles. This library does the same. 
+- It avoids the trap of object orientation. Object orientation and geometry go way back. The first object oriented systems were all  about cute little Point and Line classes. As a consequence, world + dog now feels compelled to come up with their own Point, Line, Polygon, etc. classes. So, this library has *no classes that you can instantiate and only provides static methods*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. Also, it makes it trivial to port the code to different languages. And finally, not creating insane amounts of point objects helps keep things fast as well.
+
+h2. Geohashes
 
 A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
 
-The algorithms used for implementing the functionality in GeoGeometry are mostly well known and commonly used in 2D graphics. 
+h2. Name
 
-Most existing geospatial libraries come with complicated object oriented frameworks. This is fine when used in isolation but I found myself needing to translate between different frameworks quite a bit and was looking for something without the OO cruft and more in line with the geojson style of representing different shapes as double arrays and generally keeping things simple.
-
-The functions in this library are static and can thus be used in isolation. The input for these functions are simple primitive parameters or arrays. This makes them easy to understand, test, and use.
-
-Note. geogeometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
+Note. Geogeometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
 
 h1. Features
 
 * GeoGeometry class with methods that allow you to:
-** Calculate distance between two coordinates using the haversine algorithm.
+** Calculate distance between two coordinates using the *Haversine* algorithm.
 ** Calculate distance of a point to a line. lineString, and polygon
 ** Calculate the area of a polygon
-** Simplify polygons using the Douglas Peucker algorithm
+** Simplify polygons using the *Douglas Peucker* algorithm
 ** check bounding box containment for a point
-** check polygon containment for a point
+** check *polygon containment* for a point
 ** get the center for a polygon
 ** get bounding box for a polygon
-** convert circle to a polygon
-** create a polygon from a point cloud
-** translate a wgs84 coordinate by x & y meters along the latitude and longitude
+** convert *circle to a polygon*
+** create a *polygon from a point cloud*
+** *translate a wgs84 coordinate* by x & y meters along the latitude and longitude
 
 * GeoHashUtils class with methods that allow you to: 
 ** encode and decode geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
@@ -35,11 +40,7 @@ h1. Features
 ** get the 32 sub geo hashes for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
 ** cover lines, paths, polygons, or circles with geo hashes
 
-I've deliberately kept the design simple and non object oriented. These classes have no external dependencies and only use the java.util package and the java.lang.Math class. Consequently it should be easy to port this functionality to whatever other language. Especially, I've not attempted to implement Point, Polygon, Path, Circle, or other classes to support this library. The reason for this is very simple: these things are commonly implemented in other frameworks and any attempt from my side to impose my own implementation would conflict with the need of others to reuse their own classes. I think it is somewhat of a design smell that world + dog feels compelled to implement their own Point class. 
-
-So instead, a point is represented as a latitude, longitude pair of doubles or as an array of two doubles (like in geojson). Likewise, paths and polygons are represented as arrays of points. A circle is a point and a radius. This should enable anyone to integrate this functionality easily.
-
-h1. Caveats
+h1. Limitations
 
 * Some of the algorithms used have limitations with respect to where you can use them. Generally things should be fine around the date line (if not report bugs). However, the poles are tricky and some of the algorithms get inaccurate or simply fail to exit. Because most data sets lack data for the poles, this should not be a big issue for most. Some of the algorithms now throw an exception if you try this. I'm not currently planning a fix but would appreciate pull requests for this.
 * There is currently not a whole lot of input validation in this library. That means some of the algorithms might do unexpected things if you call them in the wrong way. Input validation would make using this library more expensive and that is something I'm trying to avoid.
