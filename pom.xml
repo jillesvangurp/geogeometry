@@ -1,6 +1,6 @@
 <!--
 /**
-* Copyright (c) 2011, Jilles van Gurp
+* Copyright (c) 2011-2014, Jilles van Gurp
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.jillesvangurp</groupId>
+    <groupId>com.jillesvangurp</groupId>
     <artifactId>geogeometry</artifactId>
     <version>2.11-SNAPSHOT</version>
 
     <name>GeoGeometry</name>
     <description>Misc tools for working with wgs 84 coordinates and geohashes</description>
-
     <url>http://www.jillesvangurp.com</url>
+
+    <scm>
+        <url>git@github.com:jillesvangurp/geogeometry.git</url>
+        <connection>scm:git:git@github.com:jillesvangurp/geogeometry.git</connection>
+        <developerConnection>scm:git:git@github.com:jillesvangurp/geogeometry.git</developerConnection>
+    </scm>
 
     <licenses>
         <license>
@@ -41,23 +46,33 @@
         </license>
     </licenses>
 
-    <scm>
-        <url>git@github.com:jillesvangurp/geogeometry.git</url>
-        <connection>scm:git:git@github.com:jillesvangurp/geogeometry.git</connection>
-        <developerConnection>scm:git:git@github.com:jillesvangurp/geogeometry.git</developerConnection>
-    </scm>
 
-	<distributionManagement>
-		<repository>
-			<id>release.repo</id>
-			<url>dav:http://repo.jillesvangurp.com/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>snapshot.repo</id>
-			<url>dav:http://repo.jillesvangurp.com/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
+    <repositories>
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
     
     <developers>
         <developer>
@@ -70,6 +85,7 @@
             </roles>
         </developer>
     </developers>
+
     <organization>
         <name>www.jillesvangurp.com</name>
         <url>http://jillesvangurp.com</url>
@@ -89,8 +105,8 @@
                 <configuration>
                     <verbose>true</verbose>
                     <fork>true</fork>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -121,6 +137,17 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6</version>
+                <extensions>true</extensions>                
+                <configuration>
+                    <!-- The Base URL of Nexus instance where we want to stage -->
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <serverId>sonatype-nexus-staging</serverId>
+                </configuration>
+            </plugin>            
         </plugins>
         <extensions>
             <extension>
@@ -129,12 +156,34 @@
             <version>2.2</version>
             </extension>
         </extensions>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.1</version>
+                    <configuration>
+                        <mavenExecutorId>forked-path</mavenExecutorId>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <arguments>-Psonatype-oss-release</arguments>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>        
     </build>
     <profiles>
         <profile>
-            <id>signartifacts</id>
+            <id>sonatype-oss-release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -150,7 +199,7 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
+        </profile>        
     </profiles>
     
     <dependencies>
