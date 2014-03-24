@@ -34,11 +34,30 @@ import java.util.Comparator;
 
 import org.apache.commons.lang.Validate;
 
+/**
+ * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
+ * GeoJson http://geojson.org/ convention of expressing shapes as multi dimensional arrays of points.
+ *
+ * Following this convention means there is no need for an object oriented framework to represent the different shapes.
+ * Consequently, all of the methods in this framework are static methods. This makes usage of these methods very
+ * straightforward and also makes it easy to integrate with the many frameworks out there that provide their own object
+ * oriented abstractions.
+ *
+ * So, a point is an array with the coordinate pair. A line (or line string) is a 2d array of points. A polygon is a 3d
+ * array that consists of an outer polygon and zero or more inner polygons (holes). Each 2d array should be a closed
+ * linear ring where the last point is the same as the first point.
+ *
+ * Finally, 4d arrays can be used to express multipolygons of one or more polygons (each with their own holes).
+ *
+ * It should be noted that GeoJson represents points as arrays of [longitude, latitude] rather than the conventional way
+ * of latitude followed by longitude.
+ *
+ * It should also be noted that this class contains several methods that treat 2d arrays as polygons.
+ */
 public class GeoGeometry {
 
-
     /**
-     * @param point
+     * @param point point
      * @return bounding box that contains the point as a double array of
      *         [lat,lat,lon,lon}
      */
@@ -47,7 +66,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param lineString
+     * @param lineString line
      * @return bounding box that contains the lineString as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
@@ -68,7 +87,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param polygon
+     * @param polygon 3d polygon array
      * @return bounding box that contains the polygon as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
@@ -89,7 +108,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param multiPolygon
+     * @param multiPolygon 4d multipolygon array
      * @return bounding box that contains the multiPolygon as a double array of
      *         [minLat,maxLat,minLon,maxLon}
      */
@@ -116,8 +135,9 @@ public class GeoGeometry {
      * thousands to be way off. This method filters those out by sorting the coordinates and then discarding the
      * specified percentage.
      *
-     * @param points
-     * @return
+     * @param points 2d array of points
+     * @param percentage percentage of points to discard
+     * @return sorted array of points with the specified percentage of elements at the beginning and end of the array removed.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static double[][] filterNoiseFromPointCloud(double[][] points, float percentage) {
@@ -152,12 +172,12 @@ public class GeoGeometry {
     /**
      * @param bbox
      *            double array of [minLat,maxLat,minLon,maxLon}
-     * @param latitude
-     * @param longitude
+     * @param latitude latitude
+     * @param longitude longitude
      * @return true if the latitude and longitude are contained in the bbox
      */
     public static boolean bboxContains(double[] bbox, double latitude, double longitude) {
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
         return bbox[0] <= latitude && latitude <= bbox[1] && bbox[2] <= longitude && longitude <= bbox[3];
     }
 
@@ -165,7 +185,7 @@ public class GeoGeometry {
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
      *
-     * @param point
+     * @param point point
      * @param polygonPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
      * @return true if the polygon contains the coordinate
      */
@@ -178,10 +198,11 @@ public class GeoGeometry {
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
      *
-     * @param point
-     * @param polygonPoints
+     * @param point point
+     * @param polygonPoints linestring
      * @return true if the polygon contains the coordinate
      */
+    @Deprecated
     public static boolean polygonContains(double[] point, double[]... polygonPoints) {
         validate(point);
         return polygonContains(point[1], point[0], polygonPoints);
@@ -191,13 +212,13 @@ public class GeoGeometry {
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
      *
-     * @param latitude
-     * @param longitude
+     * @param latitude latitude
+     * @param longitude longitude
      * @param polygonPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double latitude, double longitude, double[][][] polygonPoints) {
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
         return polygonContains(latitude, longitude, polygonPoints[0]);
     }
 
@@ -205,15 +226,15 @@ public class GeoGeometry {
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
      *
-     * @param latitude
-     * @param longitude
+     * @param latitude latitude
+     * @param longitude longitude
      * @param polygonPoints
      *            polygonPoints points that make up the polygon as arrays of
      *            [latitude,longitude]
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double latitude, double longitude, double[]... polygonPoints) {
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
 
         if (polygonPoints.length <= 2) {
             throw new IllegalArgumentException("a polygon must have at least three points");
@@ -288,8 +309,8 @@ public class GeoGeometry {
      * Simple rounding method that allows you to get rid of some decimals in a
      * double.
      *
-     * @param d
-     * @param decimals
+     * @param d a double
+     * @param decimals the number of desired decimals after the .
      * @return d rounded to the specified precision
      */
     public static double roundToDecimals(double d, int decimals) {
@@ -302,14 +323,14 @@ public class GeoGeometry {
 
     /**
      * Check if the lines defined by  (x1,y1) (x2,y2) and (u1,v1) (u2,v2) cross each other or not.
-     * @param x1
-     * @param y1
-     * @param x2
-     * @param y2
-     * @param u1
-     * @param v1
-     * @param u2
-     * @param v2
+     * @param x1 double
+     * @param y1 double
+     * @param x2 double
+     * @param y2 double
+     * @param u1 double
+     * @param v1 double
+     * @param u2 double
+     * @param v2 double
      * @return true if they cross each other
      */
     public static boolean linesCross(double x1, double y1, double x2, double y2, double u1, double v1, double u2, double v2) {
@@ -394,13 +415,13 @@ public class GeoGeometry {
      * Note, this method assumes the earth is a sphere and the result is not
      * going to be very precise for larger distances.
      *
-     * @param latitude
-     * @param longitude
-     * @param meters
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param meters distance in meters that the point should be translated
      * @return the translated coordinate.
      */
     public static double[] translateLongitude(double latitude, double longitude, double meters) {
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
         return new double[] { roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6),latitude };
     }
 
@@ -409,9 +430,9 @@ public class GeoGeometry {
      * Note, this method assumes the earth is a sphere and the result is not
      * going to be very precise for larger distances.
      *
-     * @param latitude
-     * @param longitude
-     * @param meters
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param meters distance in meters that the point should be translated
      * @return the translated coordinate.
      */
     public static double[] translateLatitude(double latitude, double longitude, double meters) {
@@ -423,28 +444,28 @@ public class GeoGeometry {
      * latitude. Note, this method assumes the earth is a sphere and the result
      * is not going to be very precise for larger distances.
      *
-     * @param latitude
-     * @param longitude
-     * @param lateralMeters
-     * @param longitudalMeters
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param latitudalMeters distance in meters that the point should be translated along the latitude
+     * @param longitudalMeters distance in meters that the point should be translated along the longitude
      * @return the translated coordinate.
      */
-    public static double[] translate(double latitude, double longitude, double lateralMeters, double longitudalMeters) {
-        validate(latitude, longitude);
+    public static double[] translate(double latitude, double longitude, double latitudalMeters, double longitudalMeters) {
+        validate(latitude, longitude, false);
         double[] longitudal = translateLongitude(latitude, longitude, longitudalMeters);
-        return translateLatitude(longitudal[1], longitudal[0], lateralMeters);
+        return translateLatitude(longitudal[1], longitudal[0], latitudalMeters);
     }
 
     /**
      * Calculate a bounding box of the specified longitudal and latitudal meters with the latitude/longitude as the center.
-     * @param latitude
-     * @param longitude
-     * @param latitudalMeters
-     * @param longitudalMeters
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param latitudalMeters distance in meters that the point should be translated along the latitude
+     * @param longitudalMeters distance in meters that the point should be translated along the longitude
      * @return [minlat,maxlat,minlon,maxlon]
      */
     public static double[] bbox(double latitude, double longitude, double latitudalMeters,double longitudalMeters) {
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
 
         double[] tr = translate(latitude, longitude, latitudalMeters/2, longitudalMeters/2);
         double[] br = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
@@ -473,8 +494,8 @@ public class GeoGeometry {
      * @return the distance in meters
      */
     public static double distance(final double lat1, final double long1, final double lat2, final double long2) {
-        validate(lat1, long1);
-        validate(lat2, long2);
+        validate(lat1, long1, false);
+        validate(lat2, long2, false);
 
         final double deltaLat = toRadians(lat2 - lat1);
         final double deltaLon = toRadians(long2 - long1);
@@ -502,18 +523,18 @@ public class GeoGeometry {
 
     /**
      * Calculate distance of a point (pLat,pLon) to a line defined by two other points (lat1,lon1) and (lat2,lon2)
-     * @param x1
-     * @param y1
-     * @param x2
-     * @param y2
-     * @param x
-     * @param y
-     * @return the distance
+     * @param x1 double
+     * @param y1 double
+     * @param x2 double
+     * @param y2 double
+     * @param x double
+     * @param y double
+     * @return the distance of the point to the line
      */
     public static double distance(double x1,double y1,double x2, double y2, double x, double y) {
-        validate(x1, y1);
-        validate(x2, y2);
-        validate(x, y);
+        validate(x1, y1, false);
+        validate(x2, y2, false);
+        validate(x, y, false);
         double xx,yy;
         if(y1==y2) {
             // horizontal line
@@ -559,15 +580,20 @@ public class GeoGeometry {
 
     /**
      * Calculate distance of a point p to a line defined by two other points l1 and l2.
-     * @param l1
-     * @param l2
-     * @param p
-     * @return the distance
+     * @param l1 point 1 on the line
+     * @param l2 point 2 on the line
+     * @param p point
+     * @return the distance of the point to the line
      */
     public static double distance(double[] l1, double[] l2, double[] p ) {
         return distance(l1[1],l1[0],l2[1],l2[0],p[1],p[0]);
     }
 
+    /**
+     * @param point point
+     * @param lineString linestring
+     * @return the distance of the point to the line
+     */
     public static double distanceToLineString(double[] point, double[][] lineString) {
         if(lineString.length<2) {
             throw new IllegalArgumentException("not enough segments in line");
@@ -584,10 +610,11 @@ public class GeoGeometry {
     }
 
     /**
-     * @param point
-     * @param polygon
+     * @param point point
+     * @param polygon 2d linestring that is a polygon
      * @return distance to polygon
      */
+    @Deprecated // use 3d array to represent polygons
     public static double distanceToPolygon(double[] point, double[][] polygon) {
         if(polygon.length<3) {
             throw new IllegalArgumentException("not enough segments in polygon");
@@ -599,8 +626,8 @@ public class GeoGeometry {
     }
 
     /**
-     * @param point
-     * @param polygon
+     * @param point point
+     * @param polygon polygon
      * @return distance to polygon
      */
     public static double distanceToPolygon(double[] point, double[][][] polygon) {
@@ -611,8 +638,8 @@ public class GeoGeometry {
     }
 
     /**
-     * @param point
-     * @param multiPolygon
+     * @param point point
+     * @param multiPolygon multi polygon
      * @return distance to the nearest of the polygons in the multipolygon
      */
     public static double distanceToMultiPolygon(double[] point, double[][][][] multiPolygon) {
@@ -646,6 +673,10 @@ public class GeoGeometry {
         return new double[] { cumLon / polygonPoints.length, cumLat / polygonPoints.length };
     }
 
+    /**
+     * @param bbox 2d array of [lat,lat,lon,lon]
+     * @return a 2d linestring with a rectangular polygon
+     */
     public static double[][] bbox2polygon(double[] bbox) {
         return new double[][] { { bbox[2], bbox[0] }, { bbox[2], bbox[1] }, { bbox[3], bbox[1] }, { bbox[3], bbox[0] }, { bbox[2], bbox[0] } };
     }
@@ -658,14 +689,13 @@ public class GeoGeometry {
      *            number of segments the polygon should have. The higher this
      *            number, the better of an approximation the polygon is for the
      *            circle.
-     * @param latitude
-     * @param longitude
-     * @param radius
-     * @return an array of the points [longitude,latitude] that make up the
-     *         polygon.
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param radius radius of the circle
+     * @return a linestring polygon
      */
     public static double[][] circle2polygon(int segments, double latitude, double longitude, double radius) {
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
 
         if (segments < 5) {
             throw new IllegalArgumentException("you need a minimum of 5 segments");
@@ -743,8 +773,8 @@ public class GeoGeometry {
     }
 
     /**
-     * @param containingPolygon
-     * @param containedPolygon
+     * @param containingPolygon linestring polygon
+     * @param containedPolygon linestring polygon
      * @return true if the containing polygon fully contains the contained polygon
      */
     public static boolean contains(double[][] containingPolygon, double[][] containedPolygon) {
@@ -763,8 +793,8 @@ public class GeoGeometry {
      * Given that the contains algorithm disregards polygon points as not contained in the polygon, it is useful to
      * expand the polygon a little if you do require this.
      *
-     * @param meters
-     * @param points
+     * @param meters distance
+     * @param points linestring polygon
      * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
      */
     public static double[][] expandPolygon(int meters, double[][] points) {
@@ -790,7 +820,7 @@ public class GeoGeometry {
 
     /**
      * Calculate a polygon for the specified points.
-     * @param points
+     * @param points linestring polygon
      * @return a convex polygon for the points
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -869,9 +899,9 @@ public class GeoGeometry {
     }
 
     /**
-     * @param a
-     * @param b
-     * @param c
+     * @param a point
+     * @param b point
+     * @param c point
      * @return true if b is right of the line defined by a and c
      */
     static boolean rightTurn(double[] a, double[] b, double[] c) {
@@ -879,11 +909,12 @@ public class GeoGeometry {
     }
 
     /**
+     * Convert notation in degrees, minutes, and seconds to the decimal wgs 84 equivalent.
      * @param direction
      *            n,s,e,w
-     * @param degrees
-     * @param minutes
-     * @param seconds
+     * @param degrees degrees
+     * @param minutes minutes
+     * @param seconds seconds
      * @return decimal degree
      */
     public static double toDecimalDegree(String direction, double degrees, double minutes, double seconds) {
@@ -895,7 +926,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param point
+     * @param point point
      * @return a json representation of the point
      */
     public static String toJson(double[] point) {
@@ -907,7 +938,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param points
+     * @param points linestring
      * @return a json representation of the points
      */
     public static String toJson(double[][] points) {
@@ -923,7 +954,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param points
+     * @param points polygon
      * @return a json representation of the points
      */
     public static String toJson(double[][][] points) {
@@ -939,7 +970,7 @@ public class GeoGeometry {
     }
 
     /**
-     * @param points
+     * @param points multipolygon
      * @return a json representation of the points
      */
     public static String toJson(double[][][][] points) {
@@ -954,10 +985,35 @@ public class GeoGeometry {
         return buf.toString();
     }
 
+
+    /**
+     * Validates coordinates. Note. because of some edge cases at the extremes that I've encountered in several data sources, I've built in
+     * a small tolerance for small rounding errors that allows e.g. 180.00000000000023 to validate.
+     * @param latitude latitude between -90.0 and 90.0
+     * @param longitude longitude between -180.0 and 180.0
+     * @throws IllegalArgumentException if the lat or lon is out of the allowed range.
+     */
     public static void validate(double latitude, double longitude) {
-        // this gets rid of rounding errors e.g. 180.00000000000023 will validate
-        double roundedLat = Math.round(latitude*1000000)/1000000.0;
-        double roundedLon = Math.round(longitude*1000000)/1000000.0;
+        validate(latitude, longitude, false);
+    }
+
+
+    /**
+     * Validates coordinates. Note. because of some edge cases at the extremes that I've encountered in several data sources, I've built in
+     * a small tolerance for small rounding errors that allows e.g. 180.00000000000023 to validate.
+     * @param latitude latitude between -90.0 and 90.0
+     * @param longitude longitude between -180.0 and 180.0
+     * @param strict if false, it will allow for small rounding errors. If true, it will not.
+     * @throws IllegalArgumentException if the lat or lon is out of the allowed range.
+     */
+    public static void validate(double latitude, double longitude, boolean strict) {
+        double roundedLat = latitude;
+        double roundedLon = longitude;
+        if(!strict) {
+            // this gets rid of rounding errors e.g. 180.00000000000023 will validate
+            roundedLat = Math.round(latitude*1000000)/1000000.0;
+            roundedLon = Math.round(longitude*1000000)/1000000.0;
+        }
         if(roundedLat < -90.0 || roundedLat > 90.0) {
             throw new IllegalArgumentException("Latitude " + latitude + " is outside legal range of -90,90");
         }
@@ -966,8 +1022,11 @@ public class GeoGeometry {
         }
     }
 
+    /**
+     * @param point point
+     */
     public static void validate(double[] point) {
-        validate(point[1],point[0]);
+        validate(point[1],point[0], false);
     }
 
 
@@ -975,7 +1034,7 @@ public class GeoGeometry {
      * Calculate the approximate area. Like the distance, this is an approximation and you should account for an error
      * of about half a percent.
      *
-     * @param polygon
+     * @param polygon linestring
      * @return approximate area.
      */
     public static double area(double[][] polygon) {
@@ -1005,6 +1064,10 @@ public class GeoGeometry {
         return 0.5 * Math.abs(total);
     }
 
+    /**
+     * @param bbox bounding box of [lat,lat,lon,lon]
+     * @return the area of the bounding box
+     */
     public static double area(double[] bbox) {
         if(bbox.length != 4) {
             throw new IllegalArgumentException("Boundingbox should be array of [minLat, maxLat, minLon, maxLon]");
@@ -1020,8 +1083,8 @@ public class GeoGeometry {
      * Calculate area of polygon with holes. Assumes geojson style notation where the first 2d array is the outer
      * polygon and the rest represents the holes.
      *
-     * @param
-     * @return area
+     * @param polygon polygon
+     * @return area covered by the outer polygon
      */
     public static double area(double[][][] polygon) {
         Validate.isTrue(polygon.length > 0,"should have at least outer polygon");
@@ -1036,7 +1099,7 @@ public class GeoGeometry {
     /**
      * Calculate area of a multi polygon.
      * @param multiPolygon geojson style multi polygon
-     * @return area
+     * @return area of the outer polygons
      */
     public static double area(double[][][][] multiPolygon) {
         double area=0;
@@ -1046,10 +1109,18 @@ public class GeoGeometry {
         return area;
     }
 
+    /**
+     * @param p point
+     * @return "(longitude,latitude)"
+     */
     public static String pointToString(double[] p) {
         return "("+p[0]+","+p[1]+")";
     }
 
+    /**
+     * @param line line
+     * @return "(x1,y1),(x2,y2),..."
+     */
     public static String lineToString(double[][] line) {
         StringBuilder buf = new StringBuilder();
         for(double[] p:line) {
@@ -1060,12 +1131,14 @@ public class GeoGeometry {
     }
 
     /**
+     * Implementation of Douglas Peucker algorithm to simplify multi polygons.
+     *
      * Simplifies multi polygon with lots of segments by throwing out in between points with a perpendicular
      * distance of less than the tolerance (in meters). Implemented using the Douglas Peucker algorithm:
      * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
-     * @param points a 4d array
-     * @param tolerance
-     * @return a simpler polygon
+     * @param points multi polygon
+     * @param tolerance tolerance in meters
+     * @return a simpler multi polygon
      */
     public static double[][][][] simplifyMultiPolygon(double[][][][] points, double tolerance) {
         double[][][][] result = new double[points.length][0][0][0];
@@ -1077,11 +1150,13 @@ public class GeoGeometry {
     }
 
     /**
+     * Implementation of Douglas Peucker algorithm to simplify polygons.
+     *
      * Simplifies polygon with lots of segments by throwing out in between points with a perpendicular
      * distance of less than the tolerance (in meters). Implemented using the Douglas Peucker algorithm:
      * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
      * @param points a 3d array with the outer and inner polygons.
-     * @param tolerance
+     * @param tolerance tolerance in meters
      * @return a simpler polygon
      */
     public static double[][][] simplifyPolygon(double[][][] points, double tolerance) {
@@ -1094,11 +1169,13 @@ public class GeoGeometry {
     }
 
     /**
+     * Implementation of Douglas Peucker algorithm to simplify lines.
+     *
      * Simplifies lines and polygons with lots of segments by throwing out in between points with a perpendicular
      * distance of less than the tolerance (in meters). Implemented using the Douglas Peucker algorithm:
      * http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
      * @param points a 2d array that may be either a line or a polygon.
-     * @param tolerance
+     * @param tolerance tolerance in meters
      * @return a simpler line
      */
     public static double[][] simplifyLine(double[][] points, double tolerance) {

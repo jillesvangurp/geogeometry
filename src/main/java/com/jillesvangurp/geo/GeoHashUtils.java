@@ -53,16 +53,16 @@ public class GeoHashUtils {
     /**
      * Same as encode but returns a substring of the specified length.
      *
-     * @param latitude
-     * @param longitude
-     * @param length
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param length length in characters (1 to 12)
      * @return geo hash of the specified length. The minimum length is 1 and the maximum length is 12.
      */
     public static String encode(double latitude, double longitude, int length) {
         if (length < 1 || length > 12) {
             throw new IllegalArgumentException("length must be between 1 and 12");
         }
-        validate(latitude, longitude);
+        validate(latitude, longitude, false);
         double[] latInterval = { -90.0, 90.0 };
         double[] lonInterval = { -180.0, 180.0 };
 
@@ -108,8 +108,8 @@ public class GeoHashUtils {
      * Encodes a coordinate into a geo hash.
      *
      * @see "http://en.wikipedia.org/wiki/Geohash"
-     * @param latitude
-     * @param longitude
+     * @param latitude latitude
+     * @param longitude longitude
      * @return geo hash for the coordinate
      */
     public static String encode(double latitude, double longitude) {
@@ -118,7 +118,7 @@ public class GeoHashUtils {
 
     /**
      * Encode a geojson style point of [longitude,latitude]
-     * @param point
+     * @param point point
      * @return geohash
      */
     public static String encode(double[] point) {
@@ -127,7 +127,7 @@ public class GeoHashUtils {
 
 
     /**
-     * @param geohash
+     * @param geohash valid geohash
      * @return double array representing the bounding box for the geohash of [north latitude, south latitude, east
      *         longitude, west longitude]
      */
@@ -173,7 +173,7 @@ public class GeoHashUtils {
      *
      * Should you wish to apply some rounding, you can use the GeoGeometry.roundToDecimals method.
      *
-     * @param geohash
+     * @param geohash valid geohash
      * @return a coordinate representing the center of the geohash as a double array of [longitude,latitude]
      */
     public static double[] decode(String geohash) {
@@ -186,6 +186,7 @@ public class GeoHashUtils {
     }
 
     /**
+     * @param geoHash geohash
      * @return the geo hash of the same length directly north of the bounding box.
      */
     public static String north(String geoHash) {
@@ -197,6 +198,7 @@ public class GeoHashUtils {
     }
 
     /**
+     * @param geoHash geohash
      * @return the geo hash of the same length directly south of the bounding box.
      */
     public static String south(String geoHash) {
@@ -208,6 +210,7 @@ public class GeoHashUtils {
     }
 
     /**
+     * @param geoHash geohash
      * @return the geo hash of the same length directly west of the bounding box.
      */
     public static String west(String geoHash) {
@@ -226,6 +229,7 @@ public class GeoHashUtils {
     }
 
     /**
+     * @param geoHash geohash
      * @return the geo hash of the same length directly east of the bounding box.
      */
     public static String east(String geoHash) {
@@ -245,9 +249,9 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param geoHash
-     * @param latitude
-     * @param longitude
+     * @param geoHash geo hash
+     * @param latitude latitude
+     * @param longitude longitude
      * @return true if the coordinate is contained by the bounding box for this geo hash
      */
     public static boolean contains(String geoHash, double latitude, double longitude) {
@@ -301,7 +305,7 @@ public class GeoHashUtils {
      * s-z = SE
      * </pre>
      *
-     * @param geoHash
+     * @param geoHash geo hash
      * @return String array with the geo hashes.
      */
 
@@ -329,7 +333,7 @@ public class GeoHashUtils {
     };
 
     /**
-     * @param geoHash
+     * @param geoHash geo hash
      * @return the 16 northern sub hashes of the geo hash
      */
     public static String[] subHashesN(String geoHash) {
@@ -343,7 +347,7 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param geoHash
+     * @param geoHash geo hash
      * @return the 16 southern sub hashes of the geo hash
      */
     public static String[] subHashesS(String geoHash) {
@@ -357,7 +361,7 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param geoHash
+     * @param geoHash geo hash
      * @return the 8 north-west sub hashes of the geo hash
      */
     public static String[] subHashesNW(String geoHash) {
@@ -371,7 +375,7 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param geoHash
+     * @param geoHash geo hash
      * @return the 8 north-east sub hashes of the geo hash
      */
     public static String[] subHashesNE(String geoHash) {
@@ -385,7 +389,7 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param geoHash
+     * @param geoHash geo hash
      * @return the 8 south-west sub hashes of the geo hash
      */
     public static String[] subHashesSW(String geoHash) {
@@ -399,7 +403,7 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param geoHash
+     * @param geoHash geo hash
      * @return the 8 south-east sub hashes of the geo hash
      */
     public static String[] subHashesSE(String geoHash) {
@@ -424,7 +428,7 @@ public class GeoHashUtils {
      *
      * The algorithm works for both convex and concave algorithms.
      *
-     * @param polygonPoints
+     * @param polygonPoints linestring
      *            2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
      * @return a set of geo hashes that cover the polygon area.
      */
@@ -509,6 +513,11 @@ public class GeoHashUtils {
         return fullyContained;
     }
 
+    /**
+     * @param l1 longitude
+     * @param l2 longitude
+     * @return true if l1 is west of l2
+     */
     public static boolean isWest(double l1, double l2) {
         double ll1 = l1 + 180;
         double ll2 = l2 + 180;
@@ -521,6 +530,11 @@ public class GeoHashUtils {
         }
     }
 
+    /**
+     * @param l1 longitude
+     * @param l2 longitude
+     * @return true if l1 is east of l2
+     */
     public static boolean isEast(double l1, double l2) {
         double ll1 = l1 + 180;
         double ll2 = l2 + 180;
@@ -533,14 +547,25 @@ public class GeoHashUtils {
         }
     }
 
+    /**
+     * @param l1 latitude
+     * @param l2 latitude
+     * @return true if l1 is north of l2
+     */
     public static boolean isNorth(double l1, double l2) {
         return l1 > l2;
     }
 
+    /**
+     * @param l1 latitude
+     * @param l2 latitude
+     * @return true if l1 is south of l2
+     */
     public static boolean isSouth(double l1, double l2) {
         return l1 < l2;
     }
 
+    @SuppressWarnings("deprecation")
     private static Set<String> splitAndFilter(double[][] polygonPoints, Set<String> fullyContained, Set<String> partiallyContained) {
         Set<String> stillPartial = new HashSet<String>();
         // now we need to break up the partially contained hashes
@@ -581,8 +606,8 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param hashLength
-     * @param wayPoints
+     * @param hashLength desired length of the geohash
+     * @param wayPoints line string
      * @return set of geo hashes along the path with the specified geo hash length
      */
     public static Set<String> geoHashesForPath(int hashLength, double[]... wayPoints) {
@@ -604,11 +629,11 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param width
-     * @param lat1
-     * @param lon1
-     * @param lat2
-     * @param lon2
+     * @param width in meters
+     * @param lat1 latitude
+     * @param lon1 longitude
+     * @param lat2 latitude
+     * @param lon2 longitude
      * @return set of geo hashes along the line with the specified geo hash length.
      */
     public static Set<String> geoHashesForLine(double width, double lat1, double lon1, double lat2, double lon2) {
@@ -682,6 +707,13 @@ public class GeoHashUtils {
         return new Object[] { geohash.toString(), new double[] { latInterval[0], latInterval[1], lonInterval[0], lonInterval[1] } };
     }
 
+    /**
+     * @param length geohash length
+     * @param latitude latitude
+     * @param longitude longitude
+     * @param radius radius in meters
+     * @return set of geohashes
+     */
     public static Set<String> geoHashesForCircle(int length, double latitude, double longitude, double radius) {
         // bit of a wet finger approach here: it doesn't make much sense to have
         // lots of segments unless we have a long geohash or a large radius
@@ -703,10 +735,10 @@ public class GeoHashUtils {
     }
 
     /**
-     * @param granularityInMeters
-     * @param latitude
-     * @param longitude
-     * @return the largest hash length where the hash bbox has a width < granularityInMeters.
+     * @param granularityInMeters granularity
+     * @param latitude latitude
+     * @param longitude longitude
+     * @return the largest hash length where the hash bbox has a width less than granularityInMeters.
      */
     public static int suitableHashLength(double granularityInMeters, double latitude, double longitude) {
         if (granularityInMeters < 5) {
