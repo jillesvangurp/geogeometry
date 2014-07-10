@@ -7,7 +7,8 @@ GeoGeometry is not the only implementation of these algorithms. However, it is u
 There are two driving design principles:
 
 - It assumes you are using something like geojson, which is a convention for representing geometric shapes on the web. One key feature of *geojson* is that all shapes are represented as muli dimensional arrays of doubles. This library does the same. 
-- It avoids the trap of object orientation. Object orientation and geometry go way back. The first object oriented systems were all  about cute little Point and Line classes. As a consequence, world + dog now feels compelled to come up with their own Point, Line, Polygon, etc. classes. So, this library has *no classes that you can instantiate and only provides static methods*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. Also, it makes it trivial to port the code to different languages. And finally, not creating insane amounts of point objects helps keep things fast as well.
+- It avoids the trap of object orientation. Object orientation and geometry go way back. The first object oriented systems were all  about cute little Point and Line classes. As a consequence, world + dog now feels compelled to come up with their own Point, Line, Polygon, etc. classes. So, this library has *no classes that you can instantiate and only provides static methods*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. Also, it makes it trivial to port the code to different languages. For example, checkout my partial port for "javascript":https://github.com/jillesvangurp/geotools-js and "php":https://github.com/jillesvangurp/geotools-php. These implementations are a little behind the java implementation because I don't actively use them currently. 
+- Not creating insane amounts of point objects helps keep things fast as well and can save a ton of memory.
 
 ## Geohashes
 
