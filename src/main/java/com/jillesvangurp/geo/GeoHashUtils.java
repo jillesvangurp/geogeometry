@@ -128,8 +128,8 @@ public class GeoHashUtils {
 
     /**
      * @param geohash valid geohash
-     * @return double array representing the bounding box for the geohash of [north latitude, south latitude, east
-     *         longitude, west longitude]
+     * @return double array representing the bounding box for the geohash of [south latitude, north latitude, west
+     *         longitude, east longitude]
      */
     public static double[] decode_bbox(String geohash) {
         double[] latInterval = { -90.0, 90.0 };
@@ -187,9 +187,9 @@ public class GeoHashUtils {
 
     /**
      * @param geoHash geohash
-     * @return the geo hash of the same length directly north of the bounding box.
+     * @return the geo hash of the same length directly south of the bounding box.
      */
-    public static String north(String geoHash) {
+    public static String south(String geoHash) {
         double[] bbox = decode_bbox(geoHash);
         double latDiff = bbox[1] - bbox[0];
         double lat = bbox[0] - latDiff / 2;
@@ -199,9 +199,9 @@ public class GeoHashUtils {
 
     /**
      * @param geoHash geohash
-     * @return the geo hash of the same length directly south of the bounding box.
+     * @return the geo hash of the same length directly north of the bounding box.
      */
-    public static String south(String geoHash) {
+    public static String north(String geoHash) {
         double[] bbox = decode_bbox(geoHash);
         double latDiff = bbox[1] - bbox[0];
         double lat = bbox[1] + latDiff / 2;
@@ -492,7 +492,7 @@ public class GeoHashUtils {
             }
 
             // move to the next row
-            rowHash = south(rowHash);
+            rowHash = north(rowHash);
             rowBox = decode_bbox(rowHash);
         }
 
