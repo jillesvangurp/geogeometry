@@ -230,7 +230,7 @@ public class GeoGeometry {
      * @param longitude longitude
      * @param polygonPoints
      *            polygonPoints points that make up the polygon as arrays of
-     *            [latitude,longitude]
+     *            [longitude,latitude]
      * @return true if the polygon contains the coordinate
      */
     public static boolean polygonContains(double latitude, double longitude, double[]... polygonPoints) {
