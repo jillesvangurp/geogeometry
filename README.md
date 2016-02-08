@@ -124,3 +124,7 @@ For more details see the LICENSE file
 * 1.0
     * first release of GeoTools
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/jillesvangurp/geogeometry/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
