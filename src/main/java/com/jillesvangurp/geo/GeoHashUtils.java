@@ -568,8 +568,10 @@ public class GeoHashUtils {
     @SuppressWarnings("deprecation")
     private static Set<String> splitAndFilter(double[][] polygonPoints, Set<String> fullyContained, Set<String> partiallyContained) {
         Set<String> stillPartial = new HashSet<String>();
+        Set<String> checkCompleteArea = new HashSet<String>(32, 1.0f);
         // now we need to break up the partially contained hashes
         for (String hash : partiallyContained) {
+        	checkCompleteArea.clear();
             for (String h : subHashes(hash)) {
                 double[] hashBbox = decode_bbox(h);
                 boolean nw = GeoGeometry.polygonContains(new double[] { hashBbox[2], hashBbox[0] }, polygonPoints);
@@ -577,7 +579,7 @@ public class GeoHashUtils {
                 boolean sw = GeoGeometry.polygonContains(new double[] { hashBbox[2], hashBbox[1] }, polygonPoints);
                 boolean se = GeoGeometry.polygonContains(new double[] { hashBbox[3], hashBbox[1] }, polygonPoints);
                 if (nw && ne && sw && se) {
-                    fullyContained.add(h);
+                	checkCompleteArea.add(h);
                 } else if (nw || ne || sw || se) {
                     stillPartial.add(h);
                 } else {
@@ -600,6 +602,11 @@ public class GeoHashUtils {
                     }
                 }
             }
+			if (checkCompleteArea.size() == BASE32_CHARS.length) {
+				fullyContained.add(hash);
+			} else {
+				fullyContained.addAll(checkCompleteArea);
+			}
         }
 
         return stillPartial;
