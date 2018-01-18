@@ -53,7 +53,7 @@ Note. Geogeometry was formerly known as geotools. I renamed the project because 
 <dependency>
     <groupId>com.jillesvangurp</groupId>
     <artifactId>geogeometry</artifactId>
-    <version>1.1</version>
+    <version>2.11</version>
 </dependency>
 ```
 
