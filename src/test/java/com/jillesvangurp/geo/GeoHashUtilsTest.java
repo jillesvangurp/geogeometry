@@ -38,6 +38,7 @@ import static org.hamcrest.Matchers.lessThan;
 
 import java.util.Set;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 //import static org.hamcrest.number.OrderingComparison.lessThan;
@@ -299,7 +300,7 @@ public class GeoHashUtilsTest {
 	}
 
     @DataProvider
-    public Double[][] samplePoints() {
+    public Object[][] samplePoints() {
         return new Double[][] {
                 { 10.0, 85.0, 15.0 },
                 { 10.0, 50.0, 15.0 },
@@ -338,4 +339,41 @@ public class GeoHashUtilsTest {
         }
         assertThat(hashes.size(), greaterThan(radius));
     }
+
+    public void shouldOverlap() {
+		double[][] polygon = new double[][] {
+				{50, 15},
+				{53, 15},
+				{53, 11},
+				{50, 11}
+		};
+
+		double[][] p2overlapping = new double[][] {
+				{51, 16},
+				{52, 16},
+				{52, 10},
+				{51, 10}
+		};
+		double[][] p3outside = new double[][] {
+				{60, 15},
+				{63, 15},
+				{63, 11},
+				{60, 11}
+		};
+		double[][] p4inside = new double[][] {
+				{51, 14},
+				{52, 14},
+				{52, 12},
+				{51, 12}
+		};
+		Assert.assertTrue(GeoGeometry.overlap(polygon,polygon));
+
+		Assert.assertTrue(GeoGeometry.overlap(polygon, p2overlapping));
+		Assert.assertTrue(GeoGeometry.overlap(p2overlapping,polygon));
+
+		Assert.assertFalse(GeoGeometry.overlap(p3outside,polygon));
+		
+		Assert.assertTrue(GeoGeometry.overlap(polygon,p4inside));
+		Assert.assertTrue(GeoGeometry.overlap(p4inside,polygon));
+	}
 }
