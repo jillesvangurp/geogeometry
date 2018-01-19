@@ -32,7 +32,7 @@ import static java.lang.Math.toRadians;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 /**
  * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
