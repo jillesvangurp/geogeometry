@@ -157,8 +157,8 @@ public class GeoGeometryTest {
 	    };
 	    double[][] polygon = GeoGeometry.polygonForPoints(placesInMitte);
 
-        assertThat("should be inside", polygonContains(rosenthalerPlatz, polygon));
-        assertThat("should be inside", polygonContains(oranienburgerTor, polygon));
+        assertThat("should be inside", polygonContains(rosenthalerPlatz[1], rosenthalerPlatz[0], polygon));
+        assertThat("should be inside", polygonContains(oranienburgerTor[1], oranienburgerTor[0], polygon));
         assertThat("should NOT be inside", !polygonContains(1,1, polygon));
 	}
 
@@ -202,8 +202,8 @@ public class GeoGeometryTest {
 
 	public void polygonForPointsInFourQuadrantsShouldContainStuffInside() {
 	    double[][] polygon = GeoGeometry.polygonForPoints(new double[][]{sydney,newyork,amsterdam,buenosaires});
-        assertThat("should be inside", polygonContains(london, polygon));
-        assertThat("should NOT be inside", !polygonContains(berlin, polygon));
+        assertThat("should be inside", polygonContains(london[1], london[0], polygon));
+        assertThat("should NOT be inside", !polygonContains(berlin[1], berlin[0], polygon));
 	}
 
    public void shouldConvertCircleToPolygonOn180() {
@@ -318,7 +318,7 @@ public class GeoGeometryTest {
     public void shouldCalculatePolygonForPointCloud(double[][] points, double[][] contained) {
         double[][] polygonForPoints = GeoGeometry.polygonForPoints(points);
         for (int i = 0; i < contained.length; i++) {
-            assertThat("point in the middle should be contained", polygonContains(contained[i], polygonForPoints));
+            assertThat("point in the middle should be contained", polygonContains(contained[i][1], contained[i][0], polygonForPoints));
         }
     }
 

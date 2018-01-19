@@ -574,10 +574,14 @@ public class GeoHashUtils {
         	checkCompleteArea.clear();
             for (String h : subHashes(hash)) {
                 double[] hashBbox = decode_bbox(h);
-                boolean nw = GeoGeometry.polygonContains(new double[] { hashBbox[2], hashBbox[0] }, polygonPoints);
-                boolean ne = GeoGeometry.polygonContains(new double[] { hashBbox[3], hashBbox[0] }, polygonPoints);
-                boolean sw = GeoGeometry.polygonContains(new double[] { hashBbox[2], hashBbox[1] }, polygonPoints);
-                boolean se = GeoGeometry.polygonContains(new double[] { hashBbox[3], hashBbox[1] }, polygonPoints);
+                double[] point3 = new double[] { hashBbox[2], hashBbox[0] };
+                boolean nw = GeoGeometry.polygonContains(point3[1], point3[0], polygonPoints);
+                double[] point2 = new double[] { hashBbox[3], hashBbox[0] };
+                boolean ne = GeoGeometry.polygonContains(point2[1], point2[0], polygonPoints);
+                double[] point1 = new double[] { hashBbox[2], hashBbox[1] };
+                boolean sw = GeoGeometry.polygonContains(point1[1], point1[0], polygonPoints);
+                double[] point = new double[] { hashBbox[3], hashBbox[1] };
+                boolean se = GeoGeometry.polygonContains(point[1], point[0], polygonPoints);
                 if (nw && ne && sw && se) {
                 	checkCompleteArea.add(h);
                 } else if (nw || ne || sw || se) {

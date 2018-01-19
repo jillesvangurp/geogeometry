@@ -198,20 +198,6 @@ public class GeoGeometry {
      * Determine whether a point is contained in a polygon. Note, technically
      * the points that make up the polygon are not contained by it.
      *
-     * @param point point
-     * @param polygonPoints linestring
-     * @return true if the polygon contains the coordinate
-     */
-    @Deprecated
-    public static boolean polygonContains(double[] point, double[]... polygonPoints) {
-        validate(point);
-        return polygonContains(point[1], point[0], polygonPoints);
-    }
-
-    /**
-     * Determine whether a point is contained in a polygon. Note, technically
-     * the points that make up the polygon are not contained by it.
-     *
      * @param latitude latitude
      * @param longitude longitude
      * @param polygonPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
@@ -397,7 +383,7 @@ public class GeoGeometry {
     /**
      * Earth's mean radius, in meters.
      *
-     * @see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
+     * see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
      */
     private static final double EARTH_RADIUS = 6371000.0;
 
@@ -619,7 +605,7 @@ public class GeoGeometry {
         if(polygon.length<3) {
             throw new IllegalArgumentException("not enough segments in polygon");
         }
-        if(polygonContains(point, polygon)) {
+        if(polygonContains(point[1], point[0], polygon)) {
             return 0;
         }
         return distanceToLineString(point, polygon);
@@ -751,20 +737,22 @@ public class GeoGeometry {
      * @return true if the two polygons overlap
      */
     public static boolean overlap(double[][] left, double[][] right) {
-        if(polygonContains(polygonCenter(right), left)) {
+        double[] point1 = polygonCenter(right);
+        if(polygonContains(point1[1], point1[0], left)) {
             return true;
         }
-        if(polygonContains(polygonCenter(left), right)) {
+        double[] point = polygonCenter(left);
+        if(polygonContains(point[1], point[0], right)) {
             return true;
         }
 
         for (double[] p : right) {
-            if(polygonContains(p, left)) {
+            if(polygonContains(p[1], p[0], left)) {
                 return true;
             }
         }
         for (double[] p : left) {
-            if(polygonContains(p, right)) {
+            if(polygonContains(p[1], p[0], right)) {
                 return true;
             }
         }
@@ -779,7 +767,7 @@ public class GeoGeometry {
      */
     public static boolean contains(double[][] containingPolygon, double[][] containedPolygon) {
         for (double[] p : containedPolygon) {
-            if(!polygonContains(p, containingPolygon)) {
+            if(!polygonContains(p[1], p[0], containingPolygon)) {
                 return false;
             }
         }
