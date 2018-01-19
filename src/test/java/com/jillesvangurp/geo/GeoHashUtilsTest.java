@@ -233,7 +233,7 @@ public class GeoHashUtilsTest {
 		for (String h : geoHashesForPolygon) {
 			min = Math.min(min, h.length());
 		}
-		assertThat("there should be some hashes with length=3", min, is(4));
+		assertThat("there should be some hashes with length=3", min, is(3));
 		assertThat("huge area, should generate lots of hashes",
 				geoHashesForPolygon.size() > 1000);
 	}
