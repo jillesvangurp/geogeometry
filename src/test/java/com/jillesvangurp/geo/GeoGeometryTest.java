@@ -72,7 +72,7 @@ public class GeoGeometryTest {
 
 
 	public void shouldCheckThatLinesCross() {
-	    assertThat("should intersect", GeoGeometry.linesCross(1, 1, 2, 2, 1, 2, 2, 1));
+	    assertThat("should intersect", GeoGeometry.linesCross(1.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0));
         assertThat("should intersect (vertical)", GeoGeometry.linesCross(1, 1, 1, 10, 1, 3, 1, 4));
         assertThat("should intersect (horizontal)", GeoGeometry.linesCross(1, 666, 10, 666, 3, 666, 4, 666));
 	}
