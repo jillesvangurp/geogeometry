@@ -308,7 +308,7 @@ public class GeoGeometry {
     }
 
     /**
-     * Check if the lines defined by  (x1,y1) (x2,y2) and (u1,v1) (u2,v2) cross each other or not.
+     * Check if the line segments defined by  (x1,y1) (x2,y2) and (u1,v1) (u2,v2) cross each other or not.
      * @param x1 double
      * @param y1 double
      * @param x2 double
@@ -361,9 +361,10 @@ public class GeoGeometry {
             double a2 = v1 - b2 * u1;
 
             if (b1 - b2 == 0) {
+                // same gradient
                 if (Math.abs(a1 - a2) < .0000001) {
-                    // lines are the same
-                    return x1 >= u1 && u1 <= x2 || x1 >= u2 && u2 <= x2;
+                    // lines are definitely the same within a margin of error, check if their x overlaps
+                    return isBetween(x1, x2, u1) || isBetween(x1,x2,u2);
                 } else {
                     // parallel -> they don't intersect!
                     return false;
@@ -377,6 +378,15 @@ public class GeoGeometry {
             } else {
                 return false;
             }
+        }
+    }
+
+    private static boolean isBetween(double x1, double x2, double value) {
+        if(x1>x2) {
+            return x2 <= value && value < x1;
+
+        } else {
+            return x1 <= value && value < x2;
         }
     }
 
