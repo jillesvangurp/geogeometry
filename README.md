@@ -47,17 +47,11 @@ Note. Geogeometry was formerly known as geotools. I renamed the project because 
 * Some of the algorithms have quadratic or exponential complexity and you can easily trigger situations where execution time is going to be substantial and/or you run out of memory. For example covering a circle with a radius of a few hundred kilometers with geohashes of length 10 is probably not a great idea. If you are unsure, use getSuitableHashLength() and add 1 or 2 to get good enough granularity.
 * Beware of the [longitude,latitude] order in arrays vs. the latitude, longitude order when not using arrays. This is based on the (unfortunate) geojson convention of specifying longitude before latitude in arrays. When not using arrays, I use latitude followed by longitude, just like everyone else.
 
-# Get it from Maven Central
+# Get it 
 
-```
-<dependency>
-    <groupId>com.jillesvangurp</groupId>
-    <artifactId>geogeometry</artifactId>
-    <version>2.11</version>
-</dependency>
-```
+Use the latest jitpack releases:
 
-Note. check for the latest version. I do not always update the readme.
+[jitpack releases](https://jitpack.io/#jillesvangurp/geogeometry)
 
 # Building from source
 
