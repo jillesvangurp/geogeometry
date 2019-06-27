@@ -1,0 +1,115 @@
+buildscript {
+    ext {
+        kotlinVersion = '1.3.40'
+    }
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.18"
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.21.0' // gradle dependencyUpdates -Drevision=release
+        classpath "de.thetaphi:forbiddenapis:2.6"
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.23.1'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'maven-publish'
+apply plugin: 'org.jetbrains.dokka'
+apply plugin: 'project-report' // useful for gradle htmlDependencyReport
+apply plugin: 'com.diffplug.gradle.spotless'
+apply plugin: "de.thetaphi.forbiddenapis"
+apply plugin: 'com.github.ben-manes.versions'
+
+forbiddenApis {
+    // https://github.com/policeman-tools/forbidden-apis/wiki/GradleUsage
+    bundledSignatures = ["jdk-unsafe-9", "jdk-deprecated-9", "jdk-non-portable", "jdk-internal-9"]
+    // take out "jdk-system-out"
+    signaturesFiles = files("forbidden_signatures.txt")
+    ignoreFailures = false
+}
+
+// this intentionally breaks the build if you mess up the formatting; pro tip: use Save Actions plugin in intellij and auto format and organize imports on save
+spotless {
+    java {
+        removeUnusedImports() // removes any unused imports
+    }
+    // to fix violations: gradle spotlessApply
+    // in intellij also tweak kotlin imports to require 999 imports before wildcards and remove java.util for always using wildcards
+    // do the same for java imports
+    // wildcards are verboten!
+    // currentlyb breaks offline build due to fucked up transitive dependency on ktlint & kotlin
+    kotlin {
+        // optionally takes a version
+        ktlint()
+    }
+}
+
+afterEvaluate {
+    // just ffing run it, way to anal to break the build every time
+    tasks.getByName('spotlessCheck').dependsOn(tasks.getByName('spotlessApply'))
+}
+
+dokka {
+    outputFormat = 'gfm'
+    jdkVersion = 8
+    outputDirectory = 'docs'
+    includes = ['src/main/kotlin/io/inbot/eskotlinwrapper/module.md']
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        // for whatever reason defaults to 1.6. But since we don't care about android ...
+        jvmTarget = "1.8"
+    }
+}
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+    test.java.srcDirs += 'src/test/kotlin'
+}
+
+repositories {
+    mavenLocal()
+
+    maven {
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+
+    maven {
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+
+    maven {
+        url = 'http://repo.maven.apache.org/maven2'
+    }
+}
+
+dependencies {
+    compile 'org.apache.commons:commons-lang3:3.8'
+    testCompile 'org.testng:testng:6.13.1'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from(sourceSets.main.allJava)
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from(javadoc.destinationDir)
+}
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+test {
+    useTestNG()
+}
