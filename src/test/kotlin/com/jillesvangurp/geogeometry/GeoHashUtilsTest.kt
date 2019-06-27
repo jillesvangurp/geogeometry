@@ -1,8 +1,8 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.GeoHashUtils
-import com.jillesvangurp.geo.lat
-import com.jillesvangurp.geo.lon
+import com.jillesvangurp.geo.latitude
+import com.jillesvangurp.geo.longitude
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
@@ -19,8 +19,8 @@ class GeoHashUtilsTest : StringSpec() {
         "decode hash" {
             forall(*coordinatesWithHashes) { lat, lon, geoHash ->
                 val decoded = GeoHashUtils.decode(geoHash)
-                decoded.lat shouldBeApproximately lat
-                decoded.lon shouldBeApproximately lon
+                decoded.latitude shouldBeApproximately lat
+                decoded.longitude shouldBeApproximately lon
             }
         }
 

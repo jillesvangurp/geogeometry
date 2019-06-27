@@ -29,6 +29,7 @@ import java.util.Set;
 
 import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
+import static com.jillesvangurp.geo.GeoHashUtils.DEFAULT_GEOHASH_LENGTH;
 import static com.jillesvangurp.geo.GeoHashUtils.contains;
 import static com.jillesvangurp.geo.GeoHashUtils.decode;
 import static com.jillesvangurp.geo.GeoHashUtils.decodeBbox;
@@ -53,33 +54,33 @@ public class GeoHashUtilsTest {
         };
     }
 
-//	@Test(dataProvider = "coordinates")
-//	public void shouldDecode(Double lat, Double lon, String geoHash) {
-//		double[] decoded = decode(geoHash);
-//		assertSimilar(lat, decoded[1]);
-//		assertSimilar(lon, decoded[0]);
-//	}
+	@Test(dataProvider = "coordinates")
+	public void shouldDecode(Double lat, Double lon, String geoHash) {
+		double[] decoded = decode(geoHash);
+		assertSimilar(lat, decoded[1]);
+		assertSimilar(lon, decoded[0]);
+	}
 
-//	@Test(dataProvider = "coordinates")
-//	public void shouldEncode(Double lat, Double lon, String expectedGeoHash) {
-//		assertThat(encode(lat, lon), is(expectedGeoHash));
-//        assertThat(encode(new double[]{lon,lat}), is(expectedGeoHash));
-//	}
+	@Test(dataProvider = "coordinates")
+	public void shouldEncode(Double lat, Double lon, String expectedGeoHash) {
+		assertThat(encode(lat, lon,DEFAULT_GEOHASH_LENGTH), is(expectedGeoHash));
+        assertThat(encode(new double[]{lon,lat}), is(expectedGeoHash));
+	}
 
-//	@Test(dataProvider = "coordinates")
-//	public void shouldContainCoordinate(Double lat, Double lon, String geoHash) {
-//		assertThat("hash should contain the coordinate",
-//				contains(geoHash, lat, lon));
-//		assertThat("hash should not contain the swapped coordinate",
-//				!contains(geoHash, lon, lat));
-//	}
+	@Test(dataProvider = "coordinates")
+	public void shouldContainCoordinate(Double lat, Double lon, String geoHash) {
+		assertThat("hash should contain the coordinate",
+				contains(geoHash, lat, lon));
+		assertThat("hash should not contain the swapped coordinate",
+				!contains(geoHash, lon, lat));
+	}
 
-//    @Test(dataProvider = "coordinates")
-//    public void shouldDecodeBbox(Double lat, Double lon, String geoHash) {
-//        double[] bbox = decodeBbox(geoHash);
-//        assertThat(abs((bbox[0] + bbox[1]) / 2 - lat), lessThan(0.0001));
-//        assertThat(abs((bbox[2] + bbox[3]) / 2 - lon), lessThan(0.0001));
-//    }
+    @Test(dataProvider = "coordinates")
+    public void shouldDecodeBbox(Double lat, Double lon, String geoHash) {
+        double[] bbox = decodeBbox(geoHash);
+        assertThat(abs((bbox[0] + bbox[1]) / 2 - lat), lessThan(0.0001));
+        assertThat(abs((bbox[2] + bbox[3]) / 2 - lon), lessThan(0.0001));
+    }
 
     @Test(dataProvider = "coordinates")
     public void shouldCalculateEast(Double lat, Double lon, String geoHash) {
@@ -192,7 +193,7 @@ public class GeoHashUtilsTest {
     }
 
     private void printHashSizes(double lat, double lon) {
-        String geoHash = encode(lat, lon);
+        String geoHash = encode(lat, lon, DEFAULT_GEOHASH_LENGTH);
 
         // not a test but nice to get a sense of the scale of a geo hash
         System.out.println("<tr><td>" + lat + "</td>");
