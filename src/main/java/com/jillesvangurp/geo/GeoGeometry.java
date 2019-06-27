@@ -991,7 +991,7 @@ public class GeoGeometry {
         double roundedLat = latitude;
         double roundedLon = longitude;
         if(!strict) {
-            // this gets rid of rounding errors e.g. 180.00000000000023 will validate
+            // this gets rid of rounding errors in raw data e.g. 180.00000000000023 will validate
             roundedLat = Math.round(latitude*1000000)/1000000.0;
             roundedLon = Math.round(longitude*1000000)/1000000.0;
         }

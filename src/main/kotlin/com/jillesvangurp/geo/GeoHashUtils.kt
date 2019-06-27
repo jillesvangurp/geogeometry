@@ -19,11 +19,6 @@
 package com.jillesvangurp.geo
 
 import com.jillesvangurp.geo.GeoGeometry.validate
-import java.util.ArrayList
-import java.util.HashSet
-import java.util.TreeSet
-
-
 
 private val BITS = intArrayOf(16, 8, 4, 2, 1)
 // note: no a,i,l, and o
@@ -62,30 +57,15 @@ private val BASE32_CHARS = charArrayOf(
     'z'
 )
 
-/**
- * 2d array with the 32 possible geohash endings layed out as they would if you would break down a geohash into
- * its subhashes.
- */
-val GEOHASH_ENDINGS = arrayOf(
-    charArrayOf('0', '2', '8', 'b'),
-    charArrayOf('1', '3', '9', 'c'),
-    charArrayOf('4', '6', 'd', 'f'),
-    charArrayOf('5', '7', 'e', 'g'),
-    charArrayOf('h', 'k', 's', 'u'),
-    charArrayOf('j', 'm', 't', 'v'),
-    charArrayOf('n', 'q', 'w', 'y'),
-    charArrayOf('p', 'r', 'x', 'z')
-)
-
 private fun calculateB32DecodeMap(): Map<Char, Int> {
-    val mmap = mutableMapOf<Char, Int>()
+    val map = mutableMapOf<Char, Int>()
     for (i in BASE32_CHARS.indices) {
-        mmap[BASE32_CHARS[i]] = i
+        map[BASE32_CHARS[i]] = i
     }
-    return mmap
+    return map
 }
 
-internal val BASE32_DECODE_MAP= calculateB32DecodeMap()
+private val BASE32_DECODE_MAP= calculateB32DecodeMap()
 
 /**
  * This class was originally adapted from Apache Lucene's GeoHashUtils.java back in 2012. Please note that this class retains the
@@ -96,10 +76,10 @@ internal val BASE32_DECODE_MAP= calculateB32DecodeMap()
  *
  * New methods have been added to facilitate creating sets of geo hashes for e.g. polygons and other geometric forms.
  */
+@Suppress("unused")
 class GeoHashUtils {
     companion object {
-        @JvmField
-        val DEFAULT_GEOHASH_LENGTH = 12
+        const val DEFAULT_GEOHASH_LENGTH = 12
 
         /**
          * Same as encode but returns a substring of the specified length.
@@ -362,7 +342,7 @@ class GeoHashUtils {
 
         @JvmStatic
         fun subHashes(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
                 list.add(geoHash + c)
             }
@@ -375,7 +355,7 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun subHashesNorth(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
                 if (c <= 'g') {
                     list.add(geoHash + c)
@@ -390,7 +370,7 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun subHashesSouth(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
                 if (c >= 'h') {
                     list.add(geoHash + c)
@@ -405,7 +385,7 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun subHashesNorthWest(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
                 if (c <= '7') {
                     list.add(geoHash + c)
@@ -420,9 +400,9 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun subHashesNorthEast(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
-                if (c >= '8' && c <= 'g') {
+                if (c in '8'..'g') {
                     list.add(geoHash + c)
                 }
             }
@@ -435,9 +415,9 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun subHashesSouthWest(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
-                if (c >= 'h' && c <= 'r') {
+                if (c in 'h'..'r') {
                     list.add(geoHash + c)
                 }
             }
@@ -450,7 +430,7 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun subHashesSouthEast(geoHash: String): Array<String> {
-            val list = ArrayList<String>()
+            val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
                 if (c >= 's') {
                     list.add(geoHash + c)
@@ -479,8 +459,8 @@ class GeoHashUtils {
         fun geoHashesForPolygon(vararg polygonPoints: DoubleArray): Set<String> {
             val bbox = GeoGeometry.boundingBox(polygonPoints)
             // first lets figure out an appropriate geohash length
-            val diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3])
-            val hashLength = suitableHashLength(diagonal, bbox[0], bbox[2])
+            val diagonalDistance = GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
+            val hashLength = suitableHashLength(diagonalDistance, bbox.southLatitude, bbox.eastLongitude)
             return geoHashesForPolygon(hashLength + 1, *polygonPoints)
         }
 
@@ -542,7 +522,7 @@ class GeoHashUtils {
                 rowBox = decodeBbox(rowHash)
             }
 
-            val fullyContained = TreeSet<String>()
+            val fullyContained = mutableSetOf<String>()
 
             var detail = hashLength
             // we're not aiming for perfect detail here in terms of 'pixellation', 6
@@ -710,10 +690,10 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun geoHashesForPath(hashLength: Int, vararg wayPoints: DoubleArray): Set<String> {
-            if (wayPoints == null || wayPoints.size < 2) {
+            if (wayPoints.size < 2) {
                 throw IllegalArgumentException("must have at least two way points on the path")
             }
-            val hashes = TreeSet<String>()
+            val hashes = mutableSetOf<String>()
             // The slope of the line through points A(ax, ay) and B(bx, by) is given
             // by m = (by-ay)/(bx-ax) and the equation of this
             // line can be written y = m(x - ax) + ay.
@@ -764,22 +744,18 @@ class GeoHashUtils {
             } else return if (lat1 != lat2) {
                 geoHashesForPolygon(
                     hashLength,
-                    *arrayOf(
-                        doubleArrayOf(bbox1[0], bbox1[2]),
-                        doubleArrayOf(bbox1[1], bbox1[2]),
-                        doubleArrayOf(bbox2[1], bbox2[3]),
-                        doubleArrayOf(bbox2[0], bbox2[3])
-                    )
+                    doubleArrayOf(bbox1[0], bbox1[2]),
+                    doubleArrayOf(bbox1[1], bbox1[2]),
+                    doubleArrayOf(bbox2[1], bbox2[3]),
+                    doubleArrayOf(bbox2[0], bbox2[3])
                 )
             } else {
                 geoHashesForPolygon(
                     hashLength,
-                    *arrayOf(
-                        doubleArrayOf(bbox1[0], bbox1[2]),
-                        doubleArrayOf(bbox1[0], bbox1[3]),
-                        doubleArrayOf(bbox2[1], bbox2[2]),
-                        doubleArrayOf(bbox2[1], bbox2[3])
-                    )
+                    doubleArrayOf(bbox1[0], bbox1[2]),
+                    doubleArrayOf(bbox1[0], bbox1[3]),
+                    doubleArrayOf(bbox2[1], bbox2[2]),
+                    doubleArrayOf(bbox2[1], bbox2[3])
                 )
             }
         }
@@ -792,13 +768,13 @@ class GeoHashUtils {
             val lonInterval = doubleArrayOf(-180.0, 180.0)
 
             val geohash = StringBuilder()
-            var is_even = true
+            var isEven = true
             var bit = 0
             var ch = 0
 
             while (geohash.length < length) {
                 val mid: Double
-                if (is_even) {
+                if (isEven) {
                     mid = (lonInterval[0] + lonInterval[1]) / 2
                     if (longitude > mid) {
                         ch = ch or BITS[bit]
@@ -817,7 +793,7 @@ class GeoHashUtils {
                     }
                 }
 
-                is_even = !is_even
+                isEven = !isEven
 
                 if (bit < 4) {
                     bit++
@@ -846,15 +822,12 @@ class GeoHashUtils {
             // lots of segments unless we have a long geohash or a large radius
             val segments: Int
             val suitableHashLength = suitableHashLength(radius, latitude, longitude)
-            if (length > suitableHashLength - 3) {
-                segments = 200
-            } else if (length > suitableHashLength - 2) {
-                segments = 100
-            } else if (length > suitableHashLength - 1) {
-                segments = 50
-            } else {
-                // we don't seem to care about detail
-                segments = 15
+            segments = when {
+                length > suitableHashLength - 3 -> 200
+                length > suitableHashLength - 2 -> 100
+                length > suitableHashLength - 1 -> 50
+                else -> // we don't seem to care about detail
+                    15
             }
 
             val circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius)
