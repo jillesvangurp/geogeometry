@@ -1,6 +1,8 @@
 buildscript {
     ext {
         kotlinVersion = '1.3.40'
+        slf4jVersion = '1.7.26'
+
     }
 
     repositories {
@@ -18,7 +20,6 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
-apply plugin: 'maven-publish'
 apply plugin: 'org.jetbrains.dokka'
 apply plugin: 'project-report' // useful for gradle htmlDependencyReport
 apply plugin: 'com.diffplug.gradle.spotless'
@@ -77,15 +78,61 @@ repositories {
     jcenter()
 }
 
-dependencies {
-    testCompile 'org.testng:testng:6.13.1'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-}
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-test {
+
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "1.6"
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "1.6"
+    }
+}
+
+task testng(type: Test) {
     useTestNG()
+    testLogging {
+        // Make sure output from
+        // standard out or error is shown
+        // in Gradle output.
+        exceptionFormat = 'full'
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
+
+check.dependsOn testng
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        // Make sure output from
+        // standard out or error is shown
+        // in Gradle output.
+        exceptionFormat = 'full'
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+    testCompile 'io.kotlintest:kotlintest-runner-junit5:3.3.2'
+    testCompile 'org.testng:testng:6.13.1'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+
+    // kotlintest runner needs this
+    testCompile "org.slf4j:slf4j-api:${slf4jVersion}"
+    testCompile "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+    testCompile "org.slf4j:log4j-over-slf4j:${slf4jVersion}"
+    testCompile "org.slf4j:jul-to-slf4j:${slf4jVersion}"
+    testCompile "ch.qos.logback:logback-classic:1.2.3"
+
 }

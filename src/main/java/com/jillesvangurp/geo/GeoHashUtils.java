@@ -131,7 +131,7 @@ public class GeoHashUtils {
      * @return double array representing the bounding box for the geohash of [south latitude, north latitude, west
      *         longitude, east longitude]
      */
-    public static double[] decode_bbox(String geohash) {
+    public static double[] decodeBbox(String geohash) {
         double[] latInterval = { -90.0, 90.0 };
         double[] lonInterval = { -180.0, 180.0 };
 
@@ -176,7 +176,7 @@ public class GeoHashUtils {
      * @return a coordinate representing the center of the geohash as a double array of [longitude,latitude]
      */
     public static double[] decode(String geohash) {
-        double[] bbox = decode_bbox(geohash);
+        double[] bbox = decodeBbox(geohash);
 
         double latitude = (bbox[0] + bbox[1]) / 2;
         double longitude = (bbox[2] + bbox[3]) / 2;
@@ -189,7 +189,7 @@ public class GeoHashUtils {
      * @return the geo hash of the same length directly south of the bounding box.
      */
     public static String south(String geoHash) {
-        double[] bbox = decode_bbox(geoHash);
+        double[] bbox = decodeBbox(geoHash);
         double latDiff = bbox[1] - bbox[0];
         double lat = bbox[0] - latDiff / 2;
         double lon = (bbox[2] + bbox[3]) / 2;
@@ -201,7 +201,7 @@ public class GeoHashUtils {
      * @return the geo hash of the same length directly north of the bounding box.
      */
     public static String north(String geoHash) {
-        double[] bbox = decode_bbox(geoHash);
+        double[] bbox = decodeBbox(geoHash);
         double latDiff = bbox[1] - bbox[0];
         double lat = bbox[1] + latDiff / 2;
         double lon = (bbox[2] + bbox[3]) / 2;
@@ -213,7 +213,7 @@ public class GeoHashUtils {
      * @return the geo hash of the same length directly west of the bounding box.
      */
     public static String west(String geoHash) {
-        double[] bbox = decode_bbox(geoHash);
+        double[] bbox = decodeBbox(geoHash);
         double lonDiff = bbox[3] - bbox[2];
         double lat = (bbox[0] + bbox[1]) / 2;
         double lon = bbox[2] - lonDiff / 2;
@@ -232,7 +232,7 @@ public class GeoHashUtils {
      * @return the geo hash of the same length directly east of the bounding box.
      */
     public static String east(String geoHash) {
-        double[] bbox = decode_bbox(geoHash);
+        double[] bbox = decodeBbox(geoHash);
         double lonDiff = bbox[3] - bbox[2];
         double lat = (bbox[0] + bbox[1]) / 2;
         double lon = bbox[3] + lonDiff / 2;
@@ -254,7 +254,7 @@ public class GeoHashUtils {
      * @return true if the coordinate is contained by the bounding box for this geo hash
      */
     public static boolean contains(String geoHash, double latitude, double longitude) {
-        return GeoGeometry.bboxContains(decode_bbox(geoHash), latitude, longitude);
+        return GeoGeometry.bboxContains(decodeBbox(geoHash), latitude, longitude);
     }
 
     /**
@@ -479,7 +479,7 @@ public class GeoHashUtils {
         // lets start at the top left:
 
         String rowHash = encode(bbox[0], bbox[2], hashLength);
-        double[] rowBox = decode_bbox(rowHash);
+        double[] rowBox = decodeBbox(rowHash);
         while (rowBox[0] < bbox[1]) {
             String columnHash = rowHash;
             double[] columnBox = rowBox;
@@ -487,12 +487,12 @@ public class GeoHashUtils {
             while (isWest(columnBox[2], bbox[3])) {
                 partiallyContained.add(columnHash);
                 columnHash = east(columnHash);
-                columnBox = decode_bbox(columnHash);
+                columnBox = decodeBbox(columnHash);
             }
 
             // move to the next row
             rowHash = north(rowHash);
-            rowBox = decode_bbox(rowHash);
+            rowBox = decodeBbox(rowHash);
         }
 
         Set<String> fullyContained = new TreeSet<>();
@@ -563,7 +563,7 @@ public class GeoHashUtils {
         for (String hash : partiallyContained) {
         	checkCompleteArea.clear();
             for (String h : subHashes(hash)) {
-                double[] hashBbox = decode_bbox(h);
+                double[] hashBbox = decodeBbox(h);
                 double[] point3 = new double[] { hashBbox[2], hashBbox[0] };
                 boolean nw = GeoGeometry.polygonContains(point3[1], point3[0], polygonPoints);
                 double[] point2 = new double[] { hashBbox[3], hashBbox[0] };
@@ -751,7 +751,7 @@ public class GeoHashUtils {
         // the height is the same at for any latitude given a length, but the width converges towards the poles
         while (width < granularityInMeters && hash.length() >= 2) {
             length = hash.length();
-            double[] bbox = decode_bbox(hash);
+            double[] bbox = decodeBbox(hash);
             width = GeoGeometry.distance(bbox[0], bbox[2], bbox[0], bbox[3]);
             hash = hash.substring(0, hash.length() - 1);
         }

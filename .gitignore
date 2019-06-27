@@ -8,3 +8,5 @@ test-output
 *iml
 .gradle
 build
+out
+.kotlintest
