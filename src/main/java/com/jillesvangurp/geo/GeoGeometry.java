@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2012-2019, Jilles van Gurp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,8 +32,6 @@ import static java.lang.Math.toRadians;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
-
-//import org.apache.commons.lang3.Validate;
 
 /**
  * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
