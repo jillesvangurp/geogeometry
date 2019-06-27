@@ -442,16 +442,17 @@ public class GeoGeometry {
      * @param longitude longitude
      * @param latitudalMeters distance in meters that the point should be translated along the latitude
      * @param longitudalMeters distance in meters that the point should be translated along the longitude
-     * @return [minlat,maxlat,minlon,maxlon]
+     * @return [maxlat,minlat,maxlon,minlon]
      */
     public static double[] bbox(double latitude, double longitude, double latitudalMeters,double longitudalMeters) {
         validate(latitude, longitude, false);
 
-        double[] tr = translate(latitude, longitude, latitudalMeters/2, longitudalMeters/2);
-        double[] br = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
-        double[] bl = translate(latitude, longitude, -latitudalMeters/2, -longitudalMeters/2);
+        double[] topRight = translate(latitude, longitude, latitudalMeters/2, longitudalMeters/2);
+        double[] bottomRight = translate(latitude, longitude, -latitudalMeters/2, longitudalMeters/2);
+        double[] bottomLeft = translate(latitude, longitude, -latitudalMeters/2, -longitudalMeters/2);
 
-        return new double[] {tr[1], br[1],tr[0],bl[0]};
+        // FIXME make it a proper bbox and use [southLat,northLat, westLon, eastLon]
+        return new double[] {topRight[1], bottomRight[1],topRight[0],bottomLeft[0]};
     }
 
     /**

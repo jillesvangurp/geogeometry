@@ -29,7 +29,7 @@ import java.util.Set;
 
 import static com.jillesvangurp.geo.GeoGeometry.distance;
 import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
-import static com.jillesvangurp.geo.GeoHashUtils.DEFAULT_GEOHASH_LENGTH;
+import static com.jillesvangurp.geo.GeoHashUtils.DEFAULT_GEO_HASH_LENGTH;
 import static com.jillesvangurp.geo.GeoHashUtils.contains;
 import static com.jillesvangurp.geo.GeoHashUtils.decode;
 import static com.jillesvangurp.geo.GeoHashUtils.decodeBbox;
@@ -63,7 +63,7 @@ public class GeoHashUtilsTest {
 
 	@Test(dataProvider = "coordinates")
 	public void shouldEncode(Double lat, Double lon, String expectedGeoHash) {
-		assertThat(encode(lat, lon,DEFAULT_GEOHASH_LENGTH), is(expectedGeoHash));
+		assertThat(encode(lat, lon, DEFAULT_GEO_HASH_LENGTH), is(expectedGeoHash));
         assertThat(encode(new double[]{lon,lat}), is(expectedGeoHash));
 	}
 
@@ -193,7 +193,7 @@ public class GeoHashUtilsTest {
     }
 
     private void printHashSizes(double lat, double lon) {
-        String geoHash = encode(lat, lon, DEFAULT_GEOHASH_LENGTH);
+        String geoHash = encode(lat, lon, DEFAULT_GEO_HASH_LENGTH);
 
         // not a test but nice to get a sense of the scale of a geo hash
         System.out.println("<tr><td>" + lat + "</td>");

@@ -65,7 +65,7 @@ private fun calculateB32DecodeMap(): Map<Char, Int> {
     return map
 }
 
-private val BASE32_DECODE_MAP= calculateB32DecodeMap()
+private val BASE32_DECODE_MAP = calculateB32DecodeMap()
 
 /**
  * This class was originally adapted from Apache Lucene's GeoHashUtils.java back in 2012. Please note that this class retains the
@@ -79,7 +79,7 @@ private val BASE32_DECODE_MAP= calculateB32DecodeMap()
 @Suppress("unused")
 class GeoHashUtils {
     companion object {
-        const val DEFAULT_GEOHASH_LENGTH = 12
+        const val DEFAULT_GEO_HASH_LENGTH = 12
 
         /**
          * Same as encode but returns a substring of the specified length.
@@ -90,7 +90,7 @@ class GeoHashUtils {
          * @return geo hash of the specified length. The minimum length is 1 and the maximum length is 12.
          */
         @JvmStatic
-        fun encode(latitude: Double, longitude: Double, length: Int = DEFAULT_GEOHASH_LENGTH): String {
+        fun encode(latitude: Double, longitude: Double, length: Int = DEFAULT_GEO_HASH_LENGTH): String {
             if (length < 1 || length > 12) {
                 throw IllegalArgumentException("length must be between 1 and 12")
             }
@@ -113,7 +113,6 @@ class GeoHashUtils {
                     } else {
                         lonInterval[1] = mid
                     }
-
                 } else {
                     mid = (latInterval[0] + latInterval[1]) / 2
                     if (latitude > mid) {
@@ -144,9 +143,8 @@ class GeoHashUtils {
          */
         @JvmStatic
         fun encode(point: Point): String {
-            return encode(point.latitude, point.longitude, DEFAULT_GEOHASH_LENGTH)
+            return encode(point.latitude, point.longitude, DEFAULT_GEO_HASH_LENGTH)
         }
-
 
         /**
          * @param geoHash valid geoHash
@@ -173,13 +171,12 @@ class GeoHashUtils {
                         } else {
                             east = (west + east) / 2
                         }
-
                     } else {
 
                         if (currentCharacter and mask != 0) {
-                            south = (south+north) / 2
+                            south = (south + north) / 2
                         } else {
-                            north = (south+north) / 2
+                            north = (south + north) / 2
                         }
                     }
                     isEven = !isEven
@@ -492,8 +489,8 @@ class GeoHashUtils {
                     )
                 }
             }
-            if (maxLength < 1 || maxLength >= DEFAULT_GEOHASH_LENGTH) {
-                throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEOHASH_LENGTH was $maxLength")
+            if (maxLength < 1 || maxLength >= DEFAULT_GEO_HASH_LENGTH) {
+                throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
             }
 
             val bbox = GeoGeometry.boundingBox(polygonPoints)
@@ -782,7 +779,6 @@ class GeoHashUtils {
                     } else {
                         lonInterval[1] = mid
                     }
-
                 } else {
                     mid = (latInterval[0] + latInterval[1]) / 2
                     if (latitude > mid) {
@@ -856,9 +852,7 @@ class GeoHashUtils {
                 hash = hash.substring(0, hash.length - 1)
             }
 
-            return Math.min(length + 1, DEFAULT_GEOHASH_LENGTH)
+            return Math.min(length + 1, DEFAULT_GEO_HASH_LENGTH)
         }
     }
-
 }
-
