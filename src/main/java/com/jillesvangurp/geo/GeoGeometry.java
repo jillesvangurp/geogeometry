@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
 
-import org.apache.commons.lang3.Validate;
+//import org.apache.commons.lang3.Validate;
 
 /**
  * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
@@ -1021,7 +1021,7 @@ public class GeoGeometry {
      * @return approximate area.
      */
     public static double area(double[][] polygon) {
-        Validate.isTrue(polygon.length > 3,"polygon should have at least three elements");
+        if(polygon.length <= 3) throw new IllegalArgumentException("polygon should have at least three elements");
 
         double total=0;
         double[] previous=polygon[0];
@@ -1070,7 +1070,7 @@ public class GeoGeometry {
      * @return area covered by the outer polygon
      */
     public static double area(double[][][] polygon) {
-        Validate.isTrue(polygon.length > 0,"should have at least outer polygon");
+        if(polygon.length <= 0) throw new IllegalArgumentException("array should not be empty");
         double area = area(polygon[0]);
         for(int i=1;i<polygon.length;i++) {
             // subtract the holes
