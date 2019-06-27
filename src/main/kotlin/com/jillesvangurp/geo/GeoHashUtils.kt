@@ -18,8 +18,6 @@
  */
 package com.jillesvangurp.geo
 
-import com.jillesvangurp.geo.GeoGeometry.validate
-
 private val BITS = intArrayOf(16, 8, 4, 2, 1)
 // note: no a,i,l, and o
 private val BASE32_CHARS = charArrayOf(
@@ -94,7 +92,7 @@ class GeoHashUtils {
             if (length < 1 || length > 12) {
                 throw IllegalArgumentException("length must be between 1 and 12")
             }
-            validate(latitude, longitude, false)
+            GeoGeometry.validate(latitude, longitude, false)
             val latInterval = doubleArrayOf(-90.0, 90.0)
             val lonInterval = doubleArrayOf(-180.0, 180.0)
 
@@ -453,8 +451,8 @@ class GeoHashUtils {
          * @return a set of geo hashes that cover the polygon area.
          */
         @JvmStatic
-        fun geoHashesForPolygon(vararg polygonPoints: DoubleArray): Set<String> {
-            val bbox = GeoGeometry.boundingBox(polygonPoints)
+        fun geoHashesForPolygon(vararg polygonPoints: Point): Set<String> {
+            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<Point>)
             // first lets figure out an appropriate geohash length
             val diagonalDistance = GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
             val hashLength = suitableHashLength(diagonalDistance, bbox.southLatitude, bbox.eastLongitude)
@@ -480,7 +478,7 @@ class GeoHashUtils {
          * @return a set of geo hashes that cover the polygon area.
          */
         @JvmStatic
-        fun geoHashesForPolygon(maxLength: Int, vararg polygonPoints: DoubleArray): Set<String> {
+        fun geoHashesForPolygon(maxLength: Int, vararg polygonPoints: Point): Set<String> {
             for (ds in polygonPoints) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
                 if (ds[1] < -89.5 || ds[1] > 89.5) {
@@ -493,7 +491,7 @@ class GeoHashUtils {
                 throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
             }
 
-            val bbox = GeoGeometry.boundingBox(polygonPoints)
+            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<Point>)
             // first lets figure out an appropriate geohash length
             val diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3])
             val hashLength = suitableHashLength(diagonal, bbox[0], bbox[2])
