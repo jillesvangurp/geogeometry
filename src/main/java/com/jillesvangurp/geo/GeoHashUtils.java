@@ -140,8 +140,7 @@ public class GeoHashUtils {
 
             int currentCharacter = BASE32_DECODE_MAP.get(geohash.charAt(i));
 
-            for (int z = 0; z < BITS.length; z++) {
-                int mask = BITS[z];
+            for (int mask : BITS) {
                 if (isEven) {
                     if ((currentCharacter & mask) != 0) {
                         lonInterval[0] = (lonInterval[0] + lonInterval[1]) / 2;
@@ -310,7 +309,7 @@ public class GeoHashUtils {
      */
 
     public static String[] subHashes(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
             list.add(geoHash + c);
         }
@@ -336,10 +335,10 @@ public class GeoHashUtils {
      * @param geoHash geo hash
      * @return the 16 northern sub hashes of the geo hash
      */
-    public static String[] subHashesN(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static String[] subHashesNorth(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
-            if (c >= '0' && c <= 'g') {
+            if (c <= 'g') {
                 list.add(geoHash + c);
             }
         }
@@ -350,10 +349,10 @@ public class GeoHashUtils {
      * @param geoHash geo hash
      * @return the 16 southern sub hashes of the geo hash
      */
-    public static String[] subHashesS(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static String[] subHashesSouth(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
-            if (c >= 'h' && c <= 'z') {
+            if (c >= 'h') {
                 list.add(geoHash + c);
             }
         }
@@ -364,10 +363,10 @@ public class GeoHashUtils {
      * @param geoHash geo hash
      * @return the 8 north-west sub hashes of the geo hash
      */
-    public static String[] subHashesNW(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static String[] subHashesNorthWest(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
-            if (c >= '0' && c <= '7') {
+            if (c <= '7') {
                 list.add(geoHash + c);
             }
         }
@@ -378,8 +377,8 @@ public class GeoHashUtils {
      * @param geoHash geo hash
      * @return the 8 north-east sub hashes of the geo hash
      */
-    public static String[] subHashesNE(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static String[] subHashesNorthEast(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
             if (c >= '8' && c <= 'g') {
                 list.add(geoHash + c);
@@ -392,8 +391,8 @@ public class GeoHashUtils {
      * @param geoHash geo hash
      * @return the 8 south-west sub hashes of the geo hash
      */
-    public static String[] subHashesSW(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static String[] subHashesSouthWest(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
             if (c >= 'h' && c <= 'r') {
                 list.add(geoHash + c);
@@ -406,10 +405,10 @@ public class GeoHashUtils {
      * @param geoHash geo hash
      * @return the 8 south-east sub hashes of the geo hash
      */
-    public static String[] subHashesSE(String geoHash) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static String[] subHashesSouthEast(String geoHash) {
+        ArrayList<String> list = new ArrayList<>();
         for (char c : BASE32_CHARS) {
-            if (c >= 's' && c <= 'z') {
+            if (c >= 's') {
                 list.add(geoHash + c);
             }
         }
@@ -475,7 +474,7 @@ public class GeoHashUtils {
         double diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3]);
         int hashLength = suitableHashLength(diagonal, bbox[0], bbox[2]);
 
-        Set<String> partiallyContained = new HashSet<String>();
+        Set<String> partiallyContained = new HashSet<>();
         // now lets generate all geohashes for the containing bounding box
         // lets start at the top left:
 
@@ -496,7 +495,7 @@ public class GeoHashUtils {
             rowBox = decode_bbox(rowHash);
         }
 
-        Set<String> fullyContained = new TreeSet<String>();
+        Set<String> fullyContained = new TreeSet<>();
 
         int detail = hashLength;
         // we're not aiming for perfect detail here in terms of 'pixellation', 6
@@ -523,11 +522,7 @@ public class GeoHashUtils {
         double ll2 = l2 + 180;
         if (ll1 < ll2 && ll2 - ll1 < 180) {
             return true;
-        } else if (ll1 > ll2 && ll2 + 360 - ll1 < 180) {
-            return true;
-        } else {
-            return false;
-        }
+        } else return ll1 > ll2 && ll2 + 360 - ll1 < 180;
     }
 
     /**
@@ -540,11 +535,7 @@ public class GeoHashUtils {
         double ll2 = l2 + 180;
         if (ll1 > ll2 && ll1 - ll2 < 180) {
             return true;
-        } else if (ll1 < ll2 && ll1 + 360 - ll2 < 180) {
-            return true;
-        } else {
-            return false;
-        }
+        } else return ll1 < ll2 && ll1 + 360 - ll2 < 180;
     }
 
     /**
@@ -565,10 +556,9 @@ public class GeoHashUtils {
         return l1 < l2;
     }
 
-    @SuppressWarnings("deprecation")
     private static Set<String> splitAndFilter(double[][] polygonPoints, Set<String> fullyContained, Set<String> partiallyContained) {
-        Set<String> stillPartial = new HashSet<String>();
-        Set<String> checkCompleteArea = new HashSet<String>(32, 1.0f);
+        Set<String> stillPartial = new HashSet<>();
+        Set<String> checkCompleteArea = new HashSet<>(32, 1.0f);
         // now we need to break up the partially contained hashes
         for (String hash : partiallyContained) {
         	checkCompleteArea.clear();
@@ -625,7 +615,7 @@ public class GeoHashUtils {
         if (wayPoints == null || wayPoints.length < 2) {
             throw new IllegalArgumentException("must have at least two way points on the path");
         }
-        Set<String> hashes = new TreeSet<String>();
+        Set<String> hashes = new TreeSet<>();
         // The slope of the line through points A(ax, ay) and B(bx, by) is given
         // by m = (by-ay)/(bx-ax) and the equation of this
         // line can be written y = m(x - ax) + ay.
@@ -661,7 +651,7 @@ public class GeoHashUtils {
         double[] bbox2 = (double[]) result2[1];
 
         if (result1[0].equals(result2[0])) { // same geohash for begin and end
-            HashSet<String> results = new HashSet<String>();
+            HashSet<String> results = new HashSet<>();
             results.add((String) result1[0]);
             return results;
         } else if (lat1 != lat2) {
@@ -685,7 +675,7 @@ public class GeoHashUtils {
         int bit = 0, ch = 0;
 
         while (geohash.length() < length) {
-            double mid = 0.0;
+            double mid;
             if (is_even) {
                 mid = (lonInterval[0] + lonInterval[1]) / 2;
                 if (longitude > mid) {
@@ -705,7 +695,7 @@ public class GeoHashUtils {
                 }
             }
 
-            is_even = is_even ? false : true;
+            is_even = !is_even;
 
             if (bit < 4) {
                 bit++;
