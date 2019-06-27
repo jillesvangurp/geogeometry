@@ -31,6 +31,7 @@ import static java.lang.Math.toRadians;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 
 import org.apache.commons.lang3.Validate;
 
@@ -76,11 +77,11 @@ public class GeoGeometry {
         double maxLat = Integer.MIN_VALUE;
         double maxLon = Integer.MIN_VALUE;
 
-        for (int i = 0; i < lineString.length; i++) {
-            minLat = min(minLat, lineString[i][1]);
-            minLon = min(minLon, lineString[i][0]);
-            maxLat = max(maxLat, lineString[i][1]);
-            maxLon = max(maxLon, lineString[i][0]);
+        for (double[] doubles : lineString) {
+            minLat = min(minLat, doubles[1]);
+            minLon = min(minLon, doubles[0]);
+            maxLat = max(maxLat, doubles[1]);
+            maxLon = max(maxLon, doubles[0]);
         }
 
         return new double[] { minLat, maxLat, minLon, maxLon };
@@ -96,12 +97,12 @@ public class GeoGeometry {
         double minLon = Integer.MAX_VALUE;
         double maxLat = Integer.MIN_VALUE;
         double maxLon = Integer.MIN_VALUE;
-        for (int i = 0; i < polygon.length; i++) {
-            for (int j = 0; j < polygon[i].length; j++) {
-                minLat = min(minLat, polygon[i][j][1]);
-                minLon = min(minLon, polygon[i][j][0]);
-                maxLat = max(maxLat, polygon[i][j][1]);
-                maxLon = max(maxLon, polygon[i][j][0]);
+        for (double[][] doubles : polygon) {
+            for (double[] aDouble : doubles) {
+                minLat = min(minLat, aDouble[1]);
+                minLon = min(minLon, aDouble[0]);
+                maxLat = max(maxLat, aDouble[1]);
+                maxLon = max(maxLon, aDouble[0]);
             }
         }
         return new double[] { minLat, maxLat, minLon, maxLon };
@@ -117,13 +118,13 @@ public class GeoGeometry {
         double minLon = Integer.MAX_VALUE;
         double maxLat = Integer.MIN_VALUE;
         double maxLon = Integer.MIN_VALUE;
-        for (int i = 0; i < multiPolygon.length; i++) {
-            for (int j = 0; j < multiPolygon[i].length; j++) {
-                for (int k = 0; k < multiPolygon[i][j].length; k++) {
-                    minLat = min(minLat, multiPolygon[i][j][k][1]);
-                    minLon = min(minLon, multiPolygon[i][j][k][0]);
-                    maxLat = max(maxLat, multiPolygon[i][j][k][1]);
-                    maxLon = max(maxLon, multiPolygon[i][j][k][0]);
+        for (double[][][] doubles : multiPolygon) {
+            for (double[][] aDouble : doubles) {
+                for (double[] value : aDouble) {
+                    minLat = min(minLat, value[1]);
+                    minLon = min(minLon, value[0]);
+                    maxLat = max(maxLat, value[1]);
+                    maxLon = max(maxLon, value[0]);
                 }
             }
         }
@@ -141,28 +142,19 @@ public class GeoGeometry {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static double[][] filterNoiseFromPointCloud(double[][] points, float percentage) {
-        Arrays.sort(points, new Comparator() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                double[] p1 = (double[]) o1;
-                double[] p2 = (double[]) o2;
-                if(p1[0] == p2[0]) {
-                    if(p1[1] > p2[1]) {
-                        return 1;
-                    } else if(p1[1] == p2[1]){
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-                } else
-                    if(p1[0] > p2[0]) {
-                        return 1;
-                    } if(p1[0] == p2[0]){
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-            }
+        Arrays.sort(points, (Comparator) (o1, o2) -> {
+            double[] p1 = (double[]) o1;
+            double[] p2 = (double[]) o2;
+            if(p1[0] == p2[0]) {
+                return Double.compare(p1[1], p2[1]);
+            } else
+                if(p1[0] > p2[0]) {
+                    return 1;
+                } if(p1[0] == p2[0]){
+                    return 0;
+                } else {
+                    return -1;
+                }
         });
         int discard = (int) (points.length * percentage/2);
 
@@ -334,21 +326,19 @@ public class GeoGeometry {
                 // parallel -> they don't intersect!
                 return false;
             }
-        } else if (line1Vertical && !line2Vertical) {
+        } else if (line1Vertical) {
             double b2 = (v2 - v1) / (u2 - u1);
             double a2 = v1 - b2 * u1;
 
-            double xi = x1;
-            double yi = a2 + b2 * xi;
+            double yi = a2 + b2 * x1;
 
             return yi >= y1 && yi <= y2;
 
-        } else if (!line1Vertical && line2Vertical) {
+        } else if (line2Vertical) {
             double b1 = (y2 - y1) / (x2 - x1);
             double a1 = y1 - b1 * x1;
 
-            double xi = u1;
-            double yi = a1 + b1 * xi;
+            double yi = a1 + b1 * u1;
 
             return yi >= v1 && yi <= v2;
         } else {
@@ -373,11 +363,7 @@ public class GeoGeometry {
             // calculate intersection point xi,yi
             double xi = -(a1 - a2) / (b1 - b2);
             double yi = a1 + b1 * xi;
-            if ((x1 - xi) * (xi - x2) >= 0 && (u1 - xi) * (xi - u2) >= 0 && (y1 - yi) * (yi - y2) >= 0 && (v1 - yi) * (yi - v2) >= 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return (x1 - xi) * (xi - x2) >= 0 && (u1 - xi) * (xi - u2) >= 0 && (y1 - yi) * (yi - y2) >= 0 && (v1 - yi) * (yi - v2) >= 0;
         }
     }
 
@@ -570,8 +556,7 @@ public class GeoGeometry {
         double miny=Math.min(y1, y2);
         double maxy=Math.max(y1, y2);
 
-        boolean result = x >= minx && x<=maxx && y >= miny && y <= maxy;
-        return result;
+        return x >= minx && x<=maxx && y >= miny && y <= maxy;
     }
 
     /**
@@ -710,7 +695,7 @@ public class GeoGeometry {
             double theta = 2 * PI * i / segments;
             // trying to avoid theta being exact factors of pi because that results in some funny behavior around the
             // north-pole
-            theta = theta += 0.1;
+            theta  += 0.1;
             if (theta >= 2 * PI) {
                 theta = theta - 2 * PI;
             }
@@ -827,17 +812,14 @@ public class GeoGeometry {
             throw new IllegalStateException("need at least 3 pois for a polygon");
         }
         double[][] sorted = Arrays.copyOf(points, points.length);
-        Arrays.sort(sorted, new Comparator() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                double[] p1 = (double[]) o1;
-                double[] p2 = (double[]) o2;
+        Arrays.sort(sorted, (Comparator) (o1, o2) -> {
+            double[] p1 = (double[]) o1;
+            double[] p2 = (double[]) o2;
 
-                if (p1[0] == p2[0]) {
-                    return (new Double(p1[1]).compareTo(new Double(p2[1])));
-                } else {
-                    return (new Double(p1[0]).compareTo(new Double(p2[0])));
-                }
+            if (p1[0] == p2[0]) {
+                return Double.compare(p1[1],p2[1]);
+            } else {
+                return Double.compare(p1[0],p2[0]);
             }
         });
 
@@ -917,8 +899,11 @@ public class GeoGeometry {
      */
     public static double toDecimalDegree(String direction, double degrees, double minutes, double seconds) {
         int factor = 1;
-        if (direction != null && (direction.toLowerCase().startsWith("w") || direction.toLowerCase().startsWith("s"))) {
-            factor = -1;
+        if(direction!=null) {
+            String lowerCaseDirection = direction.toLowerCase(Locale.ROOT);
+            if (lowerCaseDirection.startsWith("w") || lowerCaseDirection.startsWith("s")) {
+                factor = -1;
+            }
         }
         return (degrees + minutes / 60 + seconds / 60 / 60) * factor;
     }
@@ -1101,8 +1086,8 @@ public class GeoGeometry {
      */
     public static double area(double[][][][] multiPolygon) {
         double area=0;
-        for(int i=0;i<multiPolygon.length;i++) {
-            area += area(multiPolygon[i]);
+        for (double[][][] doubles : multiPolygon) {
+            area += area(doubles);
         }
         return area;
     }
@@ -1122,7 +1107,7 @@ public class GeoGeometry {
     public static String lineToString(double[][] line) {
         StringBuilder buf = new StringBuilder();
         for(double[] p:line) {
-            buf.append(pointToString(p)+ ",");
+            buf.append(pointToString(p)).append(",");
         }
         buf.setLength(buf.length()-1);
         return buf.toString();
