@@ -825,10 +825,10 @@ class GeoGeometry {
         /**
          * @param left a 2d array representing a polygon
          * @param right a 2d array representing a polygon
-         * @return true if the two polygons overlap
+         * @return true if the two polygons overlap. Important: this only works for simple convex polygons. Overlap for concave polygons is more complicated.
          */
         @JvmStatic
-        fun overlap(left: Array<DoubleArray>, right: Array<DoubleArray>): Boolean {
+        fun overlap(left: LinearRing, right: LinearRing): Boolean {
             val point1 = polygonCenter(*right)
             if (polygonContains(point1[1], point1[0], *left)) {
                 return true
@@ -855,7 +855,7 @@ class GeoGeometry {
         /**
          * @param containingPolygon linestring polygon
          * @param containedPolygon linestring polygon
-         * @return true if the containing polygon fully contains the contained polygon
+         * @return true if the containing polygon fully contains the contained polygon. Important: this only works for simple convex polygons. Contains for concave polygons is more complicated. https://en.wikipedia.org/wiki/Point_in_polygon
          */
         @JvmStatic
         fun contains(containingPolygon: Array<DoubleArray>, containedPolygon: Array<DoubleArray>): Boolean {

@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 import java.util.Random;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
