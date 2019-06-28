@@ -21,18 +21,15 @@
  */
 package com.jillesvangurp.geo
 
+import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sin
-
-import java.util.Arrays
-import java.util.Locale
-import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToLong
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
@@ -158,17 +155,20 @@ class GeoGeometry {
          */
         @JvmStatic
         fun filterNoiseFromPointCloud(points: MultiPoint, percentage: Float): MultiPoint {
-            Arrays.sort(points) { p1, p2 ->
+
+            points.sortWith(Comparator { p1, p2 ->
                 when {
+                    p1 == null || p2 == null -> throw IllegalArgumentException("Array contains null points")
                     p1[0] == p2[0] -> p1[1].compareTo(p2[1])
                     p1[0] > p2[0] -> 1
                     p1[0] == p2[0] -> 0
                     else -> -1
                 }
-            }
+            })
+
             val discard = (points.size * percentage / 2).toInt()
 
-            return Arrays.copyOfRange(points, discard, points.size - discard)
+            return points.copyOfRange(discard,points.size - discard)
         }
 
         /**
@@ -231,7 +231,7 @@ class GeoGeometry {
             if (polygonPoints.size <= 2) {
                 throw IllegalArgumentException("a polygon must have at least three points")
             }
-            val bbox = boundingBox(polygonPoints as Array<Point>)
+            @Suppress("UNCHECKED_CAST") val bbox = boundingBox(polygonPoints as Array<DoubleArray>)
             if (!bboxContains(bbox, latitude, longitude)) {
                 // outside the containing bbox
                 return false
@@ -512,7 +512,7 @@ class GeoGeometry {
         }
 
         /**
-         * Kotlin math seems to not have this unlike Java Math. But it is easily replicated like this
+         * Kotlin math seems to not have this unlike Java  But it is easily replicated like this
          */
         @JvmStatic
         fun toRadians(degrees: Double): Double {
@@ -625,13 +625,13 @@ class GeoGeometry {
         }
 
         private fun onSegment(x: Double, y: Double, x1: Double, y1: Double, x2: Double, y2: Double): Boolean {
-            val minx = Math.min(x1, x2)
-            val maxx = Math.max(x1, x2)
+            val minx = min(x1, x2)
+            val maxx = max(x1, x2)
 
-            val miny = Math.min(y1, y2)
-            val maxy = Math.max(y1, y2)
+            val miny = min(y1, y2)
+            val maxy = max(y1, y2)
 
-            return x >= minx && x <= maxx && y >= miny && y <= maxy
+            return x in minx..maxx && y >= miny && y <= maxy
         }
 
         /**
@@ -661,7 +661,7 @@ class GeoGeometry {
             for (i in 1 until lineString.size) {
                 val current = lineString[i]
                 val distance = distance(last, current, point)
-                minDistance = Math.min(minDistance, distance)
+                minDistance = min(minDistance, distance)
                 last = current
             }
             return minDistance
@@ -704,7 +704,7 @@ class GeoGeometry {
         fun distanceToMultiPolygon(point: DoubleArray, multiPolygon: Array<Array<Array<DoubleArray>>>): Double {
             var distance = java.lang.Double.MAX_VALUE
             for (polygon in multiPolygon) {
-                distance = Math.min(distance, distanceToPolygon(point, polygon))
+                distance = min(distance, distanceToPolygon(point, polygon))
             }
             return distance
         }
@@ -773,7 +773,7 @@ class GeoGeometry {
 
             // things get funny near the north and south pole, so doing a modulo 90
             // to ensure that the relative amount of degrees doesn't get too crazy.
-            val relativeLongitude = relativeLatitude / cos(Math.toRadians(latitude)) % 90
+            val relativeLongitude = relativeLatitude / cos(toRadians(latitude)) % 90
 
             for (i in 0 until segments) {
                 // radians go from 0 to 2*PI; we want to divide the circle in nice
@@ -791,8 +791,8 @@ class GeoGeometry {
                 // is multiply that with the relative latitude and longitude
                 // note, latitude takes the role of y, not x. By convention we
                 // always note latitude, longitude instead of the other way around
-                var latOnCircle = latitude + relativeLatitude * Math.sin(theta)
-                var lonOnCircle = longitude + relativeLongitude * Math.cos(theta)
+                var latOnCircle = latitude + relativeLatitude * sin(theta)
+                var lonOnCircle = longitude + relativeLongitude * cos(theta)
                 if (lonOnCircle > 180) {
                     lonOnCircle = -180 + (lonOnCircle - 180)
                 } else if (lonOnCircle < -180) {
@@ -896,31 +896,30 @@ class GeoGeometry {
          * @return a convex polygon for the points
          */
         @JvmStatic
-        fun polygonForPoints(points: Array<DoubleArray>): Array<DoubleArray> {
+        fun polygonForPoints(points: MultiPoint): LinearRing {
             if (points.size < 3) {
                 throw IllegalStateException("need at least 3 pois for a polygon")
             }
-            val sorted = points.copyOf(points.size)
-            Arrays.sort<DoubleArray>(sorted) { p1, p2 ->
-
-                if (p1[0] == p2[0]) {
-                    p1[1].compareTo(p2[1])
-                } else {
-                    p1[0].compareTo(p2[0])
+            val sorted = points.clone()
+            sorted.sortWith( Comparator { p1, p2 ->
+                when {
+                    p1 == null || p2 ==null -> throw IllegalArgumentException("Points array contains null")
+                    p1[0] == p2[0] -> p1[1].compareTo(p2[1])
+                    else -> p1[0].compareTo(p2[0])
                 }
-            }
+            })
 
             val n = sorted.size
 
             val lUpper = Array(n) { DoubleArray(0) }
 
-            lUpper[0] = sorted[0] ?: throw IllegalStateException()
-            lUpper[1] = sorted[1] ?: throw IllegalStateException()
+            lUpper[0] = sorted[0]
+            lUpper[1] = sorted[1]
 
             var lUpperSize = 2
 
             for (i in 2 until n) {
-                lUpper[lUpperSize] = sorted[i] ?: throw IllegalStateException()
+                lUpper[lUpperSize] = sorted[i]
                 lUpperSize++
 
                 while (lUpperSize > 2 && !rightTurn(
@@ -937,13 +936,13 @@ class GeoGeometry {
 
             val lLower = Array(n) { DoubleArray(0) }
 
-            lLower[0] = sorted[n - 1] ?: throw IllegalStateException()
-            lLower[1] = sorted[n - 2] ?: throw IllegalStateException()
+            lLower[0] = sorted[n - 1]
+            lLower[1] = sorted[n - 2]
 
             var lLowerSize = 2
 
             for (i in n - 3 downTo 0) {
-                lLower[lLowerSize] = sorted[i] ?: throw IllegalStateException()
+                lLower[lLowerSize] = sorted[i]
                 lLowerSize++
 
                 while (lLowerSize > 2 && !rightTurn(
@@ -999,7 +998,7 @@ class GeoGeometry {
         fun toDecimalDegree(direction: String?, degrees: Double, minutes: Double, seconds: Double): Double {
             var factor = 1
             if (direction != null) {
-                val lowerCaseDirection = direction.toLowerCase(Locale.ROOT)
+                val lowerCaseDirection = direction.toLowerCase()
                 if (lowerCaseDirection.startsWith("w") || lowerCaseDirection.startsWith("s")) {
                     factor = -1
                 }
@@ -1085,8 +1084,8 @@ class GeoGeometry {
             var roundedLon = longitude
             if (!strict) {
                 // this gets rid of rounding errors in raw data e.g. 180.00000000000023 will validate
-                roundedLat = Math.round(latitude * 1000000) / 1000000.0
-                roundedLon = Math.round(longitude * 1000000) / 1000000.0
+                roundedLat = (latitude * 1000000).roundToLong() / 1000000.0
+                roundedLon = (longitude * 1000000).roundToLong() / 1000000.0
             }
             if (roundedLat < -90.0 || roundedLat > 90.0) {
                 throw IllegalArgumentException("Latitude $latitude is outside legal range of -90,90")
@@ -1125,17 +1124,17 @@ class GeoGeometry {
             for (i in 1 until polygon.size) {
                 val current = polygon[i]
                 // convert to cartesian coordinates in meters, note this not very exact
-                val x1 = (previous[0] - xRef) * (6378137 * PI / 180) * Math.cos(yRef * PI / 180)
-                val y1 = (previous[1] - yRef) * Math.toRadians(6378137.0)
-                val x2 = (current[0] - xRef) * (6378137 * PI / 180) * Math.cos(yRef * PI / 180)
-                val y2 = (current[1] - yRef) * Math.toRadians(6378137.0)
+                val x1 = (previous[0] - xRef) * (6378137 * PI / 180) * cos(yRef * PI / 180)
+                val y1 = (previous[1] - yRef) * toRadians(6378137.0)
+                val x2 = (current[0] - xRef) * (6378137 * PI / 180) * cos(yRef * PI / 180)
+                val y2 = (current[1] - yRef) * toRadians(6378137.0)
 
                 // calculate crossproduct
                 total += x1 * y2 - x2 * y1
                 previous = current
             }
 
-            return 0.5 * Math.abs(total)
+            return 0.5 * abs(total)
         }
 
         /**
