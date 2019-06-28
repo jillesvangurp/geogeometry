@@ -1,8 +1,8 @@
 # Introduction
 
-GeoGeometry started out as a simple side project to help me come up with a list of geohashes that cover a particular geo shape. However, most of the recent work has actually gone into adding several implementations of common geometry algorithms.
+GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. However, most of the recent work has actually gone into adding several implementations of common geometry algorithms.
 
-GeoGeometry is not the only implementation of these algorithms. However, it is unique in the way it has been designed and the simplicity of using it.
+GeoGeometry is of course not the only implementation of these algorithms. However, it is unique in the way it has been designed and the simplicity of using it.
 
 There are two driving design principles:
 
@@ -12,6 +12,8 @@ There are two driving design principles:
 ## Geohashes
 
 A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
+
+Geohashes are super useful if you are building e.g. search engines. Though if you are, there are better data structures such as Quad Trees or BKD Trees that Elasticsearch uses in more recent versions.
 
 ## Name
 
@@ -70,6 +72,9 @@ Like all my other projects, this project is licensed under the so-called MIT lic
 For more details see the LICENSE file
 
 # Changelog
+
+**Check the Github Releases** tab for newer releases. Below is for older releases.
+
 
 * 2.11
     * Release to maven central and change groupid
