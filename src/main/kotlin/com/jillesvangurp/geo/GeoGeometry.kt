@@ -21,16 +21,19 @@
  */
 package com.jillesvangurp.geo
 
-import java.lang.Math.PI
-import java.lang.Math.asin
-import java.lang.Math.cos
-import java.lang.Math.max
-import java.lang.Math.min
-import java.lang.Math.sin
-import java.lang.Math.toRadians
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sin
 
 import java.util.Arrays
 import java.util.Locale
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.roundToLong
+import kotlin.math.sqrt
 
 /**
  * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
@@ -61,11 +64,10 @@ class GeoGeometry {
          *
          * see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
          */
-        private val EARTH_RADIUS = 6371000.0
-
-        private val EARTH_RADIUS_METERS = 6371000.0
-        private val EARTH_CIRCUMFERENCE_METERS = EARTH_RADIUS_METERS * Math.PI * 2.0
-        private val DEGREE_LATITUDE_METERS = EARTH_RADIUS_METERS * Math.PI / 180.0
+        const val EARTH_RADIUS_METERS = 6371000.0
+        const val EARTH_CIRCUMFERENCE_METERS = EARTH_RADIUS_METERS * PI * 2.0
+        const val DEGREE_LATITUDE_METERS = EARTH_RADIUS_METERS * PI / 180.0
+        const val DEGREES_TO_RADIANS = 2 * PI / 360
 
         /**
          * @param point point
@@ -83,7 +85,7 @@ class GeoGeometry {
          * [minLat,maxLat,minLon,maxLon}
          */
         @JvmStatic
-        fun boundingBox(points: Array<Point>): BoundingBox {
+        fun boundingBox(points: MultiPoint): BoundingBox {
             var minLat = Integer.MAX_VALUE.toDouble()
             var minLon = Integer.MAX_VALUE.toDouble()
             var maxLat = Integer.MIN_VALUE.toDouble()
@@ -105,17 +107,17 @@ class GeoGeometry {
          * [minLat,maxLat,minLon,maxLon}
          */
         @JvmStatic
-        fun boundingBox(polygon: Array<Array<DoubleArray>>): DoubleArray {
+        fun boundingBox(polygon: Polygon): BoundingBox {
             var minLat = Integer.MAX_VALUE.toDouble()
             var minLon = Integer.MAX_VALUE.toDouble()
             var maxLat = Integer.MIN_VALUE.toDouble()
             var maxLon = Integer.MIN_VALUE.toDouble()
-            for (doubles in polygon) {
-                for (aDouble in doubles) {
-                    minLat = min(minLat, aDouble[1])
-                    minLon = min(minLon, aDouble[0])
-                    maxLat = max(maxLat, aDouble[1])
-                    maxLon = max(maxLon, aDouble[0])
+            for (linearRing in polygon) {
+                for (point in linearRing) {
+                    minLat = min(minLat, point[1])
+                    minLon = min(minLon, point[0])
+                    maxLat = max(maxLat, point[1])
+                    maxLon = max(maxLon, point[0])
                 }
             }
             return doubleArrayOf(minLat, maxLat, minLon, maxLon)
@@ -127,18 +129,18 @@ class GeoGeometry {
          * [minLat,maxLat,minLon,maxLon}
          */
         @JvmStatic
-        fun boundingBox(multiPolygon: Array<Array<Array<DoubleArray>>>): DoubleArray {
+        fun boundingBox(multiPolygon: MultiPolygon): BoundingBox {
             var minLat = Integer.MAX_VALUE.toDouble()
             var minLon = Integer.MAX_VALUE.toDouble()
             var maxLat = Integer.MIN_VALUE.toDouble()
             var maxLon = Integer.MIN_VALUE.toDouble()
-            for (doubles in multiPolygon) {
-                for (aDouble in doubles) {
-                    for (value in aDouble) {
-                        minLat = min(minLat, value[1])
-                        minLon = min(minLon, value[0])
-                        maxLat = max(maxLat, value[1])
-                        maxLon = max(maxLon, value[0])
+            for (polygon in multiPolygon) {
+                for (linearRing in polygon) {
+                    for (point in linearRing) {
+                        minLat = min(minLat, point[1])
+                        minLon = min(minLon, point[0])
+                        maxLat = max(maxLat, point[1])
+                        maxLon = max(maxLon, point[0])
                     }
                 }
             }
@@ -155,8 +157,8 @@ class GeoGeometry {
          * @return sorted array of points with the specified percentage of elements at the beginning and end of the array removed.
          */
         @JvmStatic
-        fun filterNoiseFromPointCloud(points: Array<DoubleArray>, percentage: Float): Array<DoubleArray> {
-            Arrays.sort<DoubleArray>(points) { p1, p2 ->
+        fun filterNoiseFromPointCloud(points: MultiPoint, percentage: Float): MultiPoint {
+            Arrays.sort(points) { p1, p2 ->
                 when {
                     p1[0] == p2[0] -> p1[1].compareTo(p2[1])
                     p1[0] > p2[0] -> 1
@@ -177,7 +179,7 @@ class GeoGeometry {
          * @return true if the latitude and longitude are contained in the bbox
          */
         @JvmStatic
-        fun bboxContains(bbox: DoubleArray, latitude: Double, longitude: Double): Boolean {
+        fun bboxContains(bbox: BoundingBox, latitude: Double, longitude: Double): Boolean {
             validate(latitude, longitude, false)
             return bbox[0] <= latitude && latitude <= bbox[1] && bbox[2] <= longitude && longitude <= bbox[3]
         }
@@ -191,7 +193,7 @@ class GeoGeometry {
          * @return true if the polygon contains the coordinate
          */
         @JvmStatic
-        fun polygonContains(point: DoubleArray, polygonPoints: Array<Array<DoubleArray>>): Boolean {
+        fun polygonContains(point: Point, polygonPoints: Polygon): Boolean {
             validate(point)
             return polygonContains(point[1], point[0], *polygonPoints[0])
         }
@@ -206,7 +208,7 @@ class GeoGeometry {
          * @return true if the polygon contains the coordinate
          */
         @JvmStatic
-        fun polygonContains(latitude: Double, longitude: Double, polygonPoints: Array<Array<DoubleArray>>): Boolean {
+        fun polygonContains(latitude: Double, longitude: Double, polygonPoints: Polygon): Boolean {
             validate(latitude, longitude, false)
             return polygonContains(latitude, longitude, *polygonPoints[0])
         }
@@ -229,7 +231,6 @@ class GeoGeometry {
             if (polygonPoints.size <= 2) {
                 throw IllegalArgumentException("a polygon must have at least three points")
             }
-
             val bbox = boundingBox(polygonPoints as Array<Point>)
             if (!bboxContains(bbox, latitude, longitude)) {
                 // outside the containing bbox
@@ -335,8 +336,8 @@ class GeoGeometry {
             if (decimals > 17) {
                 throw IllegalArgumentException("this probably doesn't do what you want; makes sense only for <= 17 decimals")
             }
-            val factor = Math.pow(10.0, decimals.toDouble())
-            return Math.round(d * factor) / factor
+            val factor = 10.0.pow(decimals.toDouble())
+            return (d * factor).roundToLong() / factor
         }
 
         /**
@@ -367,52 +368,56 @@ class GeoGeometry {
             // vertical lines result in a divide by 0;
             val line1Vertical = x2 == x1
             val line2Vertical = u2 == u1
-            if (line1Vertical && line2Vertical) {
-                // x=a
-                return if (x1 == u1) {
-                    // lines are the same
-                    y1 <= v1 && v1 < y2 || y1 <= v2 && v2 < y2
-                } else {
-                    // parallel -> they don't intersect!
-                    false
-                }
-            } else if (line1Vertical) {
-                val b2 = (v2 - v1) / (u2 - u1)
-                val a2 = v1 - b2 * u1
-
-                val yi = a2 + b2 * x1
-
-                return yi >= y1 && yi <= y2
-            } else if (line2Vertical) {
-                val b1 = (y2 - y1) / (x2 - x1)
-                val a1 = y1 - b1 * x1
-
-                val yi = a1 + b1 * u1
-
-                return yi >= v1 && yi <= v2
-            } else {
-
-                val b1 = (y2 - y1) / (x2 - x1)
-                // divide by zero if second line vertical
-                val b2 = (v2 - v1) / (u2 - u1)
-
-                val a1 = y1 - b1 * x1
-                val a2 = v1 - b2 * u1
-
-                if (b1 - b2 == 0.0) {
-                    // same gradient
-                    return if (Math.abs(a1 - a2) < .0000001) {
-                        // lines are definitely the same within a margin of error, check if their x overlaps
-                        isBetween(x1, x2, u1) || isBetween(x1, x2, u2)
+            return when {
+                line1Vertical && line2Vertical -> // x=a
+                    if (x1 == u1) {
+                        // lines are the same
+                        y1 <= v1 && v1 < y2 || y1 <= v2 && v2 < y2
                     } else {
                         // parallel -> they don't intersect!
                         false
                     }
+                line1Vertical -> {
+                    val b2 = (v2 - v1) / (u2 - u1)
+                    val a2 = v1 - b2 * u1
+
+                    val yi = a2 + b2 * x1
+
+                    yi in y1..y2
                 }
-                // calculate intersection point xi,yi
-                val xi = -(a1 - a2) / (b1 - b2)
-                val yi = a1 + b1 * xi
-                return (x1 - xi) * (xi - x2) >= 0 && (u1 - xi) * (xi - u2) >= 0 && (y1 - yi) * (yi - y2) >= 0 && (v1 - yi) * (yi - v2) >= 0
+                line2Vertical -> {
+                    val b1 = (y2 - y1) / (x2 - x1)
+                    val a1 = y1 - b1 * x1
+
+                    val yi = a1 + b1 * u1
+
+                    yi in v1..v2
+                }
+                else -> {
+
+                    val b1 = (y2 - y1) / (x2 - x1)
+                    // divide by zero if second line vertical
+                    val b2 = (v2 - v1) / (u2 - u1)
+
+                    val a1 = y1 - b1 * x1
+                    val a2 = v1 - b2 * u1
+
+                    if (b1 - b2 == 0.0) {
+                        // same gradient
+                        if (abs(a1 - a2) < .0000001) {
+                            // lines are definitely the same within a margin of error, check if their x overlaps
+                            isBetween(x1, x2, u1) || isBetween(x1, x2, u2)
+                        } else {
+                            // parallel -> they don't intersect!
+                            false
+                        }
+                    } else {
+                        // calculate intersection point xi,yi
+                        val xi = -(a1 - a2) / (b1 - b2)
+                        val yi = a1 + b1 * xi
+                        (x1 - xi) * (xi - x2) >= 0 && (u1 - xi) * (xi - u2) >= 0 && (y1 - yi) * (yi - y2) >= 0 && (v1 - yi) * (yi - v2) >= 0
+                    }
+                }
             }
         }
 
@@ -425,8 +430,8 @@ class GeoGeometry {
         }
 
         private fun lengthOfLongitudeDegreeAtLatitude(latitude: Double): Double {
-            val latitudeInRadians = Math.toRadians(latitude)
-            return Math.cos(latitudeInRadians) * EARTH_CIRCUMFERENCE_METERS / 360.0
+            val latitudeInRadians = toRadians(latitude)
+            return cos(latitudeInRadians) * EARTH_CIRCUMFERENCE_METERS / 360.0
         }
 
         /**
@@ -440,7 +445,7 @@ class GeoGeometry {
          * @return the translated coordinate.
          */
         @JvmStatic
-        fun translateLongitude(latitude: Double, longitude: Double, meters: Double): DoubleArray {
+        fun translateLongitude(latitude: Double, longitude: Double, meters: Double): Point {
             validate(latitude, longitude, false)
             return doubleArrayOf(
                 roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6),
@@ -459,7 +464,7 @@ class GeoGeometry {
          * @return the translated coordinate.
          */
         @JvmStatic
-        fun translateLatitude(latitude: Double, longitude: Double, meters: Double): DoubleArray {
+        fun translateLatitude(latitude: Double, longitude: Double, meters: Double): Point {
             return doubleArrayOf(longitude, roundToDecimals(latitude + meters / DEGREE_LATITUDE_METERS, 6))
         }
 
@@ -507,6 +512,14 @@ class GeoGeometry {
         }
 
         /**
+         * Kotlin math seems to not have this unlike Java Math. But it is easily replicated like this
+         */
+        @JvmStatic
+        fun toRadians(degrees: Double): Double {
+            return degrees * DEGREES_TO_RADIANS
+        }
+
+        /**
          * Compute the Haversine distance between the two coordinates. Haversine is
          * one of several distance calculation algorithms that exist. It is not very
          * precise in the sense that it assumes the earth is a perfect sphere, which
@@ -534,30 +547,30 @@ class GeoGeometry {
             val deltaLon = toRadians(long2 - long1)
 
             val a =
-                sin(deltaLat / 2) * sin(deltaLat / 2) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(
+                sin(deltaLat / 2) * sin(deltaLat / 2) + cos(toRadians(lat1)) * cos(toRadians(lat2)) * sin(
                     deltaLon / 2
                 ) * sin(
                     deltaLon / 2
                 )
 
-            val c = 2 * asin(Math.sqrt(a))
+            val c = 2 * asin(sqrt(a))
 
-            return EARTH_RADIUS * c
+            return EARTH_RADIUS_METERS * c
         }
 
         /**
          * Variation of the haversine distance method that takes an array
          * representation of a coordinate.
          *
-         * @param firstCoordinate
+         * @param p1
          * [latitude, longitude]
-         * @param secondCoordinate
+         * @param p2
          * [latitude, longitude]
          * @return the distance in meters
          */
         @JvmStatic
-        fun distance(firstCoordinate: DoubleArray, secondCoordinate: DoubleArray): Double {
-            return distance(firstCoordinate[1], firstCoordinate[0], secondCoordinate[1], secondCoordinate[0])
+        fun distance(p1: Point, p2: Point): Double {
+            return distance(p1[1], p1[0], p2[1], p2[0])
         }
 
         /**
@@ -577,28 +590,32 @@ class GeoGeometry {
             validate(x, y, false)
             val xx: Double
             val yy: Double
-            if (y1 == y2) {
-                // horizontal line
-                xx = x
-                yy = y1
-            } else if (x1 == x2) {
-                // vertical line
-                xx = x1
-                yy = y
-            } else {
-                // y=s*x  +c
-                val s = (y2 - y1) / (x2 - x1)
-                val c = y1 - s * x1
+            when {
+                y1 == y2 -> {
+                    // horizontal line
+                    xx = x
+                    yy = y1
+                }
+                x1 == x2 -> {
+                    // vertical line
+                    xx = x1
+                    yy = y
+                }
+                else -> {
+                    // y=s*x  +c
+                    val s = (y2 - y1) / (x2 - x1)
+                    val c = y1 - s * x1
 
-                // y=ps*x + pc
-                val ps = -1 / s
-                val pc = y - ps * x
+                    // y=ps*x + pc
+                    val ps = -1 / s
+                    val pc = y - ps * x
 
-                // solve    ps*x +pc = s*x + c
-                //          (ps-s) *x = c -pc
-                //          x= (c-pc)/(ps-s)
-                xx = (c - pc) / (ps - s)
-                yy = s * xx + c
+                    // solve    ps*x +pc = s*x + c
+                    //          (ps-s) *x = c -pc
+                    //          x= (c-pc)/(ps-s)
+                    xx = (c - pc) / (ps - s)
+                    yy = s * xx + c
+                }
             }
             return if (onSegment(xx, yy, x1, y1, x2, y2)) {
                 distance(x, y, xx, yy)
@@ -625,7 +642,7 @@ class GeoGeometry {
          * @return the distance of the point to the line
          */
         @JvmStatic
-        fun distance(l1: DoubleArray, l2: DoubleArray, p: DoubleArray): Double {
+        fun distance(l1: Point, l2: Point, p: Point): Double {
             return distance(l1[1], l1[0], l2[1], l2[0], p[1], p[0])
         }
 
@@ -635,7 +652,7 @@ class GeoGeometry {
          * @return the distance of the point to the line
          */
         @JvmStatic
-        fun distanceToLineString(point: DoubleArray, lineString: Array<DoubleArray>): Double {
+        fun distanceToLineString(point: Point, lineString: LineString): Double {
             if (lineString.size < 2) {
                 throw IllegalArgumentException("not enough segments in line")
             }
@@ -655,9 +672,8 @@ class GeoGeometry {
          * @param polygon 2d linestring that is a polygon
          * @return distance to polygon
          */
-        @Deprecated("") // use 3d array to represent polygons
         @JvmStatic
-        fun distanceToPolygon(point: DoubleArray, polygon: Array<DoubleArray>): Double {
+        fun distanceToPolygon(point: Point, polygon: LinearRing): Double {
             if (polygon.size < 3) {
                 throw IllegalArgumentException("not enough segments in polygon")
             }
@@ -672,8 +688,8 @@ class GeoGeometry {
          * @return distance to polygon
          */
         @JvmStatic
-        fun distanceToPolygon(point: DoubleArray, polygon: Array<Array<DoubleArray>>): Double {
-            if (polygon.size == 0) {
+        fun distanceToPolygon(point: Point, polygon: Polygon): Double {
+            if (polygon.isEmpty()) {
                 throw IllegalArgumentException("empty polygon")
             }
             return distanceToPolygon(point, polygon[0])
@@ -966,7 +982,7 @@ class GeoGeometry {
          * @return true if b is right of the line defined by a and c
          */
         @JvmStatic
-        fun rightTurn(a: DoubleArray, b: DoubleArray, c: DoubleArray): Boolean {
+        fun rightTurn(a: Point, b: Point, c: Point): Boolean {
             return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0
         }
 

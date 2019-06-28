@@ -18,6 +18,8 @@
  */
 package com.jillesvangurp.geo
 
+import kotlin.math.min
+
 private val BITS = intArrayOf(16, 8, 4, 2, 1)
 // note: no a,i,l, and o
 private val BASE32_CHARS = charArrayOf(
@@ -850,7 +852,7 @@ class GeoHashUtils {
                 hash = hash.substring(0, hash.length - 1)
             }
 
-            return Math.min(length + 1, DEFAULT_GEO_HASH_LENGTH)
+            return min(length + 1, DEFAULT_GEO_HASH_LENGTH)
         }
     }
 }
