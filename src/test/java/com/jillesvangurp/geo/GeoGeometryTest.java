@@ -78,7 +78,7 @@ public class GeoGeometryTest {
 
 	public void shouldCheckThatLinesDontCross() {
         assertThat("should not intersect lines intersect but not in the specified interval", !GeoGeometry.linesCross(1, 2, 3, 4, 10, 20, 20, 10));
-	    assertThat("should not intersect parallel", !GeoGeometry.linesCross(1, 1, 2, 2, 2, 2, 3, 3));
+	    assertThat("should not intersect parallel", !GeoGeometry.linesCross(1, 1, 2, 2, 2.1, 2.1, 3, 3));
         assertThat("should not intersect same vertical line but not overlapping", !GeoGeometry.linesCross(1, 1, 1, 5, 1, 6, 1, 10));
         assertThat("should not intersect same horizontal line but not overlapping", !GeoGeometry.linesCross(1, 666, 5, 666, 6, 666, 10, 666));
 	}

@@ -340,6 +340,11 @@ class GeoGeometry {
             return (d * factor).roundToLong() / factor
         }
 
+        @JvmStatic
+        fun linesCross(l1p1: Point, l1p2: Point, l2p1: Point, l2p2: Point): Boolean {
+            return linesCross(l1p1.longitude, l1p1.latitude, l1p2.longitude, l1p2.latitude, l2p1.longitude, l2p1.latitude, l2p2.longitude, l2p2.latitude)
+        }
+
         /**
          * Check if the line segments defined by  (x1,y1) (x2,y2) and (u1,v1) (u2,v2) cross each other or not.
          * @param x1 double
@@ -366,43 +371,44 @@ class GeoGeometry {
             // formula for line: y= a+bx
 
             // vertical lines result in a divide by 0;
-            val line1Vertical = x2 == x1
-            val line2Vertical = u2 == u1
+            val line1Vertical = x1 == x2
+            val line2Vertical = u1 == u2
             return when {
                 line1Vertical && line2Vertical -> // x=a
                     if (x1 == u1) {
-                        // lines are the same
+                        // lines are the same, check whether they overlap
                         y1 <= v1 && v1 < y2 || y1 <= v2 && v2 < y2
                     } else {
                         // parallel -> they don't intersect!
                         false
                     }
                 line1Vertical -> {
-                    val b2 = (v2 - v1) / (u2 - u1)
-                    val a2 = v1 - b2 * u1
+                    val gradient2 = (v2 - v1) / (u2 - u1)
 
-                    val yi = a2 + b2 * x1
+                    val a2 = v1 - gradient2 * u1
 
-                    yi in y1..y2
+                    val yi = a2 + gradient2 * x1
+
+                    isBetween(y1, y2, yi) && isBetween(v1, v2, yi)
                 }
                 line2Vertical -> {
-                    val b1 = (y2 - y1) / (x2 - x1)
-                    val a1 = y1 - b1 * x1
+                    val gradient1 = (y2 - y1) / (x2 - x1)
+                    val a1 = y1 - gradient1 * x1
 
-                    val yi = a1 + b1 * u1
+                    val yi = a1 + gradient1 * u1
 
-                    yi in v1..v2
+                    isBetween(y1, y2, yi) && isBetween(v1, v2, yi)
                 }
                 else -> {
 
-                    val b1 = (y2 - y1) / (x2 - x1)
+                    val gradient1 = (y2 - y1) / (x2 - x1)
                     // divide by zero if second line vertical
-                    val b2 = (v2 - v1) / (u2 - u1)
+                    val gradient2 = (v2 - v1) / (u2 - u1)
 
-                    val a1 = y1 - b1 * x1
-                    val a2 = v1 - b2 * u1
+                    val a1 = y1 - gradient1 * x1
+                    val a2 = v1 - gradient2 * u1
 
-                    if (b1 - b2 == 0.0) {
+                    if (gradient1 - gradient2 == 0.0) {
                         // same gradient
                         if (abs(a1 - a2) < .0000001) {
                             // lines are definitely the same within a margin of error, check if their x overlaps
@@ -413,9 +419,13 @@ class GeoGeometry {
                         }
                     } else {
                         // calculate intersection point xi,yi
-                        val xi = -(a1 - a2) / (b1 - b2)
-                        val yi = a1 + b1 * xi
-                        (x1 - xi) * (xi - x2) >= 0 && (u1 - xi) * (xi - u2) >= 0 && (y1 - yi) * (yi - y2) >= 0 && (v1 - yi) * (yi - v2) >= 0
+                        val xi = -(a1 - a2) / (gradient1 - gradient2)
+                        val yi = a1 + gradient1 * xi
+
+                        (x1 - xi) * (xi - x2) >= 0 &&
+                            (u1 - xi) * (xi - u2) >= 0 &&
+                            (y1 - yi) * (yi - y2) >= 0 &&
+                            (v1 - yi) * (yi - v2) >= 0
                     }
                 }
             }
@@ -423,9 +433,9 @@ class GeoGeometry {
 
         private fun isBetween(x1: Double, x2: Double, value: Double): Boolean {
             return if (x1 > x2) {
-                x2 <= value && value < x1
+                value in x2..x1
             } else {
-                x1 <= value && value < x2
+                value in x1..x2
             }
         }
 
