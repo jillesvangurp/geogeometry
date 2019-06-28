@@ -1,6 +1,6 @@
 # Introduction
 
-GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. However, most of the recent work has actually gone into adding several implementations of common geometry algorithms.
+GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for Java users.
 
 GeoGeometry is of course not the only implementation of these algorithms. However, it is unique in the way it has been designed and the simplicity of using it.
 
@@ -11,9 +11,9 @@ There are two driving design principles:
 
 This library has *no classes that you can instantiate and only provides static methods / Kotlin companion object functions*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. To make life easy from the Kotlin side, it does use a few typealiases in the recent Kotlin port. E.g. a Point is a DoubleArray of two coordinates, like in GeoJson. This keeps the function signatures a bit more readable.
 
-Using only simple arrays and functions makes it easy to port the code to different languages. For example, checkout my partial port for [javascript](https://github.com/jillesvangurp/geotools-js) and [php"](https://github.com/jillesvangurp/geotools-php). These implementations are a little behind the java implementation because I don't actively use them currently. Not creating insane amounts of point objects helps keep things fast as well and can save a ton of memory.
+Using only simple arrays and functions makes it easy to port the code to different languages. For example, checkout my partial port for [javascript](https://github.com/jillesvangurp/geotools-js) and [php](https://github.com/jillesvangurp/geotools-php). These implementations are a little behind the java implementation because I don't actively use them currently. Not creating insane amounts of point objects helps keep things fast as well and can save a ton of memory.
 
-The recent port to Kotlin of course enables use in native projects, javascript, as well as android and backend Java projects.
+**Update June 2019** The port to Kotlin of enables use in native projects, javascript, WASM android and backend Java projects and pretty much any platform the Kotlin compiler is able to target.
 
 ## Geohashes
 
