@@ -858,7 +858,7 @@ class GeoGeometry {
          * @return true if the containing polygon fully contains the contained polygon. Important: this only works for simple convex polygons. Contains for concave polygons is more complicated. https://en.wikipedia.org/wiki/Point_in_polygon
          */
         @JvmStatic
-        fun contains(containingPolygon: Array<DoubleArray>, containedPolygon: Array<DoubleArray>): Boolean {
+        fun contains(containingPolygon: LinearRing, containedPolygon: LinearRing): Boolean {
             for (p in containedPolygon) {
                 if (!polygonContains(p[1], p[0], *containingPolygon)) {
                     return false
@@ -879,7 +879,7 @@ class GeoGeometry {
          * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
          */
         @JvmStatic
-        fun expandPolygon(meters: Int, points: Array<DoubleArray>): Array<DoubleArray> {
+        fun expandPolygon(meters: Int, points: LinearRing): LinearRing {
             val expanded = Array(points.size * 8) { DoubleArray(0) }
             for (i in points.indices) {
                 val p = points[i]
@@ -1109,7 +1109,7 @@ class GeoGeometry {
          * @param point point
          */
         @JvmStatic
-        fun validate(point: DoubleArray) {
+        fun validate(point: Point) {
             validate(point[1], point[0], false)
         }
 
@@ -1121,7 +1121,7 @@ class GeoGeometry {
          * @return approximate area.
          */
         @JvmStatic
-        fun area(polygon: Array<DoubleArray>): Double {
+        fun area(polygon: LinearRing): Double {
             if (polygon.size <= 3) throw IllegalArgumentException("polygon should have at least three elements")
 
             var total = 0.0
@@ -1152,7 +1152,7 @@ class GeoGeometry {
          * @return the area of the bounding box
          */
         @JvmStatic
-        fun area(bbox: DoubleArray): Double {
+        fun area(bbox: BoundingBox): Double {
             if (bbox.size != 4) {
                 throw IllegalArgumentException("Boundingbox should be array of [minLat, maxLat, minLon, maxLon]")
             }
@@ -1171,8 +1171,8 @@ class GeoGeometry {
          * @return area covered by the outer polygon
          */
         @JvmStatic
-        fun area(polygon: Array<Array<DoubleArray>>): Double {
-            if (polygon.size <= 0) throw IllegalArgumentException("array should not be empty")
+        fun area(polygon: Polygon): Double {
+            if (polygon.isEmpty()) throw IllegalArgumentException("array should not be empty")
             var area = area(polygon[0])
             for (i in 1 until polygon.size) {
                 // subtract the holes
@@ -1187,7 +1187,7 @@ class GeoGeometry {
          * @return area of the outer polygons
          */
         @JvmStatic
-        fun area(multiPolygon: Array<Array<Array<DoubleArray>>>): Double {
+        fun area(multiPolygon: MultiPolygon): Double {
             var area = 0.0
             for (doubles in multiPolygon) {
                 area += area(doubles)
@@ -1200,7 +1200,7 @@ class GeoGeometry {
          * @return "(longitude,latitude)"
          */
         @JvmStatic
-        fun pointToString(p: DoubleArray): String {
+        fun pointToString(p: Point): String {
             return "(" + p[0] + "," + p[1] + ")"
         }
 
@@ -1209,7 +1209,7 @@ class GeoGeometry {
          * @return "(x1,y1),(x2,y2),..."
          */
         @JvmStatic
-        fun lineToString(line: Array<DoubleArray>): String {
+        fun lineToString(line: LineString): String {
             val buf = StringBuilder()
             for (p in line) {
                 buf.append(pointToString(p)).append(",")
@@ -1230,9 +1230,9 @@ class GeoGeometry {
          */
         @JvmStatic
         fun simplifyMultiPolygon(
-            points: Array<Array<Array<DoubleArray>>>,
+            points: MultiPolygon,
             tolerance: Double
-        ): Array<Array<Array<DoubleArray>>> {
+        ): MultiPolygon {
             val result = Array(points.size) { Array(0) { Array(0) { DoubleArray(0) } } }
             var i = 0
             for (polygon in points) {
@@ -1252,7 +1252,7 @@ class GeoGeometry {
          * @return a simpler polygon
          */
         @JvmStatic
-        fun simplifyPolygon(points: Array<Array<DoubleArray>>, tolerance: Double): Array<Array<DoubleArray>> {
+        fun simplifyPolygon(points: Polygon, tolerance: Double): Polygon {
             val result = Array(points.size) { Array(0) { DoubleArray(0) } }
             var i = 0
             for (line in points) {
@@ -1272,7 +1272,7 @@ class GeoGeometry {
          * @return a simpler line
          */
         @JvmStatic
-        fun simplifyLine(points: Array<DoubleArray>, tolerance: Double): Array<DoubleArray> {
+        fun simplifyLine(points: LinearRing, tolerance: Double): LinearRing {
             var dmax = 0.0
             var index = 0
             if (points.size == 3) {
@@ -1287,19 +1287,15 @@ class GeoGeometry {
                 }
             }
             if (dmax > tolerance && points.size > 3) {
-                val leftArray = Array(index) { DoubleArray(0) }
-                System.arraycopy(points, 0, leftArray, 0, index)
 
-                val left = simplifyLine(leftArray, tolerance)
+                val leftArray = points.copyOfRange(0, index)
 
-                val rightArray = Array(points.size - index) { DoubleArray(0) }
-                System.arraycopy(points, index, rightArray, 0, points.size - index)
+                val leftSimlified = simplifyLine(leftArray, tolerance)
 
-                val right = simplifyLine(rightArray, tolerance)
-                val result = Array(left.size + right.size) { DoubleArray(0) }
-                System.arraycopy(left, 0, result, 0, left.size)
-                System.arraycopy(right, 0, result, left.size, right.size)
-                return result
+                val rightArray = points.copyOfRange(index, points.size-1)
+
+                val rightSimplified = simplifyLine(rightArray, tolerance)
+                return leftSimlified + rightSimplified
             } else if (dmax > tolerance && points.size <= 3) {
                 return points
             } else {
