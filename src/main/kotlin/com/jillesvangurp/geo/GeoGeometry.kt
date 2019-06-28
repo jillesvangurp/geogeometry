@@ -168,7 +168,7 @@ class GeoGeometry {
 
             val discard = (points.size * percentage / 2).toInt()
 
-            return points.copyOfRange(discard,points.size - discard)
+            return points.copyOfRange(discard, points.size - discard)
         }
 
         /**
@@ -901,9 +901,9 @@ class GeoGeometry {
                 throw IllegalStateException("need at least 3 pois for a polygon")
             }
             val sorted = points.clone()
-            sorted.sortWith( Comparator { p1, p2 ->
+            sorted.sortWith(Comparator { p1, p2 ->
                 when {
-                    p1 == null || p2 ==null -> throw IllegalArgumentException("Points array contains null")
+                    p1 == null || p2 == null -> throw IllegalArgumentException("Points array contains null")
                     p1[0] == p2[0] -> p1[1].compareTo(p2[1])
                     else -> p1[0].compareTo(p2[0])
                 }
@@ -998,8 +998,8 @@ class GeoGeometry {
         fun toDecimalDegree(direction: String?, degrees: Double, minutes: Double, seconds: Double): Double {
             var factor = 1
             if (direction != null) {
-                val lowerCaseDirection = direction.toLowerCase()
-                if (lowerCaseDirection.startsWith("w") || lowerCaseDirection.startsWith("s")) {
+
+                if (direction.startsWith("w") || direction.startsWith("s") || direction.startsWith("W") || direction.startsWith("S")) {
                     factor = -1
                 }
             }

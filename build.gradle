@@ -123,7 +123,7 @@ test {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
     testCompile 'io.kotlintest:kotlintest-runner-junit5:3.3.2'
     testCompile 'org.testng:testng:6.13.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
