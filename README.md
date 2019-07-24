@@ -1,6 +1,6 @@
 # Introduction
 
-GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for Java users.
+GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users.
 
 GeoGeometry is of course not the only implementation of these algorithms. However, it is unique in the way it has been designed and the simplicity of using it.
 
@@ -9,11 +9,11 @@ There are two driving design principles:
 - It assumes you are using something like geojson, which is a convention for representing geometric shapes on the web. One key feature of [geojson](https://tools.ietf.org/html/rfc7946) is that all shapes are represented as multi dimensional arrays of doubles. This library does the same. 
 - It avoids the trap of object orientation. Object orientation and geometry go way back. The first object oriented systems were all  about cute little Point and Line classes. As a consequence, world + dog now feels compelled to come up with their own Point, Line, Polygon, etc. classes. 
 
-This library has *no classes that you can instantiate and only provides static methods / Kotlin companion object functions*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. To make life easy from the Kotlin side, it does use a few typealiases in the recent Kotlin port. E.g. a Point is a DoubleArray of two coordinates, like in GeoJson. This keeps the function signatures a bit more readable.
+This library has *no classes that you can instantiate and only provides static methods / Kotlin companion object functions*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. To make life easy from the Kotlin side, it uses typealiases. E.g. a Point is a DoubleArray of two coordinates, like in GeoJson. This keeps the function signatures a bit more readable while not adding actual classes. 
 
 Using only simple arrays and functions makes it easy to port the code to different languages. For example, checkout my partial port for [javascript](https://github.com/jillesvangurp/geotools-js) and [php](https://github.com/jillesvangurp/geotools-php). These implementations are a little behind the java implementation because I don't actively use them currently. Not creating insane amounts of point objects helps keep things fast as well and can save a ton of memory.
 
-**Update June 2019** The port to Kotlin of enables use in native projects, javascript, WASM android and backend Java projects and pretty much any platform the Kotlin compiler is able to target.
+**Update June 2019** The recent port to Kotlin of enables use in native projects, javascript, WASM android and backend Java projects and pretty much any platform the Kotlin compiler is able to target.
 
 ## Geohashes
 
@@ -57,7 +57,7 @@ So, recently I decided to sit down and modernize the codebase and clean things u
 1. It has typealiases. This allows me to have Points, LineStrings, Polygons, MultiPolygons, etc. but without having to compromise on the "everything is a multi dimensional array of doubles" principle that underlies this library. The resulting code is actually backwards compatible with the old Java signatures but a lot easier to read.
 1. Kotlin is becoming a fullstack language and I took the opportunity to make sure the entire code base has no dependencies outside the Kotlin standard library. This means it should work with the Kotlin-native and Kotlin-js compilers. I've not done work (yet) to verify this but this may happen. Note. I will likely follow up with changes to the build to make this a proper multi platform Kotlin project.
 
-Because of the first point, it should be super easy to integrate with this library from just about any other language that can use the compiled output for any of the platforms we can now target. So IOS, browsers with WASM or JS, Android JVM or Native, etc. So, porting this to Kotlin just ensured I have a much larger audience for this library.
+Because of the first point, it should be super easy to integrate with this library from just about any other language that can use the compiled output for any of the platforms we can now target. So IOS, browsers with WASM or JS, Android JVM or Native, etc. So, porting this to Kotlin just ensured I have a much larger audience for this library. I welcome pull requests to help me with turning this into a multi platform gradle project.
 
 # Limitations
 
@@ -80,7 +80,9 @@ Alternatively, you can exercise your rights under the license and simply copy an
 
 Should anyone like this licensed differently, please contact me.
 
-If anyone wants to fix stuff just send me a pull request.
+# Contribute
+
+If anyone wants to fix stuff just send me a pull request. 
 
 # License
 
