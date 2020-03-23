@@ -1,3 +1,5 @@
+![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg)
+
 # Introduction
 
 GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users.
