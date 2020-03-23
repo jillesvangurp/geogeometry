@@ -7,6 +7,7 @@ GeoGeometry is of course not the only implementation of these algorithms. Howeve
 There are two driving design principles:
 
 - It assumes you are using something like geojson, which is a convention for representing geometric shapes on the web. One key feature of [geojson](https://tools.ietf.org/html/rfc7946) is that all shapes are represented as multi dimensional arrays of doubles. This library does the same. 
+
 - It avoids the trap of object orientation. Object orientation and geometry go way back. The first object oriented systems were all  about cute little Point and Line classes. As a consequence, world + dog now feels compelled to come up with their own Point, Line, Polygon, etc. classes. 
 
 This library has *no classes that you can instantiate and only provides static methods / Kotlin companion object functions*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. To make life easy from the Kotlin side, it uses typealiases. E.g. a Point is a DoubleArray of two coordinates, like in GeoJson. This keeps the function signatures a bit more readable while not adding actual classes. 
