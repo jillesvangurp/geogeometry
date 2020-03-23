@@ -112,7 +112,7 @@ task testng(type: Test) {
 check.dependsOn testng
 
 test {
-    useJUnitPlatform()
+    useTestNG()
     testLogging {
         // Make sure output from
         // standard out or error is shown
