@@ -1,4 +1,5 @@
 ![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg)
+[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
 # Introduction
 
@@ -73,7 +74,7 @@ Because of the first point, it should be super easy to integrate with this libra
 
 Use the latest jitpack releases:
 
-[jitpack releases](https://jitpack.io/#jillesvangurp/geogeometry)
+[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
 # Building from source
 
