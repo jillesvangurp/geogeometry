@@ -1,6 +1,6 @@
 package com.jillesvangurp.geogeometry
 
-import io.kotlintest.matchers.doubles.shouldBeLessThan
+import io.kotest.matchers.doubles.shouldBeLessThan
 import kotlin.math.abs
 
 private const val defaultMarginOfError = 0.0000001

@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlinVersion = '1.3.40'
+        kotlinVersion = '1.3.71'
         slf4jVersion = '1.7.26'
 
     }
@@ -124,7 +124,8 @@ test {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
-    testCompile 'io.kotlintest:kotlintest-runner-junit5:3.3.2'
+    testImplementation 'io.kotest:kotest-runner-junit5:4.0.2' // for kotest framework
+    testImplementation 'io.kotest:kotest-assertions-core-jvm:4.0.2' // for kotest core jvm assertions
     testCompile 'org.testng:testng:6.13.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 

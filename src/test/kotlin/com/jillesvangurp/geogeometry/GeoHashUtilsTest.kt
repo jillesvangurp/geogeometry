@@ -3,10 +3,11 @@ package com.jillesvangurp.geogeometry
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geo.latitude
 import com.jillesvangurp.geo.longitude
-import io.kotlintest.data.forall
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.StringSpec
-import io.kotlintest.tables.row
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.data.blocking.forAll
+import io.kotest.data.row
+import io.kotest.matchers.shouldBe
+
 import kotlin.math.abs
 
 class GeoHashUtilsTest : StringSpec() {
@@ -17,7 +18,7 @@ class GeoHashUtilsTest : StringSpec() {
 
     init {
         "decode hash" {
-            forall(*coordinatesWithHashes) { lat, lon, geoHash ->
+            forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
                 val decoded = GeoHashUtils.decode(geoHash)
                 decoded.latitude shouldBeApproximately lat
                 decoded.longitude shouldBeApproximately lon
@@ -25,21 +26,21 @@ class GeoHashUtilsTest : StringSpec() {
         }
 
         "encode hash" {
-            forall(*coordinatesWithHashes) { lat, lon, geoHash ->
+            forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
                 GeoHashUtils.encode(lat, lon) shouldBe geoHash
                 GeoHashUtils.encode(doubleArrayOf(lon, lat)) shouldBe geoHash
             }
         }
 
         "hash bbox should contain coordinate" {
-            forall(*coordinatesWithHashes) { lat, lon, geoHash ->
+            forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
                 GeoHashUtils.contains(geoHash, lat, lon) shouldBe true
                 GeoHashUtils.contains(geoHash, lon, lat) shouldBe false
             }
         }
 
         "decode bbox" {
-            forall(*coordinatesWithHashes) { lat, lon, geoHash ->
+            forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
                 val bbox = GeoHashUtils.decodeBbox(geoHash)
 
                 abs((bbox[0] + bbox[1]) / 2 - lat) shouldBeApproximately 0.0

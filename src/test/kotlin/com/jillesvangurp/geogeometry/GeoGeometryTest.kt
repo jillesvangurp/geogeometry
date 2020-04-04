@@ -1,8 +1,8 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.GeoGeometry
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.StringSpec
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 
 class GeoGeometryTest : StringSpec() {
     init {
