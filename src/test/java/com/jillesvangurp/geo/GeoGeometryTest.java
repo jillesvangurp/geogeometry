@@ -451,14 +451,6 @@ public class GeoGeometryTest {
         assertThat(area(multiPolygon), is(2*area(polygon)));
     }
 
-    public void shouldSimplifyLineOnlyOnce() {
-        double[][] line=new double[][] {newyork,moritzPlatz,senefelderPlatz,naturkundeMuseum, buenosaires};
-        double[][] simplified = GeoGeometry.simplifyLine(line, 10000);
-        double[][] superSimplified = GeoGeometry.simplifyLine(simplified,10000);
-        assertThat(simplified.length, lessThan(line.length));
-        assertThat(simplified.length, is(superSimplified.length));
-    }
-
     @DataProvider
     public Object[][] straightLines() {
         return new Object[][] {

@@ -1,8 +1,12 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import org.hamcrest.CoreMatchers
+import org.hamcrest.MatcherAssert
+import org.hamcrest.Matchers
 
 class GeoGeometryTest : StringSpec() {
     init {
@@ -19,5 +23,6 @@ class GeoGeometryTest : StringSpec() {
             GeoGeometry.linesCross(l1p1, l1p2, l2p1, l2p2) shouldBe false
             GeoGeometry.linesCross(l2p1, l2p2, l1p1, l1p2) shouldBe false
         }
+
     }
 }
