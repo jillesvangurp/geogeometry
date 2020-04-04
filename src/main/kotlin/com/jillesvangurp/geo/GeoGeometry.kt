@@ -1292,7 +1292,7 @@ class GeoGeometry {
 
                 val leftSimlified = simplifyLine(leftArray, tolerance)
 
-                val rightArray = points.copyOfRange(index, points.size-1)
+                val rightArray = points.copyOfRange(index, points.size - 1)
 
                 val rightSimplified = simplifyLine(rightArray, tolerance)
                 return leftSimlified + rightSimplified

@@ -7,7 +7,6 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.shouldBe
-
 import kotlin.math.abs
 
 class GeoHashUtilsTest : StringSpec() {
