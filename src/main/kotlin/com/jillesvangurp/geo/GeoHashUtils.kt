@@ -138,12 +138,12 @@ class GeoHashUtils {
 
         /**
          * Encode a geojson style point of [longitude,latitude]
-         * @param point point
+         * @param pointCoordinates point
          * @return geohash
          */
         @JvmStatic
-        fun encode(point: Point): String {
-            return encode(point.latitude, point.longitude, DEFAULT_GEO_HASH_LENGTH)
+        fun encode(pointCoordinates: PointCoordinates): String {
+            return encode(pointCoordinates.latitude, pointCoordinates.longitude, DEFAULT_GEO_HASH_LENGTH)
         }
 
         /**
@@ -183,7 +183,8 @@ class GeoHashUtils {
                 }
             }
 
-            return doubleArrayOf(south, north, west, east)
+            return doubleArrayOf(west, south, east, north)
+            // return doubleArrayOf(south, north, west, east)
         }
 
         /**
@@ -199,7 +200,7 @@ class GeoHashUtils {
          * @return a coordinate representing the center of the geohash as a double array of [longitude,latitude]
          */
         @JvmStatic
-        fun decode(geoHash: String): Point {
+        fun decode(geoHash: String): PointCoordinates {
             val bbox = decodeBbox(geoHash)
 
             val latitude = (bbox.southLatitude + bbox.northLatitude) / 2
@@ -453,8 +454,8 @@ class GeoHashUtils {
          * @return a set of geo hashes that cover the polygon area.
          */
         @JvmStatic
-        fun geoHashesForPolygon(vararg polygonPoints: Point): Set<String> {
-            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<Point>)
+        fun geoHashesForPolygon(vararg polygonPoints: PointCoordinates): Set<String> {
+            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
             // first lets figure out an appropriate geohash length
             val diagonalDistance = GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
             val hashLength = suitableHashLength(diagonalDistance, bbox.southLatitude, bbox.eastLongitude)
@@ -480,7 +481,7 @@ class GeoHashUtils {
          * @return a set of geo hashes that cover the polygon area.
          */
         @JvmStatic
-        fun geoHashesForPolygon(maxLength: Int, vararg polygonPoints: Point): Set<String> {
+        fun geoHashesForPolygon(maxLength: Int, vararg polygonPoints: PointCoordinates): Set<String> {
             for (ds in polygonPoints) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
                 if (ds[1] < -89.5 || ds[1] > 89.5) {
@@ -493,7 +494,7 @@ class GeoHashUtils {
                 throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
             }
 
-            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<Point>)
+            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
             // first lets figure out an appropriate geohash length
             val diagonal = GeoGeometry.distance(bbox[0], bbox[2], bbox[1], bbox[3])
             val hashLength = suitableHashLength(diagonal, bbox[0], bbox[2])
@@ -827,7 +828,7 @@ class GeoHashUtils {
             }
 
             val circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius)
-            return geoHashesForPolygon(length, *circle2polygon)
+            return geoHashesForPolygon(length, *circle2polygon[0])
         }
 
         /**

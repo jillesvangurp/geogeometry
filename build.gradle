@@ -114,17 +114,21 @@ test {
 }
 
 dependencies {
+    // our only run time dependency is the kotlin-stdlib, which works on any platform
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
+
+    // test runner
     testImplementation 'io.kotest:kotest-runner-junit5:4.0.2' // for kotest framework
     testImplementation 'io.kotest:kotest-assertions-core-jvm:4.0.2' // for kotest core jvm assertions
     testCompile 'org.testng:testng:7.2.0'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 
-    // kotlintest runner needs this
+    // kotlintest runner needs this to enable logging
     testCompile "org.slf4j:slf4j-api:${slf4jVersion}"
     testCompile "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     testCompile "org.slf4j:log4j-over-slf4j:${slf4jVersion}"
     testCompile "org.slf4j:jul-to-slf4j:${slf4jVersion}"
     testCompile "ch.qos.logback:logback-classic:1.2.3"
+    testCompile "com.google.code.gson:gson:2.8.5"
 
 }
