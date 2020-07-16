@@ -21,8 +21,6 @@
  */
 package com.jillesvangurp.geo;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -116,7 +114,7 @@ public class GeoHashUtilsTest {
     public void shouldCalculateSouth(Double lat, Double lon, String geoHash) {
         String original = geoHash.substring(0, 3);
         String calculatedHash = GeoHashUtils.south(original);
-        System.out.println(original + " " + calculatedHash);
+//        System.out.println(original + " " + calculatedHash);
         double[] oBox = decodeBbox(original);
         double[] cBox = decodeBbox(calculatedHash);
         assertThat("calculated hash should not contain the coordinate",
@@ -159,7 +157,7 @@ public class GeoHashUtilsTest {
         assertSimilar((oSouth - cNorth) / 2, oSouth - oNorth);
         assertSimilar(oWest, cWest);
         assertSimilar(oEast, cEast);
-        System.out.println();
+//        System.out.println();
         double nl = GeoHashUtils.decode(calculatedHash)[1];
         double ol = GeoHashUtils.decode(original)[1];
         assertThat("decoded hash lat should be north of original", GeoHashUtils.isNorth(nl, ol));
@@ -197,37 +195,37 @@ public class GeoHashUtilsTest {
                 lessThan(0.0000001));
     }
 
-    @Test(enabled = false)
-    public void shouldCalculateBboxSizes() {
-        System.out.println("<table border=\"1\">");
-        System.out.println("<th><td>latitude</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></th>");
-        printHashSizes(90, 0);
-        printHashSizes(80, 0);
-        printHashSizes(70, 0);
-        printHashSizes(60, 0);
-        printHashSizes(50, 0);
-        printHashSizes(40, 0);
-        printHashSizes(30, 0);
-        printHashSizes(20, 0);
-        printHashSizes(10, 0);
-        printHashSizes(0, 0);
-        System.out.println("</table>");
-    }
+//    @Test(enabled = false)
+//    public void shouldCalculateBboxSizes() {
+//        System.out.println("<table border=\"1\">");
+//        System.out.println("<th><td>latitude</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></th>");
+//        printHashSizes(90, 0);
+//        printHashSizes(80, 0);
+//        printHashSizes(70, 0);
+//        printHashSizes(60, 0);
+//        printHashSizes(50, 0);
+//        printHashSizes(40, 0);
+//        printHashSizes(30, 0);
+//        printHashSizes(20, 0);
+//        printHashSizes(10, 0);
+//        printHashSizes(0, 0);
+//        System.out.println("</table>");
+//    }
 
-    private void printHashSizes(double lat, double lon) {
-        String geoHash = encode(lat, lon, DEFAULT_GEO_HASH_LENGTH);
-
-        // not a test but nice to get a sense of the scale of a geo hash
-        System.out.println("<tr><td>" + lat + "</td>");
-        for (int i = 1; i <= geoHash.length(); i++) {
-            String prefix = geoHash.substring(0, i);
-            double[] bbox = decodeBbox(prefix);
-            double vertical = roundToDecimals(distance(bbox[0], bbox[3], bbox[1], bbox[3]), 2);
-            double horizontal = roundToDecimals(distance(bbox[0], bbox[2], bbox[0], bbox[3]), 2);
-            System.out.print("<td>" + horizontal + "x" + vertical + "</td>");
-        }
-        System.out.print("</tr>\n");
-    }
+//    private void printHashSizes(double lat, double lon) {
+//        String geoHash = encode(lat, lon, DEFAULT_GEO_HASH_LENGTH);
+//
+//        // not a test but nice to get a sense of the scale of a geo hash
+//        System.out.println("<tr><td>" + lat + "</td>");
+//        for (int i = 1; i <= geoHash.length(); i++) {
+//            String prefix = geoHash.substring(0, i);
+//            double[] bbox = decodeBbox(prefix);
+//            double vertical = roundToDecimals(distance(bbox[0], bbox[3], bbox[1], bbox[3]), 2);
+//            double horizontal = roundToDecimals(distance(bbox[0], bbox[2], bbox[0], bbox[3]), 2);
+//            System.out.print("<td>" + horizontal + "x" + vertical + "</td>");
+//        }
+//        System.out.print("</tr>\n");
+//    }
 
     @Test(enabled = false)
     public void shouldCalculateSubHashesForHash() {
@@ -239,10 +237,10 @@ public class GeoHashUtilsTest {
         for (int j = 0; j < 16; j++) {
             String column = row;
             for (int i = 0; i < 8; i++) {
-                System.out.print(column + " ");
+//                System.out.print(column + " ");
                 column = east(column);
             }
-            System.out.println();
+//            System.out.println();
             row = north(row);
         }
     }
@@ -287,19 +285,19 @@ public class GeoHashUtilsTest {
     @Test(dataProvider = "lines")
     public void shouldCalculateHashesForLine(double lat1, double lon1,
                                              double lat2, double lon2, String orientation) {
-        Set<String> hashes = GeoHashUtils.geoHashesForLine(5000, lat1, lon1, lat2,
+        Set<String> hashes = GeoHashUtils.geoHashesForLine(10000, lat1, lon1, lat2,
                 lon2);
 
-        GsonBuilder b = new GsonBuilder();
-        Gson gson = b.serializeNulls().setPrettyPrinting().create();
-
-
-        PointGeometry p1 = PointGeometry.of(lon1, lat1);
-        PointGeometry p2 = PointGeometry.of(lon2, lat2);
-        double[][] line = p1.line(p2);
-        LineStringGeometry lineGeo = new LineStringGeometry(line,null);
-        System.out.println(gson.toJson(
-                FeatureCollection.of(p1.asFeature(null,null), p2.asFeature(null,null), lineGeo.asFeature(null,null)).plus( FeatureCollection.fromGeoHashes(hashes))));
+//        GsonBuilder b = new GsonBuilder();
+//        Gson gson = b.serializeNulls().create();
+//
+//
+//        PointGeometry p1 = PointGeometry.of(lon1, lat1);
+//        PointGeometry p2 = PointGeometry.of(lon2, lat2);
+//        double[][] line = p1.line(p2);
+//        LineStringGeometry lineGeo = new LineStringGeometry(line,null);
+//        System.out.println(gson.toJson(
+//                FeatureCollection.of(p1.asFeature(null,null), p2.asFeature(null,null), lineGeo.asFeature(null,null)).plus( FeatureCollection.fromGeoHashes(hashes))));
 
         assertThat("number of hashes, orientation " + orientation, hashes.size(), greaterThan(10));
 

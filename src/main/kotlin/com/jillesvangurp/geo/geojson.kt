@@ -2,9 +2,6 @@
 
 package com.jillesvangurp.geo
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
  */
@@ -37,32 +34,24 @@ val PointCoordinates.longitude: Double
         return this[0]
     }
 
-// FIXME I messed up the order and did something different than geojson
-// should be: [sw.lon,sw.lat,ne.lon,ne.lat] (all axes of the most southwesterly point
-//    followed by all axes of the more northeasterly point)
-
 val BoundingBox.southLatitude: Double
     get() {
         return this[1]
-        // return this[0] // should be 1
     }
 
 val BoundingBox.northLatitude: Double
     get() {
         return this[3]
-        // return this[1] // should be 3
     }
 
 val BoundingBox.westLongitude: Double
     get() {
         return this[0]
-        // return this[2] // should be 0
     }
 
 val BoundingBox.eastLongitude: Double
     get() {
         return this[2]
-        // return this[3] // should be 2
     }
 
 fun BoundingBox.polygon(): PolygonGeometry {
@@ -111,9 +100,6 @@ data class Feature(val geometry: Geometry?, val properties: Map<String, Any?>? =
         return result
     }
 }
-
-val gsonp: Gson = GsonBuilder().serializeNulls().setPrettyPrinting().create()
-val gson: Gson = GsonBuilder().serializeNulls().create()
 
 data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox? = null) {
     val type: String = "FeatureCollection"
@@ -185,6 +171,7 @@ data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingB
     companion object {
         @JvmStatic
         fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
+
         @JvmStatic
         fun of(lon: Double, lat: Double) = PointGeometry(doubleArrayOf(lon, lat))
     }
@@ -217,7 +204,8 @@ data class MultiPointGeometry(val coordinates: MultiPointCoordinates?, val bbox:
     }
 }
 
-data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
+data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) :
+    Geometry {
     override val type = GeometryType.LineString
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -299,7 +287,8 @@ data class PolygonGeometry(val coordinates: PolygonCoordinates? = null, val bbox
     }
 }
 
-data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
+data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) :
+    Geometry {
     override val type = GeometryType.MultiPolygon
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

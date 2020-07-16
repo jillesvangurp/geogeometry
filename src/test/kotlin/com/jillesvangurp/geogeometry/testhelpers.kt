@@ -1,5 +1,7 @@
 package com.jillesvangurp.geogeometry
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import io.kotest.matchers.doubles.shouldBeLessThan
 import kotlin.math.abs
 
@@ -13,3 +15,8 @@ fun Double.shouldBeApproximately(other: Double, marginOfError: Double = defaultM
 infix fun Double.shouldBeApproximately(other: Double) {
     this.shouldBeApproximately(other, defaultMarginOfError)
 }
+
+// we don't want gson a dependency but useful when debugging since you can serialize feature collections
+// normally we only have this as a test dependency
+val gsonp: Gson = GsonBuilder().serializeNulls().setPrettyPrinting().create()
+val gson: Gson = GsonBuilder().serializeNulls().create()

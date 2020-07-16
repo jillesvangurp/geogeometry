@@ -478,13 +478,13 @@ class GeoHashUtils {
          *
          * @param maxLength
          * maximum length of the geoHash; the more you specify, the more expensive it gets
-         * @param polygonPoints
+         * @param outerPolygonLinearRing
          * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
          * @return a set of geo hashes that cover the polygon area.
          */
         @JvmStatic
-        fun geoHashesForPolygon(maxLength: Int, vararg polygonPoints: PointCoordinates): Set<String> {
-            for (point in polygonPoints) {
+        fun geoHashesForPolygon(maxLength: Int, vararg outerPolygonLinearRing: PointCoordinates): Set<String> {
+            for (point in outerPolygonLinearRing) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
                 if (point.longitude < -89.5 || point.longitude > 89.5) {
                     throw IllegalArgumentException(
@@ -495,10 +495,10 @@ class GeoHashUtils {
             if (maxLength < 1 || maxLength >= DEFAULT_GEO_HASH_LENGTH) {
                 throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
             }
-            val f = arrayOf(polygonPoints) as PolygonCoordinates
+            val f = arrayOf(outerPolygonLinearRing) as PolygonCoordinates
             // println(f.stringify())
 
-            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
+            val bbox = GeoGeometry.boundingBox(outerPolygonLinearRing as Array<PointCoordinates>)
             // println(bbox.polygon().coordinates?.map { "[${it.map { p -> "[${p[0]},${p[1]}]" }.joinToString(", ")}]"  }?.joinToString(", "))
             // first lets figure out an appropriate geohash length
             val southLat = bbox.southLatitude
@@ -533,8 +533,9 @@ class GeoHashUtils {
                 rowBox = decodeBbox(rowHash)
             }
 
-            val features = FeatureCollection.of(bbox.polygon().asFeature(), PolygonGeometry(arrayOf(polygonPoints as LinearRingCoordinates)).asFeature())
-            println(gson.toJson(FeatureCollection.fromGeoHashes(partiallyContained) + features))
+            // useful for debugging so keep this for now
+            // val features = FeatureCollection.of(bbox.polygon().asFeature(), PolygonGeometry(arrayOf(outerPolygonLinearRing as LinearRingCoordinates)).asFeature())
+            // println(gson.toJson(FeatureCollection.fromGeoHashes(partiallyContained) + features))
 
             val fullyContained = mutableSetOf<String>()
 
@@ -545,15 +546,16 @@ class GeoHashUtils {
             // we're not aiming for perfect detail here in terms of 'pixellation', 6
             // extra chars in the geohash ought to be enough and going beyond 9
             // doesn't serve much purpose.
-            while (detail < maxLength) {
-                partiallyContained = splitAndFilter(polygonPoints, fullyContained, partiallyContained)
+            // we need to sometimes go beyond maxLength if we found no fully contained hashes.
+            // WARNING this can get ugly in terms of numbers of hashes
+            while (detail < maxLength || fullyContained.isEmpty()) {
+                partiallyContained = splitAndFilter(outerPolygonLinearRing, fullyContained, partiallyContained)
                 detail++
             }
             // fallback
             if (fullyContained.size == 0) {
                 fullyContained.addAll(partiallyContained)
             }
-
             return fullyContained
         }
 

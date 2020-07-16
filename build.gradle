@@ -124,12 +124,12 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 
     // kotlintest runner needs this to enable logging
-    testCompile "org.slf4j:slf4j-api:${slf4jVersion}"
-    testCompile "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
-    testCompile "org.slf4j:log4j-over-slf4j:${slf4jVersion}"
-    testCompile "org.slf4j:jul-to-slf4j:${slf4jVersion}"
-    testCompile "ch.qos.logback:logback-classic:1.2.3"
+    testImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    testImplementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+    testImplementation "org.slf4j:log4j-over-slf4j:${slf4jVersion}"
+    testImplementation "org.slf4j:jul-to-slf4j:${slf4jVersion}"
+    testImplementation "ch.qos.logback:logback-classic:1.2.3"
 
-    implementation "com.google.code.gson:gson:2.8.5"
+    testImplementation "com.google.code.gson:gson:2.8.5"
 
 }
