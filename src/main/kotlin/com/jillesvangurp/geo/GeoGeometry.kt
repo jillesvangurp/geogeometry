@@ -89,11 +89,11 @@ class GeoGeometry {
             var northLat = Integer.MIN_VALUE.toDouble()
             var eastLon = Integer.MIN_VALUE.toDouble()
 
-            for (points in points) {
-                southLat = min(southLat, points.latitude)
-                westLon = min(westLon, points.longitude)
-                northLat = max(northLat, points.latitude)
-                eastLon = max(eastLon, points.longitude)
+            for (p in points) {
+                southLat = min(southLat, p.latitude)
+                westLon = min(westLon, p.longitude)
+                northLat = max(northLat, p.latitude)
+                eastLon = max(eastLon, p.longitude)
             }
 
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
