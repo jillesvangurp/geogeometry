@@ -18,7 +18,6 @@
  */
 package com.jillesvangurp.geo
 
-import kotlin.math.max
 import kotlin.math.min
 
 private val BITS = intArrayOf(16, 8, 4, 2, 1)
@@ -454,6 +453,7 @@ class GeoHashUtils {
          * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
          * @return a set of geo hashes that cover the polygon area.
          */
+        @Suppress("UNCHECKED_CAST")
         @JvmStatic
         fun geoHashesForPolygon(vararg polygonPoints: PointCoordinates): Set<String> {
             val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
@@ -495,11 +495,14 @@ class GeoHashUtils {
             if (maxLength < 1 || maxLength >= DEFAULT_GEO_HASH_LENGTH) {
                 throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
             }
-            val f = arrayOf(outerPolygonLinearRing) as PolygonCoordinates
-            // println(f.stringify())
 
-            val bbox = GeoGeometry.boundingBox(outerPolygonLinearRing as Array<PointCoordinates>)
+            @Suppress("UNCHECKED_CAST") val bbox =
+                GeoGeometry.boundingBox(outerPolygonLinearRing as Array<PointCoordinates>)
+            // if shit breaks, this is useful for wtf'ing in geojson.io
+            // val f = arrayOf(outerPolygonLinearRing) as PolygonCoordinates
+            // println(f.stringify())
             // println(bbox.polygon().coordinates?.map { "[${it.map { p -> "[${p[0]},${p[1]}]" }.joinToString(", ")}]"  }?.joinToString(", "))
+
             // first lets figure out an appropriate geohash length
             val southLat = bbox.southLatitude
             val northLat = bbox.northLatitude
@@ -762,47 +765,14 @@ class GeoHashUtils {
                 // same geohash for begin and end, effectively a point
                 setOf(h1)
             } else {
-
-                val west = min(b1.westLongitude, b2.westLongitude)
-                val east = max(b1.eastLongitude, b2.eastLongitude)
-                val south = min(b1.southLatitude, b2.southLatitude)
-                val north = max(b1.northLatitude, b2.northLatitude)
-
-                when {
-                    // lat1 == lat2 -> geoHashesForPolygon(
-                    //     // horizontal
-                    //     hashLength,
-                    //     doubleArrayOf(b1.westLongitude,south),
-                    //     doubleArrayOf(b1.eastLongitude,south),
-                    //     doubleArrayOf(b1.eastLongitude,north),
-                    //     doubleArrayOf(b1.westLongitude,north),
-                    //     doubleArrayOf(b1.westLongitude,south)
-                    // )
-                    // lon1 == lon2 -> geoHashesForPolygon(
-                    //     // vertical
-                    //     hashLength,
-                    //     doubleArrayOf(south, west),
-                    //     doubleArrayOf(south, east),
-                    //     doubleArrayOf(north, east),
-                    //     doubleArrayOf(north, west),
-                    //     doubleArrayOf(south, west)
-                    //     // doubleArrayOf(b1.southLatitude, west),
-                    //     // doubleArrayOf(b1.southLatitude, east),
-                    //     // doubleArrayOf(b1.northLatitude, east),
-                    //     // doubleArrayOf(b1.northLatitude, west),
-                    //     // doubleArrayOf(b1.southLatitude, west)
-                    // )
-                    else ->
-                        geoHashesForPolygon(
-                            hashLength,
-                            doubleArrayOf(b1.westLongitude, b1.southLatitude),
-                            doubleArrayOf(b1.eastLongitude, b1.southLatitude),
-                            doubleArrayOf(b2.eastLongitude, b2.northLatitude),
-                            doubleArrayOf(b2.westLongitude, b2.northLatitude),
-                            doubleArrayOf(b1.westLongitude, b1.southLatitude)
-
-                        )
-                }
+                geoHashesForPolygon(
+                    hashLength,
+                    doubleArrayOf(b1.westLongitude, b1.southLatitude),
+                    doubleArrayOf(b1.eastLongitude, b1.southLatitude),
+                    doubleArrayOf(b2.eastLongitude, b2.northLatitude),
+                    doubleArrayOf(b2.westLongitude, b2.northLatitude),
+                    doubleArrayOf(b1.westLongitude, b1.southLatitude)
+                )
             }
         }
 
