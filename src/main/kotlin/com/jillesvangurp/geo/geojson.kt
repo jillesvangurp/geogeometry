@@ -2,6 +2,9 @@
 
 package com.jillesvangurp.geo
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
  */
@@ -14,6 +17,11 @@ typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + h
 typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
 
 typealias BoundingBox = DoubleArray
+
+fun PointCoordinates.stringify() = "[${this[0]},${this[1]}]"
+fun LineStringCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
+fun PolygonCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
+fun MultiPolygonCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
 
 fun BoundingBox.isValid(): Boolean {
     return this.westLongitude <= this.eastLongitude && this.southLatitude <= this.northLatitude
@@ -57,8 +65,24 @@ val BoundingBox.eastLongitude: Double
         // return this[3] // should be 2
     }
 
+fun BoundingBox.polygon(): PolygonGeometry {
+    val coordinates = arrayOf(
+        arrayOf(
+            doubleArrayOf(this.westLongitude, this.southLatitude),
+            doubleArrayOf(this.eastLongitude, this.southLatitude),
+            doubleArrayOf(this.eastLongitude, this.northLatitude),
+            doubleArrayOf(this.westLongitude, this.northLatitude),
+            doubleArrayOf(this.westLongitude, this.southLatitude)
+        )
+    )
+    return PolygonGeometry(coordinates)
+}
+
 interface Geometry {
     val type: GeometryType
+
+    fun asFeature(properties: Map<String, Any?>? = null, bbox: BoundingBox? = null) =
+        Feature(this, properties, bbox)
 }
 
 data class Feature(val geometry: Geometry?, val properties: Map<String, Any?>? = null, val bbox: BoundingBox? = null) {
@@ -88,6 +112,9 @@ data class Feature(val geometry: Geometry?, val properties: Map<String, Any?>? =
     }
 }
 
+val gsonp: Gson = GsonBuilder().serializeNulls().setPrettyPrinting().create()
+val gson: Gson = GsonBuilder().serializeNulls().create()
+
 data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox? = null) {
     val type: String = "FeatureCollection"
     override fun equals(other: Any?): Boolean {
@@ -105,10 +132,21 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
         return true
     }
 
+    operator fun plus(other: FeatureCollection) = FeatureCollection(this.features + other.features)
+
     override fun hashCode(): Int {
         var result = features.hashCode()
         result = 31 * result + (bbox?.contentHashCode() ?: 0)
         return result
+    }
+
+    companion object {
+        @JvmStatic
+        fun fromGeoHashes(hashes: Iterable<String>) =
+            FeatureCollection(hashes.map { GeoHashUtils.decodeBbox(it).polygon() }.toList().map { it.asFeature() })
+
+        @JvmStatic
+        fun of(vararg features: Feature) = FeatureCollection(features.toList())
     }
 }
 
@@ -116,13 +154,15 @@ enum class GeometryType {
     Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection
 }
 
-data class Point(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
+data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
     override val type = GeometryType.Point
+    infix fun line(other: PointGeometry) = arrayOf(this.coordinates, other.coordinates)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Point
+        other as PointGeometry
 
         if (coordinates != null) {
             if (other.coordinates == null) return false
@@ -141,15 +181,22 @@ data class Point(val coordinates: PointCoordinates?, val bbox: BoundingBox? = nu
         result = 31 * result + (bbox?.contentHashCode() ?: 0)
         return result
     }
+
+    companion object {
+        @JvmStatic
+        fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
+        @JvmStatic
+        fun of(lon: Double, lat: Double) = PointGeometry(doubleArrayOf(lon, lat))
+    }
 }
 
-data class MultiPoint(val coordinates: MultiPointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
+data class MultiPointGeometry(val coordinates: MultiPointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
     override val type = GeometryType.MultiPoint
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as MultiPoint
+        other as MultiPointGeometry
 
         if (coordinates != null) {
             if (other.coordinates == null) return false
@@ -170,13 +217,13 @@ data class MultiPoint(val coordinates: MultiPointCoordinates?, val bbox: Boundin
     }
 }
 
-data class LineString(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
+data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
     override val type = GeometryType.LineString
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as LineString
+        other as LineStringGeometry
 
         if (coordinates != null) {
             if (other.coordinates == null) return false
@@ -197,14 +244,14 @@ data class LineString(val coordinates: LineStringCoordinates? = null, val bbox: 
     }
 }
 
-data class MultiLineString(val coordinates: MultiLineStringCoordinates? = null, val bbox: BoundingBox? = null) :
+data class MultiLineStringGeometry(val coordinates: MultiLineStringCoordinates? = null, val bbox: BoundingBox? = null) :
     Geometry {
     override val type = GeometryType.MultiLineString
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as MultiLineString
+        other as MultiLineStringGeometry
 
         if (coordinates != null) {
             if (other.coordinates == null) return false
@@ -225,13 +272,13 @@ data class MultiLineString(val coordinates: MultiLineStringCoordinates? = null, 
     }
 }
 
-data class Polygon(val coordinates: PolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
+data class PolygonGeometry(val coordinates: PolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
     override val type = GeometryType.Polygon
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Polygon
+        other as PolygonGeometry
 
         if (coordinates != null) {
             if (other.coordinates == null) return false
@@ -252,13 +299,13 @@ data class Polygon(val coordinates: PolygonCoordinates? = null, val bbox: Boundi
     }
 }
 
-data class MultiPolygon(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
+data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
     override val type = GeometryType.MultiPolygon
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as MultiPolygon
+        other as MultiPolygonGeometry
 
         if (coordinates != null) {
             if (other.coordinates == null) return false
@@ -281,6 +328,9 @@ data class MultiPolygon(val coordinates: MultiPolygonCoordinates? = null, val bb
 
 data class GeometryCollection(val geometries: Array<Geometry>, val bbox: BoundingBox? = null) : Geometry {
     override val type = GeometryType.GeometryCollection
+
+    operator fun plus(other: GeometryCollection) = GeometryCollection(this.geometries + other.geometries)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

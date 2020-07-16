@@ -129,6 +129,7 @@ dependencies {
     testCompile "org.slf4j:log4j-over-slf4j:${slf4jVersion}"
     testCompile "org.slf4j:jul-to-slf4j:${slf4jVersion}"
     testCompile "ch.qos.logback:logback-classic:1.2.3"
-    testCompile "com.google.code.gson:gson:2.8.5"
+
+    implementation "com.google.code.gson:gson:2.8.5"
 
 }

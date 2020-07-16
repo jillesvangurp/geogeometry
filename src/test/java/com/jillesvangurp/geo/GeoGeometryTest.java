@@ -430,8 +430,6 @@ public class GeoGeometryTest {
         double expectedArea = radius * 2 * radius * 2;
 //        System.out.println(area);
 //        System.out.println(expectedArea);
-//        GsonBuilder b = new GsonBuilder();
-//        Gson gson = b.serializeNulls().setPrettyPrinting().create();
 //
 //        Feature f = new Feature(new Polygon(polygonCoordinates, null), null, null);
 //

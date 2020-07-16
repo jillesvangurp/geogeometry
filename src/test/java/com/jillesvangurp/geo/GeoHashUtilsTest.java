@@ -21,21 +21,16 @@
  */
 package com.jillesvangurp.geo;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Set;
 
-import static com.jillesvangurp.geo.GeoGeometry.distance;
-import static com.jillesvangurp.geo.GeoGeometry.roundToDecimals;
-import static com.jillesvangurp.geo.GeoHashUtils.DEFAULT_GEO_HASH_LENGTH;
-import static com.jillesvangurp.geo.GeoHashUtils.contains;
-import static com.jillesvangurp.geo.GeoHashUtils.decode;
-import static com.jillesvangurp.geo.GeoHashUtils.decodeBbox;
-import static com.jillesvangurp.geo.GeoHashUtils.east;
-import static com.jillesvangurp.geo.GeoHashUtils.encode;
-import static com.jillesvangurp.geo.GeoHashUtils.north;
+import static com.jillesvangurp.geo.GeoGeometry.*;
+import static com.jillesvangurp.geo.GeoHashUtils.*;
 import static java.lang.Math.abs;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -54,26 +49,26 @@ public class GeoHashUtilsTest {
         };
     }
 
-	@Test(dataProvider = "coordinates")
-	public void shouldDecode(Double lat, Double lon, String geoHash) {
-		double[] decoded = decode(geoHash);
-		assertSimilar(lat, decoded[1]);
-		assertSimilar(lon, decoded[0]);
-	}
+    @Test(dataProvider = "coordinates")
+    public void shouldDecode(Double lat, Double lon, String geoHash) {
+        double[] decoded = decode(geoHash);
+        assertSimilar(lat, decoded[1]);
+        assertSimilar(lon, decoded[0]);
+    }
 
-	@Test(dataProvider = "coordinates")
-	public void shouldEncode(Double lat, Double lon, String expectedGeoHash) {
-		assertThat(encode(lat, lon, DEFAULT_GEO_HASH_LENGTH), is(expectedGeoHash));
-        assertThat(encode(new double[]{lon,lat}), is(expectedGeoHash));
-	}
+    @Test(dataProvider = "coordinates")
+    public void shouldEncode(Double lat, Double lon, String expectedGeoHash) {
+        assertThat(encode(lat, lon, DEFAULT_GEO_HASH_LENGTH), is(expectedGeoHash));
+        assertThat(encode(new double[]{lon, lat}), is(expectedGeoHash));
+    }
 
-	@Test(dataProvider = "coordinates")
-	public void shouldContainCoordinate(Double lat, Double lon, String geoHash) {
-		assertThat("hash should contain the coordinate",
-				contains(geoHash, lat, lon));
-		assertThat("hash should not contain the swapped coordinate",
-				!contains(geoHash, lon, lat));
-	}
+    @Test(dataProvider = "coordinates")
+    public void shouldContainCoordinate(Double lat, Double lon, String geoHash) {
+        assertThat("hash should contain the coordinate",
+                contains(geoHash, lat, lon));
+        assertThat("hash should not contain the swapped coordinate",
+                !contains(geoHash, lon, lat));
+    }
 
     @Test(dataProvider = "coordinates")
     public void shouldDecodeBbox(Double lat, Double lon, String geoHash) {
@@ -262,6 +257,7 @@ public class GeoHashUtilsTest {
         for (String h : geoHashesForPolygon) {
             min = Math.min(min, h.length());
         }
+
         assertThat("there should be some hashes with length=3", min, is(3));
         assertThat("huge area, should generate lots of hashes",
                 geoHashesForPolygon.size() > 1000);
@@ -278,17 +274,34 @@ public class GeoHashUtilsTest {
 
     @DataProvider
     public Object[][] lines() {
-        return new Object[][]{{1, 1, 2, 2}, {2, 2, 1, 1}, {2, 1, 1, 1},
-                {1, 2, 1, 1}, {1, 1, 2, 1}, {1, 1, 1, 2}, {1, 1, 1, 2}};
+        return new Object[][]{
+                {1, 1, 2, 2, "/"},
+                {2, 2, 1, 1, "\\"},
+                {2, 1, 1, 1, "|"},
+                {1, 2, 1, 1, "-"},
+                {1, 1, 2, 1, "|"},
+                {1, 1, 1, 2, "-"},
+                {1, 1, 1, 2, "|"}};
     }
 
     @Test(dataProvider = "lines")
     public void shouldCalculateHashesForLine(double lat1, double lon1,
-                                             double lat2, double lon2) {
-        Set<String> hashes = GeoHashUtils.geoHashesForLine(1000, lat1, lon1, lat2,
+                                             double lat2, double lon2, String orientation) {
+        Set<String> hashes = GeoHashUtils.geoHashesForLine(5000, lat1, lon1, lat2,
                 lon2);
 
-        assertThat(hashes.size(), greaterThan(10));
+        GsonBuilder b = new GsonBuilder();
+        Gson gson = b.serializeNulls().setPrettyPrinting().create();
+
+
+        PointGeometry p1 = PointGeometry.of(lon1, lat1);
+        PointGeometry p2 = PointGeometry.of(lon2, lat2);
+        double[][] line = p1.line(p2);
+        LineStringGeometry lineGeo = new LineStringGeometry(line,null);
+        System.out.println(gson.toJson(
+                FeatureCollection.of(p1.asFeature(null,null), p2.asFeature(null,null), lineGeo.asFeature(null,null)).plus( FeatureCollection.fromGeoHashes(hashes))));
+
+        assertThat("number of hashes, orientation " + orientation, hashes.size(), greaterThan(10));
 
     }
 

@@ -18,9 +18,11 @@
  */
 package com.jillesvangurp.geo
 
+import kotlin.math.max
 import kotlin.math.min
 
 private val BITS = intArrayOf(16, 8, 4, 2, 1)
+
 // note: no a,i,l, and o
 private val BASE32_CHARS = charArrayOf(
     '0',
@@ -456,7 +458,8 @@ class GeoHashUtils {
         fun geoHashesForPolygon(vararg polygonPoints: PointCoordinates): Set<String> {
             val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
             // first lets figure out an appropriate geohash length
-            val diagonalDistance = GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
+            val diagonalDistance =
+                GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
             val hashLength = suitableHashLength(diagonalDistance, bbox.southLatitude, bbox.eastLongitude)
             return geoHashesForPolygon(hashLength + 1, *polygonPoints)
         }
@@ -492,8 +495,11 @@ class GeoHashUtils {
             if (maxLength < 1 || maxLength >= DEFAULT_GEO_HASH_LENGTH) {
                 throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
             }
+            val f = arrayOf(polygonPoints) as PolygonCoordinates
+            // println(f.stringify())
 
             val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
+            // println(bbox.polygon().coordinates?.map { "[${it.map { p -> "[${p[0]},${p[1]}]" }.joinToString(", ")}]"  }?.joinToString(", "))
             // first lets figure out an appropriate geohash length
             val southLat = bbox.southLatitude
             val northLat = bbox.northLatitude
@@ -508,25 +514,34 @@ class GeoHashUtils {
             // lets start at the top left:
 
             var rowHash = encode(southLat, westLon, hashLength)
+            // we start by covering the entire bbox with hashes of the same length
+            // we do this by scanning west to east and south to north
             var rowBox = decodeBbox(rowHash)
             while (rowBox.southLatitude < northLat) {
                 var columnHash = rowHash
                 var columnBox = rowBox
 
-                while (isWest(columnBox.eastLongitude, eastLon)) {
+                while (isWest(columnBox.westLongitude, eastLon)) {
                     partiallyContained.add(columnHash)
+                    // move column east
                     columnHash = east(columnHash)
                     columnBox = decodeBbox(columnHash)
                 }
 
-                // move to the next row
+                // move row north
                 rowHash = north(rowHash)
                 rowBox = decodeBbox(rowHash)
             }
 
+            val features = FeatureCollection.of(bbox.polygon().asFeature(), PolygonGeometry(arrayOf(polygonPoints as LinearRingCoordinates)).asFeature())
+            println(gson.toJson(FeatureCollection.fromGeoHashes(partiallyContained) + features))
+
             val fullyContained = mutableSetOf<String>()
 
             var detail = hashLength
+
+            // next we 'refine' our hashes by tossing out the ones outside the polygon
+            // and splitting the remaining ones in their 32 sub hashes if they are not full contained
             // we're not aiming for perfect detail here in terms of 'pixellation', 6
             // extra chars in the geohash ought to be enough and going beyond 9
             // doesn't serve much purpose.
@@ -534,6 +549,7 @@ class GeoHashUtils {
                 partiallyContained = splitAndFilter(polygonPoints, fullyContained, partiallyContained)
                 detail++
             }
+            // fallback
             if (fullyContained.size == 0) {
                 fullyContained.addAll(partiallyContained)
             }
@@ -733,51 +749,62 @@ class GeoHashUtils {
         @JvmStatic
         fun geoHashesForLine(width: Double, lat1: Double, lon1: Double, lat2: Double, lon2: Double): Set<String> {
             if (lat1 == lat2 && lon1 == lon2) {
-                throw IllegalArgumentException("identical begin and end coordinate: line must have two different points")
+                return setOf(encode(lat1, lon1))
             }
 
             val hashLength = suitableHashLength(width, lat1, lon1)
-            println("hashlength $hashLength")
-            val result1 = encodeWithBbox(lat1, lon1, hashLength)
-            val bbox1 = result1[1] as DoubleArray
+            val (h1, b1) = encodeWithBbox(lat1, lon1, hashLength)
+            val (h2, b2) = encodeWithBbox(lat2, lon2, hashLength)
 
-            val result2 = encodeWithBbox(lat2, lon2, hashLength)
-            val bbox2 = result2[1] as DoubleArray
-
-            if (result1[0] == result2[0]) { // same geohash for begin and end
-                val results = HashSet<String>()
-                results.add(result1[0] as String)
-                return results
+            return if (h1 == h2) {
+                // same geohash for begin and end, effectively a point
+                setOf(h1)
             } else {
-                val west1 = bbox1.westLongitude
-                val south1 = bbox1.southLatitude
-                val east2 = bbox2.eastLongitude
-                val south2 = bbox2.southLatitude
-                return if (lat1 != lat2) {
-                    val east1 = bbox1.eastLongitude
-                    val west2 = bbox2.westLongitude
-                    geoHashesForPolygon(
-                        hashLength,
-                        doubleArrayOf(west1, south1),
-                        doubleArrayOf(east1, south1),
-                        doubleArrayOf(east2, south2),
-                        doubleArrayOf(west2, south2)
-                    )
-                } else {
-                    val north1 = bbox1.northLatitude
-                    val south2 = bbox2.southLatitude
-                    geoHashesForPolygon(
-                        hashLength,
-                        doubleArrayOf(west1, south1),
-                        doubleArrayOf(west1, north1),
-                        doubleArrayOf(east2, south2),
-                        doubleArrayOf(east2, south2)
-                    )
+
+                val west = min(b1.westLongitude, b2.westLongitude)
+                val east = max(b1.eastLongitude, b2.eastLongitude)
+                val south = min(b1.southLatitude, b2.southLatitude)
+                val north = max(b1.northLatitude, b2.northLatitude)
+
+                when {
+                    // lat1 == lat2 -> geoHashesForPolygon(
+                    //     // horizontal
+                    //     hashLength,
+                    //     doubleArrayOf(b1.westLongitude,south),
+                    //     doubleArrayOf(b1.eastLongitude,south),
+                    //     doubleArrayOf(b1.eastLongitude,north),
+                    //     doubleArrayOf(b1.westLongitude,north),
+                    //     doubleArrayOf(b1.westLongitude,south)
+                    // )
+                    // lon1 == lon2 -> geoHashesForPolygon(
+                    //     // vertical
+                    //     hashLength,
+                    //     doubleArrayOf(south, west),
+                    //     doubleArrayOf(south, east),
+                    //     doubleArrayOf(north, east),
+                    //     doubleArrayOf(north, west),
+                    //     doubleArrayOf(south, west)
+                    //     // doubleArrayOf(b1.southLatitude, west),
+                    //     // doubleArrayOf(b1.southLatitude, east),
+                    //     // doubleArrayOf(b1.northLatitude, east),
+                    //     // doubleArrayOf(b1.northLatitude, west),
+                    //     // doubleArrayOf(b1.southLatitude, west)
+                    // )
+                    else ->
+                        geoHashesForPolygon(
+                            hashLength,
+                            doubleArrayOf(b1.westLongitude, b1.southLatitude),
+                            doubleArrayOf(b1.eastLongitude, b1.southLatitude),
+                            doubleArrayOf(b2.eastLongitude, b2.northLatitude),
+                            doubleArrayOf(b2.westLongitude, b2.northLatitude),
+                            doubleArrayOf(b1.westLongitude, b1.southLatitude)
+
+                        )
                 }
             }
         }
 
-        private fun encodeWithBbox(latitude: Double, longitude: Double, length: Int): Array<Any> {
+        private fun encodeWithBbox(latitude: Double, longitude: Double, length: Int): Pair<String, BoundingBox> {
             if (length < 1 || length > 12) {
                 throw IllegalArgumentException("length must be between 1 and 12")
             }
@@ -823,10 +850,7 @@ class GeoHashUtils {
             val northLat = latInterval[1]
             val westLon = lonInterval[0]
             val eastLon = lonInterval[1]
-            return arrayOf(
-                geohash.toString(),
-                doubleArrayOf(westLon, southLat, eastLon, northLat)
-            )
+            return geohash.toString() to doubleArrayOf(westLon, southLat, eastLon, northLat)
         }
 
         /**
