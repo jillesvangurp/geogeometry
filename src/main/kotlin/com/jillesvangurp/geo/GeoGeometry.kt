@@ -125,7 +125,7 @@ class GeoGeometry {
             }
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
             assert(bbox.isValid())
-            return bbox            // return doubleArrayOf(southLat, northLat, westLon, eastLon)
+            return bbox // return doubleArrayOf(southLat, northLat, westLon, eastLon)
         }
 
         /**
@@ -151,7 +151,7 @@ class GeoGeometry {
             }
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
             assert(bbox.isValid())
-            return bbox            // return doubleArrayOf(southLat, northLat, westLon, eastLon)
+            return bbox // return doubleArrayOf(southLat, northLat, westLon, eastLon)
         }
 
         /**
@@ -834,7 +834,7 @@ class GeoGeometry {
             // should end with same point as the origin
             val firstPoint = points[0]
             points[points.size - 1] = doubleArrayOf(firstPoint[0], firstPoint[1])
-            return  arrayOf(points)
+            return arrayOf(points)
         }
 
         /**

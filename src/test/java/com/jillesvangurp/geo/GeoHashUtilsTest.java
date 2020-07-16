@@ -78,8 +78,8 @@ public class GeoHashUtilsTest {
     @Test(dataProvider = "coordinates")
     public void shouldDecodeBbox(Double lat, Double lon, String geoHash) {
         double[] bbox = decodeBbox(geoHash);
-        assertThat(abs((bbox[0] + bbox[1]) / 2 - lat), lessThan(0.0001));
-        assertThat(abs((bbox[2] + bbox[3]) / 2 - lon), lessThan(0.0001));
+        assertThat(abs((bbox[0] + bbox[2]) / 2 - lon), lessThan(0.0001));
+        assertThat(abs((bbox[1] + bbox[3]) / 2 - lat), lessThan(0.0001));
     }
 
     @Test(dataProvider = "coordinates")
@@ -90,10 +90,10 @@ public class GeoHashUtilsTest {
                 !contains(calculated, lat, lon));
         double[] bbox = decodeBbox(original);
         double[] eastBbox = decodeBbox(calculated);
-        assertSimilar(bbox[0], eastBbox[0]);
         assertSimilar(bbox[1], eastBbox[1]);
-        assertSimilar(bbox[3], eastBbox[2]);
-        assertSimilar((eastBbox[3] - bbox[2]) / 2, bbox[3] - bbox[2]);
+        assertSimilar(bbox[3], eastBbox[3]);
+        assertSimilar(bbox[2], eastBbox[0]);
+        assertSimilar((eastBbox[2] - bbox[0]) / 2, bbox[2] - bbox[0]);
         double nl = GeoHashUtils.decode(calculated)[0];
         double ol = GeoHashUtils.decode(original)[0];
         assertThat("decoded hash lon should be east of original", GeoHashUtils.isEast(nl, ol));
@@ -102,34 +102,44 @@ public class GeoHashUtilsTest {
     public void shouldCalculateEastOn180() {
         String hash = encode(-18, 179.9, 3);
         double[] bbox = decodeBbox(hash);
-        assertThat(bbox[3], equalTo(180.0));
+        assertThat(bbox[2], equalTo(180.0));
         String east = GeoHashUtils.east(hash);
         bbox = decodeBbox(east);
-        assertThat(bbox[2], equalTo(-180.0));
+        assertThat(bbox[0], equalTo(-180.0));
     }
 
     public void shouldCalculateWestOn180() {
         String hash = encode(-18, -179.9, 3);
         double[] bbox = decodeBbox(hash);
-        assertThat(bbox[2], equalTo(-180.0));
+        assertThat(bbox[0], equalTo(-180.0));
         String west = GeoHashUtils.west(hash);
         bbox = decodeBbox(west);
-        assertThat(bbox[3], equalTo(180.0));
+        assertThat(bbox[2], equalTo(180.0));
     }
 
     @Test(dataProvider = "coordinates")
     public void shouldCalculateSouth(Double lat, Double lon, String geoHash) {
         String original = geoHash.substring(0, 3);
-        String calculated = GeoHashUtils.south(original);
-        assertThat("north hash should not contain the coordinate",
-                !contains(calculated, lat, lon));
-        double[] bbox = decodeBbox(geoHash.substring(0, 3));
-        double[] northBbox = decodeBbox(calculated);
-        assertSimilar((bbox[1] - northBbox[0]) / 2, bbox[1] - bbox[0]);
-        assertSimilar(bbox[0], northBbox[1]);
-        assertSimilar(bbox[2], northBbox[2]);
-        assertSimilar(bbox[3], northBbox[3]);
-        double nl = GeoHashUtils.decode(calculated)[1];
+        String calculatedHash = GeoHashUtils.south(original);
+        System.out.println(original + " " + calculatedHash);
+        double[] oBox = decodeBbox(original);
+        double[] cBox = decodeBbox(calculatedHash);
+        assertThat("calculated hash should not contain the coordinate",
+                !contains(calculatedHash, lat, lon));
+        double oWest = oBox[0];
+        double oSouth = oBox[1];
+        double oEast = oBox[2];
+        double oNorth = oBox[3];
+        double cWest = cBox[0];
+        double cSouth = cBox[1];
+        double cEast = cBox[2];
+        double cNorth = cBox[3];
+
+        assertSimilar((oNorth - cSouth) / 2, oNorth - oSouth);
+        assertSimilar(oSouth, cNorth);
+        assertSimilar(oEast, cEast);
+        assertSimilar(oWest, cWest);
+        double nl = GeoHashUtils.decode(calculatedHash)[1];
         double ol = GeoHashUtils.decode(original)[1];
         assertThat("decoded hash lat should be south of original", GeoHashUtils.isSouth(nl, ol));
     }
@@ -138,14 +148,22 @@ public class GeoHashUtilsTest {
     public void shouldCalculateNorth(Double lat, Double lon, String geoHash) {
         String original = geoHash.substring(0, 3);
         String calculatedHash = GeoHashUtils.north(original);
-        double[] bbox = decodeBbox(geoHash.substring(0, 3));
-        double[] southBbox = decodeBbox(calculatedHash);
+        double[] oBox = decodeBbox(original);
+        double[] cBox = decodeBbox(calculatedHash);
         assertThat("calculated hash should not contain the coordinate",
                 !contains(calculatedHash, lat, lon));
-        assertSimilar(bbox[1], southBbox[0]);
-        assertSimilar((bbox[0] - southBbox[1]) / 2, bbox[0] - bbox[1]);
-        assertSimilar(bbox[2], southBbox[2]);
-        assertSimilar(bbox[3], southBbox[3]);
+        double oWest = oBox[0];
+        double oSouth = oBox[1];
+        double oEast = oBox[2];
+        double oNorth = oBox[3];
+        double cWest = cBox[0];
+        double cSouth = cBox[1];
+        double cEast = cBox[2];
+        double cNorth = cBox[3];
+        assertSimilar(oNorth, cSouth);
+        assertSimilar((oSouth - cNorth) / 2, oSouth - oNorth);
+        assertSimilar(oWest, cWest);
+        assertSimilar(oEast, cEast);
         System.out.println();
         double nl = GeoHashUtils.decode(calculatedHash)[1];
         double ol = GeoHashUtils.decode(original)[1];
@@ -155,16 +173,25 @@ public class GeoHashUtilsTest {
     @Test(dataProvider = "coordinates")
     public void shouldCalculateWest(Double lat, Double lon, String geoHash) {
         String original = geoHash.substring(0, 3);
-        String calculated = GeoHashUtils.west(original);
-        assertThat("west hash should not contain the coordinate",
-                !contains(calculated, lat, lon));
-        double[] bbox = decodeBbox(geoHash.substring(0, 3));
-        double[] westBbox = decodeBbox(calculated);
-        assertSimilar(bbox[0], westBbox[0]);
-        assertSimilar(bbox[1], westBbox[1]);
-        assertSimilar((bbox[3] - westBbox[2]) / 2, bbox[3] - bbox[2]);
-        assertSimilar(bbox[2], westBbox[3]);
-        double nl = GeoHashUtils.decode(calculated)[0];
+        String calculatedHash = GeoHashUtils.west(original);
+        double[] oBox = decodeBbox(original);
+        double[] cBox = decodeBbox(calculatedHash);
+        assertThat("calculated hash should not contain the coordinate",
+                !contains(calculatedHash, lat, lon));
+        double oWest = oBox[0];
+        double oSouth = oBox[1];
+        double oEast = oBox[2];
+        double oNorth = oBox[3];
+        double cWest = cBox[0];
+        double cSouth = cBox[1];
+        double cEast = cBox[2];
+        double cNorth = cBox[3];
+
+        assertSimilar(oSouth, cSouth);
+        assertSimilar(oNorth, cNorth);
+        assertSimilar((oEast - cWest) / 2, oEast - oWest);
+        assertSimilar(oWest, cEast);
+        double nl = GeoHashUtils.decode(calculatedHash)[0];
         double ol = GeoHashUtils.decode(original)[0];
         assertThat("decoded hash lon should be west of original", GeoHashUtils.isWest(nl, ol));
     }
@@ -326,7 +353,7 @@ public class GeoHashUtilsTest {
         int length = GeoHashUtils.suitableHashLength(m, latitude, longitude);
         String hash = encode(latitude, longitude, length);
         double[] bbox = decodeBbox(hash);
-        double distance = GeoGeometry.distance(bbox[0], bbox[2], bbox[0], bbox[3]);
+        double distance = GeoGeometry.distance(bbox[0], bbox[1], bbox[0], bbox[3]);
         assertThat(distance, lessThan(m));
     }
 

@@ -21,14 +21,9 @@
  */
 package com.jillesvangurp.geo;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 
 import static com.jillesvangurp.geo.GeoGeometry.*;
