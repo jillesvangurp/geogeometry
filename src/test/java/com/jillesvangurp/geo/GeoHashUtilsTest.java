@@ -92,24 +92,6 @@ public class GeoHashUtilsTest {
         assertThat("decoded hash lon should be east of original", GeoHashUtils.isEast(nl, ol));
     }
 
-    public void shouldCalculateEastOn180() {
-        String hash = encode(-18, 179.9, 3);
-        double[] bbox = decodeBbox(hash);
-        assertThat(bbox[2], equalTo(180.0));
-        String east = GeoHashUtils.east(hash);
-        bbox = decodeBbox(east);
-        assertThat(bbox[0], equalTo(-180.0));
-    }
-
-    public void shouldCalculateWestOn180() {
-        String hash = encode(-18, -179.9, 3);
-        double[] bbox = decodeBbox(hash);
-        assertThat(bbox[0], equalTo(-180.0));
-        String west = GeoHashUtils.west(hash);
-        bbox = decodeBbox(west);
-        assertThat(bbox[2], equalTo(180.0));
-    }
-
     @Test(dataProvider = "coordinates")
     public void shouldCalculateSouth(Double lat, Double lon, String geoHash) {
         String original = geoHash.substring(0, 3);
@@ -245,31 +227,6 @@ public class GeoHashUtilsTest {
         }
     }
 
-    double[][] polygon = new double[][]{{-1, 1}, {2, 2}, {3, -1},
-            {-2, -4}};
-
-    public void shouldCalculateHashesForPolygon() {
-        int min = 10;
-        Set<String> geoHashesForPolygon = GeoHashUtils.geoHashesForPolygon(
-                8, polygon);
-        for (String h : geoHashesForPolygon) {
-            min = Math.min(min, h.length());
-        }
-
-        assertThat("there should be some hashes with length=3", min, is(3));
-        assertThat("huge area, should generate lots of hashes",
-                geoHashesForPolygon.size() > 1000);
-    }
-
-    public void shouldCalculateHashesForCircle() {
-        Set<String> hashesForCircle = GeoHashUtils.geoHashesForCircle(8, 52, 13, 2000);
-        for (String hash : hashesForCircle) {
-            double[] point = GeoHashUtils.decode(hash);
-            double distance = GeoGeometry.distance(point, new double[]{13, 52});
-            assertThat(distance, lessThan(2000.0));
-        }
-    }
-
     @DataProvider
     public Object[][] lines() {
         return new Object[][]{
@@ -303,40 +260,6 @@ public class GeoHashUtilsTest {
 
     }
 
-    public void shouldCheckIfWest() {
-        assertThat("should be west", GeoHashUtils.isWest(90, 91));
-        assertThat("should be west", GeoHashUtils.isWest(-1, 1));
-        assertThat("should be west", GeoHashUtils.isWest(-89, 90));
-        assertThat("should be west", GeoHashUtils.isWest(180, -178));
-        assertThat("should be west", GeoHashUtils.isWest(180, -179.99527198651967));
-        assertThat("should not be west", !GeoHashUtils.isWest(-179, 180));
-        assertThat("should not be west", !GeoHashUtils.isWest(91, 90));
-        assertThat("should not be west", !GeoHashUtils.isWest(-179, 180));
-        assertThat("should not be west", !GeoHashUtils.isWest(89, -90));
-        assertThat("should not be west", !GeoHashUtils.isWest(1, -1));
-        assertThat("should not be west", !GeoHashUtils.isWest(91, 90));
-        assertThat("should not be west", !GeoHashUtils.isWest(-91, 90));
-    }
-
-    public void shouldCheckIfEast() {
-        assertThat("should not be east", !GeoHashUtils.isEast(90, 91));
-        assertThat("should not be east", !GeoHashUtils.isEast(-1, 1));
-        assertThat("should not be east", !GeoHashUtils.isEast(-89, 90));
-        assertThat("should not be east", !GeoHashUtils.isEast(180, -178));
-        assertThat("should not be west", !GeoHashUtils.isEast(180, -179.99527198651967));
-        assertThat("should be east", GeoHashUtils.isEast(-179, 180));
-        assertThat("should be east", GeoHashUtils.isEast(91, 90));
-        assertThat("should be east", GeoHashUtils.isEast(-179, 180));
-        assertThat("should be east", GeoHashUtils.isEast(89, -90));
-        assertThat("should be east", GeoHashUtils.isEast(1, -1));
-        assertThat("should be east", GeoHashUtils.isEast(91, 90));
-        assertThat("should be east", GeoHashUtils.isEast(-91, 90));
-    }
-
-    public void shouldBeNeitherWestNorEast() {
-        assertThat("should not be west", !GeoHashUtils.isWest(-90, 90));
-        assertThat("should not be east", !GeoHashUtils.isEast(-90, 90));
-    }
 
     @DataProvider
     public Object[][] samplePoints() {
@@ -366,53 +289,5 @@ public class GeoHashUtilsTest {
         double[] bbox = decodeBbox(hash);
         double distance = GeoGeometry.distance(bbox[0], bbox[1], bbox[0], bbox[3]);
         assertThat(distance, lessThan(m));
-    }
-
-    public void shouldGenerateCircleHashesThatAreAllWithinRadiusOfCircle() {
-        double latitude = 52.529731;
-        double longitude = 13.401284;
-        int radius = 500;
-        Set<String> hashes = GeoHashUtils.geoHashesForCircle(8, latitude, longitude, radius);
-        for (String hash : hashes) {
-            assertThat(distance(decode(hash), new double[]{longitude, latitude}), lessThan(500.0));
-        }
-        assertThat(hashes.size(), greaterThan(radius));
-    }
-
-    public void shouldOverlap() {
-        double[][] polygon = new double[][]{
-                {50, 15},
-                {53, 15},
-                {53, 11},
-                {50, 11}
-        };
-
-        double[][] p2overlapping = new double[][]{
-                {51, 16},
-                {52, 16},
-                {52, 10},
-                {51, 10}
-        };
-        double[][] p3outside = new double[][]{
-                {60, 15},
-                {63, 15},
-                {63, 11},
-                {60, 11}
-        };
-        double[][] p4inside = new double[][]{
-                {51, 14},
-                {52, 14},
-                {52, 12},
-                {51, 12}
-        };
-        Assert.assertTrue(GeoGeometry.overlap(polygon, polygon));
-
-        Assert.assertTrue(GeoGeometry.overlap(polygon, p2overlapping));
-        Assert.assertTrue(GeoGeometry.overlap(p2overlapping, polygon));
-
-        Assert.assertFalse(GeoGeometry.overlap(p3outside, polygon));
-
-        Assert.assertTrue(GeoGeometry.overlap(polygon, p4inside));
-        Assert.assertTrue(GeoGeometry.overlap(p4inside, polygon));
     }
 }

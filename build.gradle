@@ -120,6 +120,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.1.1")
+    // FIXME prevent junit4 from being pulled in
     testCompile 'org.testng:testng:7.2.0'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 
