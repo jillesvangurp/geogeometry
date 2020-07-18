@@ -29,12 +29,11 @@ import com.jillesvangurp.geo.westLongitude
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.shouldBe
+import kotlin.math.abs
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
-import org.testng.Assert
-import kotlin.math.abs
 
 class GeoHashUtilsTest {
     val coordinatesWithHashes = arrayOf(
@@ -242,12 +241,12 @@ class GeoHashUtilsTest {
             doubleArrayOf(52.0, 12.0),
             doubleArrayOf(51.0, 12.0)
         )
-        Assert.assertTrue(overlap(polygon, polygon))
-        Assert.assertTrue(overlap(polygon, p2overlapping))
-        Assert.assertTrue(overlap(p2overlapping, polygon))
-        Assert.assertFalse(overlap(p3outside, polygon))
-        Assert.assertTrue(overlap(polygon, p4inside))
-        Assert.assertTrue(overlap(p4inside, polygon))
+        overlap(polygon, polygon) shouldBe true
+        overlap(polygon, p2overlapping) shouldBe true
+        overlap(p2overlapping, polygon) shouldBe true
+        overlap(p3outside, polygon) shouldBe false
+        overlap(polygon, p4inside) shouldBe true
+        overlap(p4inside, polygon) shouldBe true
     }
 
     val samplePoints = arrayOf<Array<Double>>(
@@ -487,6 +486,7 @@ class GeoHashUtilsTest {
         }
     }
 
+    @Test
     fun shouldCalculateNorth() {
         coordinates.forEach { (point, geoHash) ->
             val original = geoHash.substring(0, 3)
