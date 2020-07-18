@@ -26,12 +26,12 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
 import io.kotest.matchers.shouldBe
-import java.util.Random
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.util.Random
 
 class GeoGeometryTest {
     var sydney = doubleArrayOf(151.206146, -33.872796)
@@ -166,7 +166,8 @@ class GeoGeometryTest {
             roundToDecimals(
                 0.1234567891111112,
                 17
-            ), CoreMatchers.`is`(0.1234567891111112)
+            ),
+            CoreMatchers.`is`(0.1234567891111112)
         )
     }
 
@@ -517,7 +518,8 @@ class GeoGeometryTest {
                 berlin[0],
                 berlin[1],
                 berlin[0]
-            ), Matchers.greaterThan(499.0)
+            ),
+            Matchers.greaterThan(499.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -525,7 +527,8 @@ class GeoGeometryTest {
                 berlin[0],
                 berlin[1],
                 berlin[0]
-            ), Matchers.lessThan(501.0)
+            ),
+            Matchers.lessThan(501.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -533,7 +536,8 @@ class GeoGeometryTest {
                 berlin[0],
                 berlin[1],
                 berlin[0]
-            ), Matchers.greaterThan(499.0)
+            ),
+            Matchers.greaterThan(499.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -541,7 +545,8 @@ class GeoGeometryTest {
                 berlin[0],
                 berlin[1],
                 berlin[0]
-            ), Matchers.lessThan(501.0)
+            ),
+            Matchers.lessThan(501.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -549,7 +554,8 @@ class GeoGeometryTest {
                 bbox[0],
                 berlin[1],
                 berlin[0]
-            ), Matchers.greaterThan(499.0)
+            ),
+            Matchers.greaterThan(499.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -557,7 +563,8 @@ class GeoGeometryTest {
                 bbox[0],
                 berlin[1],
                 berlin[0]
-            ), Matchers.lessThan(501.0)
+            ),
+            Matchers.lessThan(501.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -565,7 +572,8 @@ class GeoGeometryTest {
                 bbox[2],
                 berlin[1],
                 berlin[0]
-            ), Matchers.greaterThan(499.0)
+            ),
+            Matchers.greaterThan(499.0)
         )
         MatcherAssert.assertThat(
             distance(
@@ -573,7 +581,8 @@ class GeoGeometryTest {
                 bbox[2],
                 berlin[1],
                 berlin[0]
-            ), Matchers.lessThan(501.0)
+            ),
+            Matchers.lessThan(501.0)
         )
     }
 
@@ -763,7 +772,8 @@ class GeoGeometryTest {
                         doubleArrayOf(2.0, 2.0),
                         doubleArrayOf(1.0, 1.0)
                     )
-                ), arrayOf(polygon)
+                ),
+                arrayOf(polygon)
             )
         var d =
             Math.round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon))

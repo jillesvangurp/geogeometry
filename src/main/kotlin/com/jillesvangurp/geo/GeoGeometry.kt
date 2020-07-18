@@ -166,15 +166,17 @@ class GeoGeometry {
         @JvmStatic
         fun filterNoiseFromPointCloud(points: MultiPointCoordinates, percentage: Float): MultiPointCoordinates {
 
-            points.sortWith(Comparator { p1, p2 ->
-                when {
-                    p1 == null || p2 == null -> throw IllegalArgumentException("Array contains null points")
-                    p1[0] == p2[0] -> p1[1].compareTo(p2[1])
-                    p1[0] > p2[0] -> 1
-                    p1[0] == p2[0] -> 0
-                    else -> -1
+            points.sortWith(
+                Comparator { p1, p2 ->
+                    when {
+                        p1 == null || p2 == null -> throw IllegalArgumentException("Array contains null points")
+                        p1[0] == p2[0] -> p1[1].compareTo(p2[1])
+                        p1[0] > p2[0] -> 1
+                        p1[0] == p2[0] -> 0
+                        else -> -1
+                    }
                 }
-            })
+            )
 
             val discard = (points.size * percentage / 2).toInt()
 
@@ -926,13 +928,15 @@ class GeoGeometry {
                 throw IllegalStateException("need at least 3 pois for a polygon")
             }
             val sorted = points.clone()
-            sorted.sortWith(Comparator { p1, p2 ->
-                when {
-                    p1 == null || p2 == null -> throw IllegalArgumentException("Points array contains null")
-                    p1[0] == p2[0] -> p1[1].compareTo(p2[1])
-                    else -> p1[0].compareTo(p2[0])
+            sorted.sortWith(
+                Comparator { p1, p2 ->
+                    when {
+                        p1 == null || p2 == null -> throw IllegalArgumentException("Points array contains null")
+                        p1[0] == p2[0] -> p1[1].compareTo(p2[1])
+                        else -> p1[0].compareTo(p2[0])
+                    }
                 }
-            })
+            )
 
             val n = sorted.size
 
@@ -948,10 +952,10 @@ class GeoGeometry {
                 lUpperSize++
 
                 while (lUpperSize > 2 && !rightTurn(
-                        lUpper[lUpperSize - 3],
-                        lUpper[lUpperSize - 2],
-                        lUpper[lUpperSize - 1]
-                    )
+                    lUpper[lUpperSize - 3],
+                    lUpper[lUpperSize - 2],
+                    lUpper[lUpperSize - 1]
+                )
                 ) {
                     // Remove the middle point of the three last
                     lUpper[lUpperSize - 2] = lUpper[lUpperSize - 1]
@@ -971,10 +975,10 @@ class GeoGeometry {
                 lLowerSize++
 
                 while (lLowerSize > 2 && !rightTurn(
-                        lLower[lLowerSize - 3],
-                        lLower[lLowerSize - 2],
-                        lLower[lLowerSize - 1]
-                    )
+                    lLower[lLowerSize - 3],
+                    lLower[lLowerSize - 2],
+                    lLower[lLowerSize - 1]
+                )
                 ) {
                     // Remove the middle point of the three last
                     lLower[lLowerSize - 2] = lLower[lLowerSize - 1]

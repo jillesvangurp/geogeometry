@@ -5,15 +5,13 @@ import com.google.gson.GsonBuilder
 import io.kotest.matchers.doubles.shouldBeLessThan
 import kotlin.math.abs
 
-private const val defaultMarginOfError = 0.0000001
-
-fun Double.shouldBeApproximately(other: Double, marginOfError: Double = defaultMarginOfError) {
+fun Double.shouldBeApproximately(other: Double, marginOfError: Double = 0.0000001) {
     // allow for tiny rounding errors
-    abs(this - other) shouldBeLessThan 0.000001
+    abs(this - other) shouldBeLessThan marginOfError
 }
 
 infix fun Double.shouldBeApproximately(other: Double) {
-    this.shouldBeApproximately(other, defaultMarginOfError)
+    this.shouldBeApproximately(other, 0.0000001)
 }
 
 // we don't want gson a dependency but useful when debugging since you can serialize feature collections

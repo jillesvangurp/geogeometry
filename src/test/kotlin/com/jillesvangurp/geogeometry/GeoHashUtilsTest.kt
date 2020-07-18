@@ -29,11 +29,11 @@ import com.jillesvangurp.geo.westLongitude
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.shouldBe
-import kotlin.math.abs
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
+import kotlin.math.abs
 
 class GeoHashUtilsTest {
     val coordinatesWithHashes = arrayOf(
@@ -208,8 +208,10 @@ class GeoHashUtilsTest {
                 distance(
                     decode(
                         hash
-                    ), doubleArrayOf(longitude, latitude)
-                ), Matchers.lessThan(500.0)
+                    ),
+                    doubleArrayOf(longitude, latitude)
+                ),
+                Matchers.lessThan(500.0)
             )
         }
         MatcherAssert.assertThat(hashes.size, Matchers.greaterThan(radius))
@@ -388,7 +390,8 @@ class GeoHashUtilsTest {
                     point.latitude,
                     point.longitude,
                     GeoHashUtils.DEFAULT_GEO_HASH_LENGTH
-                ), CoreMatchers.`is`(geoHash)
+                ),
+                CoreMatchers.`is`(geoHash)
             )
             MatcherAssert.assertThat(
                 encode(point),
