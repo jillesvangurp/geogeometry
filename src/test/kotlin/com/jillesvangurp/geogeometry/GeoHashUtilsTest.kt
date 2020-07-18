@@ -3,14 +3,22 @@ package com.jillesvangurp.geogeometry
 import com.jillesvangurp.geo.GeoGeometry.Companion.distance
 import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
 import com.jillesvangurp.geo.GeoHashUtils
+import com.jillesvangurp.geo.GeoHashUtils.Companion.contains
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decode
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decodeBbox
 import com.jillesvangurp.geo.GeoHashUtils.Companion.east
 import com.jillesvangurp.geo.GeoHashUtils.Companion.encode
 import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForCircle
+import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForLine
 import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForPolygon
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isEast
+import com.jillesvangurp.geo.GeoHashUtils.Companion.isNorth
+import com.jillesvangurp.geo.GeoHashUtils.Companion.isSouth
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
+import com.jillesvangurp.geo.GeoHashUtils.Companion.north
+import com.jillesvangurp.geo.GeoHashUtils.Companion.south
+import com.jillesvangurp.geo.GeoHashUtils.Companion.subHashes
+import com.jillesvangurp.geo.GeoHashUtils.Companion.suitableHashLength
 import com.jillesvangurp.geo.GeoHashUtils.Companion.west
 import com.jillesvangurp.geo.eastLongitude
 import com.jillesvangurp.geo.latitude
@@ -43,8 +51,6 @@ class GeoHashUtilsTest {
         arrayOf(1, 1, 1, 2),
         arrayOf(1, 1, 1, 2)
     )
-
-
 
     @Test
     fun `decode hash`() {
@@ -112,7 +118,6 @@ class GeoHashUtilsTest {
             CoreMatchers.equalTo(180.0)
         )
     }
-
 
     @Test
     fun shouldCalculateHashesForPolygon() {
@@ -243,5 +248,315 @@ class GeoHashUtilsTest {
         Assert.assertFalse(overlap(p3outside, polygon))
         Assert.assertTrue(overlap(polygon, p4inside))
         Assert.assertTrue(overlap(p4inside, polygon))
+    }
+
+    val samplePoints = arrayOf<Array<Double>>(
+        arrayOf(10.0, 85.0, 15.0),
+        arrayOf(10.0, 50.0, 15.0),
+        arrayOf(10.0, 0.0, 15.0),
+        arrayOf(100.0, 85.0, 15.0),
+        arrayOf(100.0, 50.0, 15.0),
+        arrayOf(100.0, 0.0, 15.0),
+        arrayOf(1000.0, 85.0, 15.0),
+        arrayOf(1000.0, 50.0, 15.0),
+        arrayOf(1000.0, 0.0, 15.0),
+        arrayOf(10000.0, 85.0, 15.0),
+        arrayOf(10000.0, 50.0, 15.0),
+        arrayOf(10000.0, 0.0, 15.0),
+        arrayOf(100000.0, 85.0, 15.0),
+        arrayOf(100000.0, 50.0, 15.0),
+        arrayOf(100000.0, 0.0, 15.0)
+    )
+
+    @Test
+    fun shouldCalculateHashLength() {
+        samplePoints.forEach { (m, latitude, longitude) ->
+            val length = suitableHashLength(m, latitude, longitude)
+            val hash = encode(latitude, longitude, length)
+            val bbox = decodeBbox(hash)
+            val distance = distance(bbox[0], bbox[1], bbox[0], bbox[3])
+            MatcherAssert.assertThat(distance, Matchers.lessThan(m))
+        }
+    }
+
+    val lines = arrayOf(
+        arrayOf(1, 1, 2, 2),
+        arrayOf(2, 2, 1, 1),
+        arrayOf(2, 1, 1, 1),
+        arrayOf(1, 2, 1, 1),
+        arrayOf(1, 1, 2, 1),
+        arrayOf(1, 1, 1, 2),
+        arrayOf(1, 1, 1, 2)
+    )
+
+    @Test
+    fun shouldCalculateHashesForLine() {
+        lines.forEach { (lat1, lon1, lat2, lon2) ->
+
+            val hashes = geoHashesForLine(
+                10000.0, lat1.toDouble(), lon1.toDouble(), lat2.toDouble(),
+                lon2.toDouble()
+            )
+//        GsonBuilder b = new GsonBuilder();
+//        Gson gson = b.serializeNulls().create();
+//
+//
+//        PointGeometry p1 = PointGeometry.of(lon1, lat1);
+//        PointGeometry p2 = PointGeometry.of(lon2, lat2);
+//        double[][] line = p1.line(p2);
+//        LineStringGeometry lineGeo = new LineStringGeometry(line,null);
+//        System.out.println(gson.toJson(
+//                FeatureCollection.of(p1.asFeature(null,null), p2.asFeature(null,null), lineGeo.asFeature(null,null)).plus( FeatureCollection.fromGeoHashes(hashes))));
+            MatcherAssert.assertThat(
+                "number of hashes, orientation",
+                hashes.size,
+                Matchers.greaterThan(10)
+            )
+        }
+    }
+
+    //    @Test(enabled = false)
+    //    public void shouldCalculateBboxSizes() {
+    //        System.out.println("<table border=\"1\">");
+    //        System.out.println("<th><td>latitude</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></th>");
+    //        printHashSizes(90, 0);
+    //        printHashSizes(80, 0);
+    //        printHashSizes(70, 0);
+    //        printHashSizes(60, 0);
+    //        printHashSizes(50, 0);
+    //        printHashSizes(40, 0);
+    //        printHashSizes(30, 0);
+    //        printHashSizes(20, 0);
+    //        printHashSizes(10, 0);
+    //        printHashSizes(0, 0);
+    //        System.out.println("</table>");
+    //    }
+    //    private void printHashSizes(double lat, double lon) {
+    //        String geoHash = encode(lat, lon, DEFAULT_GEO_HASH_LENGTH);
+    //
+    //        // not a test but nice to get a sense of the scale of a geo hash
+    //        System.out.println("<tr><td>" + lat + "</td>");
+    //        for (int i = 1; i <= geoHash.length(); i++) {
+    //            String prefix = geoHash.substring(0, i);
+    //            double[] bbox = decodeBbox(prefix);
+    //            double vertical = roundToDecimals(distance(bbox[0], bbox[3], bbox[1], bbox[3]), 2);
+    //            double horizontal = roundToDecimals(distance(bbox[0], bbox[2], bbox[0], bbox[3]), 2);
+    //            System.out.print("<td>" + horizontal + "x" + vertical + "</td>");
+    //        }
+    //        System.out.print("</tr>\n");
+    //    }
+
+    @Test
+    fun shouldCalculateSubHashesForHash() {
+        val hash = "u33dbfc"
+        val subHashes = subHashes(hash)
+        subHashes.size shouldBe 32
+        val first = subHashes[0]
+        var row = first
+        for (j in 0..15) {
+            var column = row
+            for (i in 0..7) {
+                column = east(column)
+            }
+            row = north(row)
+        }
+    }
+
+    val coordinates = listOf(
+        doubleArrayOf(-0.1, 0.1) to "ebpbtdpntc6e",
+        doubleArrayOf(13.394904, 52.530888) to "u33dbfcyegk2"
+    )
+
+    @Test
+    fun shouldDecode() {
+        io.kotest.assertions.assertSoftly {
+            coordinates.forEach { (point, geoHash) ->
+
+                val decoded = decode(geoHash)
+
+                assertSimilar(point.latitude, decoded[1])
+                assertSimilar(point.longitude, decoded[0])
+            }
+        }
+    }
+
+    @Test
+    fun shouldEncode() {
+        coordinates.forEach { (point, geoHash) ->
+
+            MatcherAssert.assertThat(
+                encode(
+                    point.latitude,
+                    point.longitude,
+                    GeoHashUtils.DEFAULT_GEO_HASH_LENGTH
+                ), CoreMatchers.`is`(geoHash)
+            )
+            MatcherAssert.assertThat(
+                encode(point),
+                CoreMatchers.`is`(geoHash)
+            )
+        }
+    }
+
+    @Test
+    fun shouldContainCoordinate() {
+        coordinates.forEach { (point, geoHash) ->
+            MatcherAssert.assertThat(
+                "hash should contain the coordinate",
+                contains(geoHash, point.latitude, point.longitude)
+            )
+            MatcherAssert.assertThat(
+                "hash should not contain the swapped coordinate",
+                !contains(geoHash, point.longitude, point.latitude)
+            )
+        }
+    }
+
+    @Test
+    fun shouldDecodeBbox() {
+        coordinates.forEach { (point, geoHash) ->
+
+            val bbox = decodeBbox(geoHash)
+            MatcherAssert.assertThat(
+                abs((bbox[0] + bbox[2]) / 2 - point.longitude),
+                Matchers.lessThan(0.0001)
+            )
+            MatcherAssert.assertThat(
+                abs((bbox[1] + bbox[3]) / 2 - point.latitude),
+                Matchers.lessThan(0.0001)
+            )
+        }
+    }
+
+    @Test
+    fun shouldCalculateEast() {
+        coordinates.forEach { (point, geoHash) ->
+
+            val original = geoHash.substring(0, 3)
+            val calculated = east(geoHash.substring(0, 3))
+            MatcherAssert.assertThat(
+                "east hash should not contain the coordinate",
+                !contains(calculated, point.latitude, point.longitude)
+            )
+            val bbox = decodeBbox(original)
+            val eastBbox = decodeBbox(calculated)
+            assertSimilar(bbox[1], eastBbox[1])
+            assertSimilar(bbox[3], eastBbox[3])
+            assertSimilar(bbox[2], eastBbox[0])
+            assertSimilar((eastBbox[2] - bbox[0]) / 2, bbox[2] - bbox[0])
+            val nl = decode(calculated)[0]
+            val ol = decode(original)[0]
+            MatcherAssert.assertThat(
+                "decoded hash lon should be east of original",
+                isEast(nl, ol)
+            )
+        }
+    }
+
+    @Test
+    fun shouldCalculateSouth() {
+        coordinates.forEach { (point, geoHash) ->
+
+            val original = geoHash.substring(0, 3)
+            val calculatedHash = south(original)
+            //        System.out.println(original + " " + calculatedHash);
+            val oBox = decodeBbox(original)
+            val cBox = decodeBbox(calculatedHash)
+            MatcherAssert.assertThat(
+                "calculated hash should not contain the coordinate",
+                !contains(calculatedHash, point.latitude, point.longitude)
+            )
+            val oWest = oBox[0]
+            val oSouth = oBox[1]
+            val oEast = oBox[2]
+            val oNorth = oBox[3]
+            val cWest = cBox[0]
+            val cSouth = cBox[1]
+            val cEast = cBox[2]
+            val cNorth = cBox[3]
+            assertSimilar((oNorth - cSouth) / 2, oNorth - oSouth)
+            assertSimilar(oSouth, cNorth)
+            assertSimilar(oEast, cEast)
+            assertSimilar(oWest, cWest)
+            val nl = decode(calculatedHash)[1]
+            val ol = decode(original)[1]
+            MatcherAssert.assertThat(
+                "decoded hash lat should be south of original",
+                isSouth(nl, ol)
+            )
+        }
+    }
+
+    fun shouldCalculateNorth() {
+        coordinates.forEach { (point, geoHash) ->
+            val original = geoHash.substring(0, 3)
+            val calculatedHash = north(original)
+            val oBox = decodeBbox(original)
+            val cBox = decodeBbox(calculatedHash)
+            MatcherAssert.assertThat(
+                "calculated hash should not contain the coordinate",
+                !contains(calculatedHash, point.latitude, point.longitude)
+            )
+            val oWest = oBox[0]
+            val oSouth = oBox[1]
+            val oEast = oBox[2]
+            val oNorth = oBox[3]
+            val cWest = cBox[0]
+            val cSouth = cBox[1]
+            val cEast = cBox[2]
+            val cNorth = cBox[3]
+            assertSimilar(oNorth, cSouth)
+            assertSimilar((oSouth - cNorth) / 2, oSouth - oNorth)
+            assertSimilar(oWest, cWest)
+            assertSimilar(oEast, cEast)
+            //        System.out.println();
+            val nl = decode(calculatedHash)[1]
+            val ol = decode(original)[1]
+            MatcherAssert.assertThat(
+                "decoded hash lat should be north of original",
+                isNorth(nl, ol)
+            )
+        }
+    }
+
+    @Test
+    fun shouldCalculateWest() {
+        coordinates.forEach { (point, geoHash) ->
+
+            val original = geoHash.substring(0, 3)
+            val calculatedHash = west(original)
+            val oBox = decodeBbox(original)
+            val cBox = decodeBbox(calculatedHash)
+            MatcherAssert.assertThat(
+                "calculated hash should not contain the coordinate",
+                !contains(calculatedHash, point.latitude, point.longitude)
+            )
+            val oWest = oBox[0]
+            val oSouth = oBox[1]
+            val oEast = oBox[2]
+            val oNorth = oBox[3]
+            val cWest = cBox[0]
+            val cSouth = cBox[1]
+            val cEast = cBox[2]
+            val cNorth = cBox[3]
+            assertSimilar(oSouth, cSouth)
+            assertSimilar(oNorth, cNorth)
+            assertSimilar((oEast - cWest) / 2, oEast - oWest)
+            assertSimilar(oWest, cEast)
+            val nl = decode(calculatedHash)[0]
+            val ol = decode(original)[0]
+            MatcherAssert.assertThat(
+                "decoded hash lon should be west of original",
+                isWest(nl, ol)
+            )
+        }
+    }
+
+    private fun assertSimilar(d1: Double, d2: Double) {
+        // allow for some margin of error
+        MatcherAssert.assertThat(
+            "should be similar$d1 and $d2", Math.abs(d1 - d2),
+            Matchers.lessThan(0.0000001)
+        )
     }
 }
