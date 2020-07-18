@@ -45,7 +45,7 @@ tasks {
 }
 
 val artifactName = "geogeometry"
-val artifactGroup = "com.tryformation"
+val artifactGroup = "com.github.jillesvangurp"
 
 publishing {
     publications {
