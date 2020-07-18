@@ -465,7 +465,7 @@ class GeoHashUtils {
         }
 
         /**
-         * Cover the polygon with geo hashes. Calls getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
+         * Cover the polygon with geo hashes. Call getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
          * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
          * boxes, specify your own maxLength.
          *

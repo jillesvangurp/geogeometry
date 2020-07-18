@@ -13,11 +13,11 @@ There are two driving design principles:
 
 - It avoids the trap of object orientation. Object orientation and geometry go way back. The first object oriented systems were all  about cute little Point and Line classes. As a consequence, world + dog now feels compelled to come up with their own Point, Line, Polygon, etc. classes. 
 
-This library has *no classes that you can instantiate and only provides static methods / Kotlin companion object functions*. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. To make life easy from the Kotlin side, it uses typealiases. E.g. a Point is a DoubleArray of two coordinates, like in GeoJson. This keeps the function signatures a bit more readable while not adding actual classes. 
+The algorithms in this library don't require using such objects and instead work directly on arrays of points. This makes it easy to integrate whatever framework you have for representing shapes with geogeometry. To make life easy from the Kotlin side and make the code more readable, it uses type-aliases and extension functions and properties. E.g. a Point is a DoubleArray of two coordinates that has a latitude and longitude property. This keeps the function signatures a bit more readable while not adding actual classes. 
 
 Using only simple arrays and functions makes it easy to port the code to different languages. For example, checkout my partial port for [javascript](https://github.com/jillesvangurp/geotools-js) and [php](https://github.com/jillesvangurp/geotools-php). These implementations are a little behind the java implementation because I don't actively use them currently. Not creating insane amounts of point objects helps keep things fast as well and can save a ton of memory.
 
-**Update June 2019** The recent port to Kotlin of enables use in native projects, javascript, WASM android and backend Java projects and pretty much any platform the Kotlin compiler is able to target.
+The port to Kotlin of enables use with all of Kotlin's compilers as the only dependency of this project is the Kotlin stdlib. This means you should be able to use this with the native compiler on e.g. IOS or WASM. You should also be able to use kotlin-js to access the functionality in a browser or on node.js. And of course the jvm compiler is fully supported.
 
 ## Geohashes
 
@@ -27,7 +27,7 @@ Geohashes are super useful if you are building e.g. search engines. Though if yo
 
 ## Name
 
-Note. Geogeometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
+Note. GeoGeometry was formerly known as geotools. I renamed the project because the name was already in use by geotools.org, which predates this project and on top of that delivers very similar functionality for Java. 
 
 # Features
 
@@ -51,6 +51,8 @@ Note. Geogeometry was formerly known as geotools. I renamed the project because 
     * find out neighboring geohashes east, west, south, or north of a geohash
     * get the 32 sub geo hashes for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
     * cover lines, paths, polygons, or circles with geo hashes
+
+* geojson.kt file with type aliases and model classes that allow you to work with geojson content.
 
 # Move from Java to Kotlin
 
