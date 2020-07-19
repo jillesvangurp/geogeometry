@@ -26,7 +26,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("stdlib-common"))
             }
-
         }
 
         js() {
@@ -39,13 +38,12 @@ kotlin {
                     implementation(kotlin("stdlib-js"))
                 }
             }
+            nodejs {
+
+            }
         }
         // JVM-specific tests and their dependencies:
         jvm() {
-            // this.mavenPublication {
-            //     groupId = artifactGroup
-            //     artifactId = project.name
-            // }
             val main by compilations.getting {
                 this.kotlinOptions {
                     jvmTarget = "1.8"
