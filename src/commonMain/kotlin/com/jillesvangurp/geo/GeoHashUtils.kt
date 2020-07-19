@@ -90,7 +90,7 @@ class GeoHashUtils {
          * @param length length in characters (1 to 12)
          * @return geo hash of the specified length. The minimum length is 1 and the maximum length is 12.
          */
-        @JvmStatic
+
         fun encode(latitude: Double, longitude: Double, length: Int = DEFAULT_GEO_HASH_LENGTH): String {
             if (length < 1 || length > 12) {
                 throw IllegalArgumentException("length must be between 1 and 12")
@@ -141,7 +141,7 @@ class GeoHashUtils {
          * @param pointCoordinates point
          * @return geohash
          */
-        @JvmStatic
+
         fun encode(pointCoordinates: PointCoordinates): String {
             return encode(pointCoordinates.latitude, pointCoordinates.longitude, DEFAULT_GEO_HASH_LENGTH)
         }
@@ -151,7 +151,7 @@ class GeoHashUtils {
          * @return double array representing the bounding box for the geoHash of [south latitude, north latitude, west
          * longitude, east longitude]
          */
-        @JvmStatic
+
         fun decodeBbox(geoHash: String): DoubleArray {
             var south = -90.0
             var north = 90.0
@@ -199,7 +199,7 @@ class GeoHashUtils {
          * @param geoHash valid geo hash
          * @return a coordinate representing the center of the geohash as a double array of [longitude,latitude]
          */
-        @JvmStatic
+
         fun decode(geoHash: String): PointCoordinates {
             val bbox = decodeBbox(geoHash)
 
@@ -213,7 +213,7 @@ class GeoHashUtils {
          * @param geoHash geohash
          * @return the geo hash of the same length directly south of the bounding box.
          */
-        @JvmStatic
+
         fun south(geoHash: String): String {
             val bbox = decodeBbox(geoHash)
             val latDiff = bbox.northLatitude - bbox.southLatitude
@@ -226,7 +226,7 @@ class GeoHashUtils {
          * @param geoHash geohash
          * @return the geo hash of the same length directly north of the bounding box.
          */
-        @JvmStatic
+
         fun north(geoHash: String): String {
             val bbox = decodeBbox(geoHash)
             val latDiff = bbox.northLatitude - bbox.southLatitude
@@ -239,7 +239,7 @@ class GeoHashUtils {
          * @param geoHash geohash
          * @return the geo hash of the same length directly west of the bounding box.
          */
-        @JvmStatic
+
         fun west(geoHash: String): String {
             val bbox = decodeBbox(geoHash)
             val lonDiff = bbox.eastLongitude - bbox.westLongitude
@@ -259,7 +259,7 @@ class GeoHashUtils {
          * @param geoHash geohash
          * @return the geo hash of the same length directly east of the bounding box.
          */
-        @JvmStatic
+
         fun east(geoHash: String): String {
             val bbox = decodeBbox(geoHash)
             val lonDiff = bbox.eastLongitude - bbox.westLongitude
@@ -282,7 +282,7 @@ class GeoHashUtils {
          * @param longitude longitude
          * @return true if the coordinate is contained by the bounding box for this geo hash
          */
-        @JvmStatic
+
         fun contains(geoHash: String, latitude: Double, longitude: Double): Boolean {
             return GeoGeometry.bboxContains(decodeBbox(geoHash), latitude, longitude)
         }
@@ -338,7 +338,7 @@ class GeoHashUtils {
          * @return String array with the geo hashes.
          */
 
-        @JvmStatic
+
         fun subHashes(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -351,7 +351,7 @@ class GeoHashUtils {
          * @param geoHash geo hash
          * @return the 16 northern sub hashes of the geo hash
          */
-        @JvmStatic
+
         fun subHashesNorth(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -366,7 +366,7 @@ class GeoHashUtils {
          * @param geoHash geo hash
          * @return the 16 southern sub hashes of the geo hash
          */
-        @JvmStatic
+
         fun subHashesSouth(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -381,7 +381,7 @@ class GeoHashUtils {
          * @param geoHash geo hash
          * @return the 8 north-west sub hashes of the geo hash
          */
-        @JvmStatic
+
         fun subHashesNorthWest(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -396,7 +396,7 @@ class GeoHashUtils {
          * @param geoHash geo hash
          * @return the 8 north-east sub hashes of the geo hash
          */
-        @JvmStatic
+
         fun subHashesNorthEast(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -411,7 +411,7 @@ class GeoHashUtils {
          * @param geoHash geo hash
          * @return the 8 south-west sub hashes of the geo hash
          */
-        @JvmStatic
+
         fun subHashesSouthWest(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -426,7 +426,7 @@ class GeoHashUtils {
          * @param geoHash geo hash
          * @return the 8 south-east sub hashes of the geo hash
          */
-        @JvmStatic
+
         fun subHashesSouthEast(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
             for (c in BASE32_CHARS) {
@@ -455,7 +455,6 @@ class GeoHashUtils {
          * @return a set of geo hashes that cover the polygon area.
          */
         @Suppress("UNCHECKED_CAST")
-        @JvmStatic
         fun geoHashesForPolygon(vararg polygonPoints: PointCoordinates): Set<String> {
             val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
             // first lets figure out an appropriate geohash length
@@ -467,10 +466,9 @@ class GeoHashUtils {
             return geoHashesForPolygon(hashLength + 2, *polygonPoints)
         }
 
-        @JvmStatic
-        fun geoHashesForPolygon(coordinates: PolygonCoordinates, maxHashLength: Int): Set<String> {
-            val hashesForPoly =
-                geoHashesForPolygon(*coordinates[0] ?: throw IllegalArgumentException("expected a linering"))
+
+        fun geoHashesForPolygon(coordinates: PolygonCoordinates): Set<String> {
+            val hashesForPoly = geoHashesForPolygon(*coordinates[0])
             // TODO implement removal of hole hashes?
             return hashesForPoly
         }
@@ -496,7 +494,7 @@ class GeoHashUtils {
          * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
          * @return a set of geo hashes that cover the polygon area.
          */
-        @JvmStatic
+
         fun geoHashesForPolygon(maxLength: Int, vararg outerPolygonLinearRing: PointCoordinates): Set<String> {
             for (point in outerPolygonLinearRing) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
@@ -581,7 +579,7 @@ class GeoHashUtils {
          * @param l2 longitude
          * @return true if l1 is west of l2
          */
-        @JvmStatic
+
         fun isWest(l1: Double, l2: Double): Boolean {
             val ll1 = l1 + 180
             val ll2 = l2 + 180
@@ -596,7 +594,7 @@ class GeoHashUtils {
          * @param l2 longitude
          * @return true if l1 is east of l2
          */
-        @JvmStatic
+
         fun isEast(l1: Double, l2: Double): Boolean {
             val ll1 = l1 + 180
             val ll2 = l2 + 180
@@ -611,7 +609,7 @@ class GeoHashUtils {
          * @param l2 latitude
          * @return true if l1 is north of l2
          */
-        @JvmStatic
+
         fun isNorth(l1: Double, l2: Double): Boolean {
             return l1 > l2
         }
@@ -621,7 +619,7 @@ class GeoHashUtils {
          * @param l2 latitude
          * @return true if l1 is south of l2
          */
-        @JvmStatic
+
         fun isSouth(l1: Double, l2: Double): Boolean {
             return l1 < l2
         }
@@ -730,7 +728,7 @@ class GeoHashUtils {
          * @param wayPoints line string
          * @return set of geo hashes along the path with the specified geo hash length
          */
-        @JvmStatic
+
         fun geoHashesForPath(hashLength: Int, vararg wayPoints: DoubleArray): Set<String> {
             if (wayPoints.size < 2) {
                 throw IllegalArgumentException("must have at least two way points on the path")
@@ -765,7 +763,7 @@ class GeoHashUtils {
          * @param lon2 longitude
          * @return set of geo hashes along the line with the specified geo hash length.
          */
-        @JvmStatic
+
         fun geoHashesForLine(width: Double, lat1: Double, lon1: Double, lat2: Double, lon2: Double): Set<String> {
             if (lat1 == lat2 && lon1 == lon2) {
                 return setOf(encode(lat1, lon1))
@@ -846,7 +844,7 @@ class GeoHashUtils {
          * @param radius radius in meters
          * @return set of geohashes
          */
-        @JvmStatic
+
         fun geoHashesForCircle(length: Int, latitude: Double, longitude: Double, radius: Double): Set<String> {
             // bit of a wet finger approach here: it doesn't make much sense to have
             // lots of segments unless we have a long geohash or a large radius
@@ -870,7 +868,7 @@ class GeoHashUtils {
          * @param longitude longitude
          * @return the largest hash length where the hash bbox has a width less than granularityInMeters.
          */
-        @JvmStatic
+
         fun suitableHashLength(granularityInMeters: Double, latitude: Double, longitude: Double): Int {
             if (granularityInMeters < 5) {
                 return 10

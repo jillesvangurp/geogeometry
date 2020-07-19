@@ -71,7 +71,7 @@ class GeoGeometry {
          * @return bounding box that contains the point as a double array of
          * [lat,lat,lon,lon}
          */
-        @JvmStatic
+
         fun boundingBox(pointCoordinates: PointCoordinates): BoundingBox {
             return doubleArrayOf(pointCoordinates[0], pointCoordinates[1], pointCoordinates[0], pointCoordinates[1])
             // return doubleArrayOf(pointCoordinates[1], pointCoordinates[1], pointCoordinates[0], pointCoordinates[0])
@@ -82,12 +82,12 @@ class GeoGeometry {
          * @return bounding box that contains the lineString as a double array of
          * [minLat,maxLat,minLon,maxLon}
          */
-        @JvmStatic
+
         fun boundingBox(points: MultiPointCoordinates): BoundingBox {
-            var southLat = Integer.MAX_VALUE.toDouble()
-            var westLon = Integer.MAX_VALUE.toDouble()
-            var northLat = Integer.MIN_VALUE.toDouble()
-            var eastLon = Integer.MIN_VALUE.toDouble()
+            var southLat = Int.MAX_VALUE.toDouble()
+            var westLon = Int.MAX_VALUE.toDouble()
+            var northLat = Int.MIN_VALUE.toDouble()
+            var eastLon = Int.MIN_VALUE.toDouble()
 
             for (p in points) {
                 southLat = min(southLat, p.latitude)
@@ -97,7 +97,6 @@ class GeoGeometry {
             }
 
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
-            assert(bbox.isValid())
             return bbox
             // return doubleArrayOf(southLat, northLat, westLon, eastLon)
         }
@@ -107,13 +106,13 @@ class GeoGeometry {
          * @return bounding box that contains the polygon as a double array of
          * [minLat,maxLat,minLon,maxLon}
          */
-        @JvmStatic
-        fun boundingBox(polygonCoordinates: PolygonCoordinates): BoundingBox {
-            var westLon = Integer.MAX_VALUE.toDouble()
-            var southLat = Integer.MAX_VALUE.toDouble()
 
-            var eastLon = Integer.MIN_VALUE.toDouble()
-            var northLat = Integer.MIN_VALUE.toDouble()
+        fun boundingBox(polygonCoordinates: PolygonCoordinates): BoundingBox {
+            var westLon = Int.MAX_VALUE.toDouble()
+            var southLat = Int.MAX_VALUE.toDouble()
+
+            var eastLon = Int.MIN_VALUE.toDouble()
+            var northLat = Int.MIN_VALUE.toDouble()
             for (linearRing in polygonCoordinates) {
                 for (point in linearRing) {
                     westLon = min(westLon, point.longitude)
@@ -124,7 +123,6 @@ class GeoGeometry {
                 }
             }
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
-            assert(bbox.isValid())
             return bbox // return doubleArrayOf(southLat, northLat, westLon, eastLon)
         }
 
@@ -133,12 +131,12 @@ class GeoGeometry {
          * @return bounding box that contains the multiPolygon as a double array of
          * [minLat,maxLat,minLon,maxLon}
          */
-        @JvmStatic
+
         fun boundingBox(multiPolygonCoordinates: MultiPolygonCoordinates): BoundingBox {
-            var southLat = Integer.MAX_VALUE.toDouble()
-            var westLon = Integer.MAX_VALUE.toDouble()
-            var northLat = Integer.MIN_VALUE.toDouble()
-            var eastLon = Integer.MIN_VALUE.toDouble()
+            var southLat = Int.MAX_VALUE.toDouble()
+            var westLon = Int.MAX_VALUE.toDouble()
+            var northLat = Int.MIN_VALUE.toDouble()
+            var eastLon = Int.MIN_VALUE.toDouble()
             for (polygon in multiPolygonCoordinates) {
                 for (linearRing in polygon) {
                     for (point in linearRing) {
@@ -150,7 +148,6 @@ class GeoGeometry {
                 }
             }
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
-            assert(bbox.isValid())
             return bbox // return doubleArrayOf(southLat, northLat, westLon, eastLon)
         }
 
@@ -163,13 +160,12 @@ class GeoGeometry {
          * @param percentage percentage of points to discard
          * @return sorted array of points with the specified percentage of elements at the beginning and end of the array removed.
          */
-        @JvmStatic
+
         fun filterNoiseFromPointCloud(points: MultiPointCoordinates, percentage: Float): MultiPointCoordinates {
 
             points.sortWith(
                 Comparator { p1, p2 ->
                     when {
-                        p1 == null || p2 == null -> throw IllegalArgumentException("Array contains null points")
                         p1[0] == p2[0] -> p1[1].compareTo(p2[1])
                         p1[0] > p2[0] -> 1
                         p1[0] == p2[0] -> 0
@@ -190,7 +186,7 @@ class GeoGeometry {
          * @param longitude longitude
          * @return true if the latitude and longitude are contained in the bbox
          */
-        @JvmStatic
+
         fun bboxContains(bbox: BoundingBox, latitude: Double, longitude: Double): Boolean {
             validate(latitude, longitude, false)
             return bbox.southLatitude <= latitude && latitude <= bbox.northLatitude && bbox.westLongitude <= longitude && longitude <= bbox.eastLongitude
@@ -204,7 +200,7 @@ class GeoGeometry {
          * @param polygonCoordinatesPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
          * @return true if the polygon contains the coordinate
          */
-        @JvmStatic
+
         fun polygonContains(pointCoordinates: PointCoordinates, polygonCoordinatesPoints: PolygonCoordinates): Boolean {
             validate(pointCoordinates)
             return polygonContains(pointCoordinates[1], pointCoordinates[0], *polygonCoordinatesPoints[0])
@@ -219,7 +215,7 @@ class GeoGeometry {
          * @param polygonCoordinatesPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
          * @return true if the polygon contains the coordinate
          */
-        @JvmStatic
+
         fun polygonContains(latitude: Double, longitude: Double, polygonCoordinatesPoints: PolygonCoordinates): Boolean {
             validate(latitude, longitude, false)
             return polygonContains(latitude, longitude, *polygonCoordinatesPoints[0])
@@ -236,7 +232,7 @@ class GeoGeometry {
          * [longitude,latitude]
          * @return true if the polygon contains the coordinate
          */
-        @JvmStatic
+
         fun polygonContains(latitude: Double, longitude: Double, vararg polygonPoints: PointCoordinates): Boolean {
             validate(latitude, longitude, false)
 
@@ -343,7 +339,7 @@ class GeoGeometry {
          * @param decimals the number of desired decimals after the .
          * @return d rounded to the specified precision
          */
-        @JvmStatic
+
         fun roundToDecimals(d: Double, decimals: Int): Double {
             if (decimals > 17) {
                 throw IllegalArgumentException("this probably doesn't do what you want; makes sense only for <= 17 decimals")
@@ -352,7 +348,7 @@ class GeoGeometry {
             return (d * factor).roundToLong() / factor
         }
 
-        @JvmStatic
+
         fun linesCross(l1p1: PointCoordinates, l1p2: PointCoordinates, l2p1: PointCoordinates, l2p2: PointCoordinates): Boolean {
             return linesCross(l1p1.longitude, l1p1.latitude, l1p2.longitude, l1p2.latitude, l2p1.longitude, l2p1.latitude, l2p2.longitude, l2p2.latitude)
         }
@@ -369,7 +365,7 @@ class GeoGeometry {
          * @param v2 double
          * @return true if they cross each other
          */
-        @JvmStatic
+
         fun linesCross(
             x1: Double,
             y1: Double,
@@ -466,7 +462,7 @@ class GeoGeometry {
          * @param meters distance in meters that the point should be translated
          * @return the translated coordinate.
          */
-        @JvmStatic
+
         fun translateLongitude(latitude: Double, longitude: Double, meters: Double): PointCoordinates {
             validate(latitude, longitude, false)
             return doubleArrayOf(
@@ -485,7 +481,7 @@ class GeoGeometry {
          * @param meters distance in meters that the point should be translated
          * @return the translated coordinate.
          */
-        @JvmStatic
+
         fun translateLatitude(latitude: Double, longitude: Double, meters: Double): PointCoordinates {
             return doubleArrayOf(longitude, roundToDecimals(latitude + meters / DEGREE_LATITUDE_METERS, 6))
         }
@@ -501,7 +497,7 @@ class GeoGeometry {
          * @param longitudalMeters distance in meters that the point should be translated along the longitude
          * @return the translated coordinate.
          */
-        @JvmStatic
+
         fun translate(
             latitude: Double,
             longitude: Double,
@@ -521,7 +517,7 @@ class GeoGeometry {
          * @param longitudalMeters distance in meters that the point should be translated along the longitude
          * @return [maxlat,minlat,maxlon,minlon]
          */
-        @JvmStatic
+
         fun bbox(latitude: Double, longitude: Double, latitudalMeters: Double, longitudalMeters: Double): DoubleArray {
             validate(latitude, longitude, false)
 
@@ -540,7 +536,7 @@ class GeoGeometry {
         /**
          * Kotlin math seems to not have this unlike Java  But it is easily replicated like this
          */
-        @JvmStatic
+
         fun toRadians(degrees: Double): Double {
             return degrees * DEGREES_TO_RADIANS
         }
@@ -564,7 +560,7 @@ class GeoGeometry {
          * the longitude in decimal degrees
          * @return the distance in meters
          */
-        @JvmStatic
+
         fun distance(lat1: Double, long1: Double, lat2: Double, long2: Double): Double {
             validate(lat1, long1, false)
             validate(lat2, long2, false)
@@ -594,7 +590,7 @@ class GeoGeometry {
          * [latitude, longitude]
          * @return the distance in meters
          */
-        @JvmStatic
+
         fun distance(p1: PointCoordinates, p2: PointCoordinates): Double {
             return distance(p1[1], p1[0], p2[1], p2[0])
         }
@@ -609,7 +605,7 @@ class GeoGeometry {
          * @param y double
          * @return the distance of the point to the line
          */
-        @JvmStatic
+
         fun distance(x1: Double, y1: Double, x2: Double, y2: Double, x: Double, y: Double): Double {
             validate(x1, y1, false)
             validate(x2, y2, false)
@@ -667,7 +663,7 @@ class GeoGeometry {
          * @param p point
          * @return the distance of the point to the line
          */
-        @JvmStatic
+
         fun distance(l1: PointCoordinates, l2: PointCoordinates, p: PointCoordinates): Double {
             return distance(l1[1], l1[0], l2[1], l2[0], p[1], p[0])
         }
@@ -677,12 +673,12 @@ class GeoGeometry {
          * @param lineStringCoordinates linestring
          * @return the distance of the point to the line
          */
-        @JvmStatic
+
         fun distanceToLineString(pointCoordinates: PointCoordinates, lineStringCoordinates: LineStringCoordinates): Double {
             if (lineStringCoordinates.size < 2) {
                 throw IllegalArgumentException("not enough segments in line")
             }
-            var minDistance = java.lang.Double.MAX_VALUE
+            var minDistance = Double.MAX_VALUE
             var last = lineStringCoordinates[0]
             for (i in 1 until lineStringCoordinates.size) {
                 val current = lineStringCoordinates[i]
@@ -698,7 +694,7 @@ class GeoGeometry {
          * @param polygon 2d linestring that is a polygon
          * @return distance to polygon
          */
-        @JvmStatic
+
         fun distanceToPolygon(pointCoordinates: PointCoordinates, polygon: LinearRingCoordinates): Double {
             if (polygon.size < 3) {
                 throw IllegalArgumentException("not enough segments in polygon")
@@ -713,7 +709,7 @@ class GeoGeometry {
          * @param polygonCoordinates polygon
          * @return distance to polygon
          */
-        @JvmStatic
+
         fun distanceToPolygon(pointCoordinates: PointCoordinates, polygonCoordinates: PolygonCoordinates): Double {
             if (polygonCoordinates.isEmpty()) {
                 throw IllegalArgumentException("empty polygon")
@@ -726,9 +722,9 @@ class GeoGeometry {
          * @param multiPolygon multi polygon
          * @return distance to the nearest of the polygons in the multipolygon
          */
-        @JvmStatic
+
         fun distanceToMultiPolygon(point: DoubleArray, multiPolygon: Array<Array<Array<DoubleArray>>>): Double {
-            var distance = java.lang.Double.MAX_VALUE
+            var distance = Double.MAX_VALUE
             for (polygon in multiPolygon) {
                 distance = min(distance, distanceToPolygon(point, polygon))
             }
@@ -747,7 +743,7 @@ class GeoGeometry {
          * [longitude,latitude]
          * @return the average longitude and latitude an array.
          */
-        @JvmStatic
+
         fun polygonCenter(vararg polygonPoints: DoubleArray): DoubleArray {
             var cumLon = 0.0
             var cumLat = 0.0
@@ -786,7 +782,7 @@ class GeoGeometry {
          * @param radius radius of the circle
          * @return a linestring polygon
          */
-        @JvmStatic
+
         fun circle2polygon(segments: Int, latitude: Double, longitude: Double, radius: Double): PolygonCoordinates {
             validate(latitude, longitude, false)
 
@@ -844,7 +840,7 @@ class GeoGeometry {
          * @param right a 2d array representing a polygon
          * @return true if the two polygons overlap. Important: this only works for simple convex polygons. Overlap for concave polygons is more complicated.
          */
-        @JvmStatic
+
         fun overlap(left: LinearRingCoordinates, right: LinearRingCoordinates): Boolean {
             val point1 = polygonCenter(*right)
             if (polygonContains(point1[1], point1[0], *left)) {
@@ -874,7 +870,7 @@ class GeoGeometry {
          * @param containedPolygon linestring polygon
          * @return true if the containing polygon fully contains the contained polygon. Important: this only works for simple convex polygons. Contains for concave polygons is more complicated. https://en.wikipedia.org/wiki/Point_in_polygon
          */
-        @JvmStatic
+
         fun contains(containingPolygon: LinearRingCoordinates, containedPolygon: LinearRingCoordinates): Boolean {
             for (p in containedPolygon) {
                 if (!polygonContains(p[1], p[0], *containingPolygon)) {
@@ -895,7 +891,7 @@ class GeoGeometry {
          * @param points linestring polygon
          * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
          */
-        @JvmStatic
+
         fun expandPolygon(meters: Int, points: LinearRingCoordinates): LinearRingCoordinates {
             val expanded = Array(points.size * 8) { DoubleArray(0) }
             for (i in points.indices) {
@@ -922,16 +918,16 @@ class GeoGeometry {
          * @param points linestring polygon
          * @return a convex polygon for the points
          */
-        @JvmStatic
+
         fun polygonForPoints(points: MultiPointCoordinates): LinearRingCoordinates {
             if (points.size < 3) {
                 throw IllegalStateException("need at least 3 pois for a polygon")
             }
-            val sorted = points.clone()
+
+            val sorted = points.copyOf()
             sorted.sortWith(
                 Comparator { p1, p2 ->
                     when {
-                        p1 == null || p2 == null -> throw IllegalArgumentException("Points array contains null")
                         p1[0] == p2[0] -> p1[1].compareTo(p2[1])
                         else -> p1[0].compareTo(p2[0])
                     }
@@ -1009,7 +1005,7 @@ class GeoGeometry {
          * @param c point
          * @return true if b is right of the line defined by a and c
          */
-        @JvmStatic
+
         fun rightTurn(a: PointCoordinates, b: PointCoordinates, c: PointCoordinates): Boolean {
             return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0
         }
@@ -1023,7 +1019,7 @@ class GeoGeometry {
          * @param seconds seconds
          * @return decimal degree
          */
-        @JvmStatic
+
         fun toDecimalDegree(direction: String?, degrees: Double, minutes: Double, seconds: Double): Double {
             var factor = 1
             if (direction != null) {
@@ -1039,7 +1035,7 @@ class GeoGeometry {
          * @param point point
          * @return a json representation of the point
          */
-        @JvmStatic
+
         fun toJson(point: DoubleArray): String {
             return if (point.size == 0) {
                 "[]"
@@ -1052,7 +1048,7 @@ class GeoGeometry {
          * @param points linestring
          * @return a json representation of the points
          */
-        @JvmStatic
+
         fun toJson(points: Array<DoubleArray>): String {
             val buf = StringBuilder("[")
             for (i in points.indices) {
@@ -1069,7 +1065,7 @@ class GeoGeometry {
          * @param points polygon
          * @return a json representation of the points
          */
-        @JvmStatic
+
         fun toJson(points: Array<Array<DoubleArray>>): String {
             val buf = StringBuilder("[")
             for (i in points.indices) {
@@ -1086,7 +1082,7 @@ class GeoGeometry {
          * @param points multipolygon
          * @return a json representation of the points
          */
-        @JvmStatic
+
         fun toJson(points: Array<Array<Array<DoubleArray>>>): String {
             val buf = StringBuilder("[")
             for (i in points.indices) {
@@ -1107,7 +1103,7 @@ class GeoGeometry {
          * @param strict if false, it will allow for small rounding errors. If true, it will not.
          * @throws IllegalArgumentException if the lat or lon is out of the allowed range.
          */
-        @JvmStatic
+
         fun validate(latitude: Double, longitude: Double, strict: Boolean = false) {
             var roundedLat = latitude
             var roundedLon = longitude
@@ -1127,7 +1123,7 @@ class GeoGeometry {
         /**
          * @param pointCoordinates point
          */
-        @JvmStatic
+
         fun validate(pointCoordinates: PointCoordinates) {
             validate(pointCoordinates[1], pointCoordinates[0], false)
         }
@@ -1139,7 +1135,7 @@ class GeoGeometry {
          * @param polygon linestring
          * @return approximate area.
          */
-        @JvmStatic
+
         fun area(polygon: LinearRingCoordinates): Double {
             if (polygon.size <= 3) throw IllegalArgumentException("polygon should have at least three elements")
 
@@ -1170,12 +1166,11 @@ class GeoGeometry {
          * @param bbox bounding box of [lat,lat,lon,lon]
          * @return the area of the bounding box
          */
-        @JvmStatic
+
         fun area(bbox: BoundingBox): Double {
             if (bbox.size != 4) {
                 throw IllegalArgumentException("Boundingbox should be array of [minLat, maxLat, minLon, maxLon]")
             }
-            assert(bbox.isValid())
             val latDist = distance(bbox.southLatitude, bbox.westLongitude, bbox.northLatitude, bbox.westLongitude)
             val lonDist = distance(bbox.northLatitude, bbox.westLongitude, bbox.northLatitude, bbox.eastLongitude)
             return latDist * lonDist
@@ -1188,7 +1183,7 @@ class GeoGeometry {
          * @param polygonCoordinates polygon
          * @return area covered by the outer polygon
          */
-        @JvmStatic
+
         fun area(polygonCoordinates: PolygonCoordinates): Double {
             if (polygonCoordinates.isEmpty()) throw IllegalArgumentException("array should not be empty")
             var area = area(polygonCoordinates[0])
@@ -1204,7 +1199,7 @@ class GeoGeometry {
          * @param multiPolygonCoordinates geojson style multi polygon
          * @return area of the outer polygons
          */
-        @JvmStatic
+
         fun area(multiPolygonCoordinates: MultiPolygonCoordinates): Double {
             var area = 0.0
             for (doubles in multiPolygonCoordinates) {
@@ -1217,7 +1212,7 @@ class GeoGeometry {
          * @param p point
          * @return "(longitude,latitude)"
          */
-        @JvmStatic
+
         fun pointToString(p: PointCoordinates): String {
             return "(" + p[0] + "," + p[1] + ")"
         }
@@ -1226,14 +1221,13 @@ class GeoGeometry {
          * @param lineCoordinates line
          * @return "(x1,y1),(x2,y2),..."
          */
-        @JvmStatic
+
         fun lineToString(lineCoordinates: LineStringCoordinates): String {
             val buf = StringBuilder()
             for (p in lineCoordinates) {
                 buf.append(pointToString(p)).append(",")
             }
-            buf.setLength(buf.length - 1)
-            return buf.toString()
+            return buf.toString().substring(0, buf.length-1)
         }
 
         /**
@@ -1246,7 +1240,7 @@ class GeoGeometry {
          * @param tolerance tolerance in meters
          * @return a simpler multi polygon
          */
-        @JvmStatic
+
         fun simplifyMultiPolygon(
             points: MultiPolygonCoordinates,
             tolerance: Double
@@ -1269,7 +1263,7 @@ class GeoGeometry {
          * @param tolerance tolerance in meters
          * @return a simpler polygon
          */
-        @JvmStatic
+
         fun simplifyPolygon(points: PolygonCoordinates, tolerance: Double): PolygonCoordinates {
             val result = Array(points.size) { Array(0) { DoubleArray(0) } }
             var i = 0
@@ -1289,7 +1283,7 @@ class GeoGeometry {
          * @param tolerance tolerance in meters
          * @return a simpler line
          */
-        @JvmStatic
+
         fun simplifyLine(points: LinearRingCoordinates, tolerance: Double): LinearRingCoordinates {
             var dmax = 0.0
             var index = 0

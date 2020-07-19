@@ -78,7 +78,8 @@ data class Feature(val geometry: Geometry?, val properties: Map<String, Any?>? =
     val type = "Feature"
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as Feature
 
@@ -105,7 +106,8 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
     val type: String = "FeatureCollection"
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as FeatureCollection
 
@@ -127,11 +129,11 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
     }
 
     companion object {
-        @JvmStatic
+
         fun fromGeoHashes(hashes: Iterable<String>) =
             FeatureCollection(hashes.map { GeoHashUtils.decodeBbox(it).polygon() }.toList().map { it.asFeature() })
 
-        @JvmStatic
+
         fun of(vararg features: Feature) = FeatureCollection(features.toList())
     }
 }
@@ -146,7 +148,8 @@ data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingB
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as PointGeometry
 
@@ -169,10 +172,10 @@ data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingB
     }
 
     companion object {
-        @JvmStatic
+
         fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
 
-        @JvmStatic
+
         fun of(lon: Double, lat: Double) = PointGeometry(doubleArrayOf(lon, lat))
     }
 }
@@ -181,7 +184,8 @@ data class MultiPointGeometry(val coordinates: MultiPointCoordinates?, val bbox:
     override val type = GeometryType.MultiPoint
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as MultiPointGeometry
 
@@ -209,7 +213,8 @@ data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, va
     override val type = GeometryType.LineString
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as LineStringGeometry
 
@@ -237,7 +242,8 @@ data class MultiLineStringGeometry(val coordinates: MultiLineStringCoordinates? 
     override val type = GeometryType.MultiLineString
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as MultiLineStringGeometry
 
@@ -264,7 +270,8 @@ data class PolygonGeometry(val coordinates: PolygonCoordinates? = null, val bbox
     override val type = GeometryType.Polygon
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as PolygonGeometry
 
@@ -292,7 +299,8 @@ data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null
     override val type = GeometryType.MultiPolygon
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as MultiPolygonGeometry
 
@@ -322,7 +330,8 @@ data class GeometryCollection(val geometries: Array<Geometry>, val bbox: Boundin
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if(other == null) return false
+        if (this::class != other::class) return false
 
         other as GeometryCollection
 
