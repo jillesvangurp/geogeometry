@@ -1,5 +1,8 @@
 package com.jillesvangurp.geogeometry
 
+import com.jillesvangurp.geo.FeatureCollection
+import com.jillesvangurp.geo.GeoGeometry.Companion.area
+import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
 import com.jillesvangurp.geo.GeoGeometry.Companion.distance
 import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
 import com.jillesvangurp.geo.GeoHashUtils
@@ -20,6 +23,8 @@ import com.jillesvangurp.geo.GeoHashUtils.Companion.south
 import com.jillesvangurp.geo.GeoHashUtils.Companion.subHashes
 import com.jillesvangurp.geo.GeoHashUtils.Companion.suitableHashLength
 import com.jillesvangurp.geo.GeoHashUtils.Companion.west
+import com.jillesvangurp.geo.PolygonCoordinates
+import com.jillesvangurp.geo.PolygonGeometry
 import com.jillesvangurp.geo.eastLongitude
 import com.jillesvangurp.geo.latitude
 import com.jillesvangurp.geo.longitude
@@ -28,6 +33,7 @@ import com.jillesvangurp.geo.southLatitude
 import com.jillesvangurp.geo.westLongitude
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
@@ -561,5 +567,67 @@ class GeoHashUtilsTest {
             "should be similar$d1 and $d2", Math.abs(d1 - d2),
             Matchers.lessThan(0.0000001)
         )
+    }
+
+    @Test
+    fun `should cover concave polygon with hashes`() {
+        val concavePolygon = """
+      {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              13.402633666992188,
+              52.556785714011625
+            ],
+            [
+              13.402719497680664,
+              52.54713081557263
+            ],
+            [
+              13.41379165649414,
+              52.547078621160054
+            ],
+            [
+              13.413705825805664,
+              52.54968826575346
+            ],
+            [
+              13.405895233154297,
+              52.54927073304618
+            ],
+            [
+              13.40580940246582,
+              52.55459397751005
+            ],
+            [
+              13.413963317871094,
+              52.55433304920524
+            ],
+            [
+              13.413877487182617,
+              52.55683789687965
+            ],
+            [
+              13.402633666992188,
+              52.556785714011625
+            ]
+          ]
+        ]
+      }            
+""".trimIndent()
+
+        val p = gson.fromJson(concavePolygon, PolygonGeometry::class.java)
+        val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0)?: throw IllegalStateException())
+
+
+        // println(gson.toJson(FeatureCollection.fromGeoHashes(hashes)))
+
+        val area = hashes.map { GeoHashUtils.decodeBbox(it) }.map { area(it) }.sum()
+        val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))
+        // it's a concave polygon so the area of the hashes should be much smaller than that of the
+        // bounding box containing the polygon
+        area shouldBeLessThan bboxArea*0.6
+
     }
 }

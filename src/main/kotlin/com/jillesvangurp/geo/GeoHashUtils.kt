@@ -447,7 +447,8 @@ class GeoHashUtils {
          * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
          * geohashes around the edges.
          *
-         * The algorithm works for both convex and concave algorithms.
+         * The algorithm works for both convex and concave algorithms. However, for concave algorithms the suitable hash
+         * size calculation may be wrong. Use the variant of this method that allows you to specify one.
          *
          * @param polygonPoints linestring
          * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
@@ -461,8 +462,19 @@ class GeoHashUtils {
             val diagonalDistance =
                 GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
             val hashLength = suitableHashLength(diagonalDistance, bbox.southLatitude, bbox.eastLongitude)
-            return geoHashesForPolygon(hashLength + 1, *polygonPoints)
+            // using 2 here means we get a lot of hashes back but it reduces the chance of problems
+            // beware of using this with very large polygons
+            return geoHashesForPolygon(hashLength + 2, *polygonPoints)
         }
+
+        @JvmStatic
+        fun geoHashesForPolygon(coordinates: PolygonCoordinates, maxHashLength: Int): Set<String> {
+            val hashesForPoly =
+                geoHashesForPolygon(*coordinates[0] ?: throw IllegalArgumentException("expected a linering"))
+            // TODO implement removal of hole hashes?
+            return hashesForPoly
+        }
+
 
         /**
          * Cover the polygon with geo hashes. Call getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
@@ -474,7 +486,9 @@ class GeoHashUtils {
          * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
          * geohashes around the edges.
          *
-         * The algorithm works for both convex and concave algorithms.
+         * The algorithm works for both convex and concave algorithms. Important: for concave polygons, be sure to
+         * pick a hash size small enough to cover the narrowest part of the polygon. Otherwise, you may parts of the
+         * polygon that are not covered.
          *
          * @param maxLength
          * maximum length of the geoHash; the more you specify, the more expensive it gets
