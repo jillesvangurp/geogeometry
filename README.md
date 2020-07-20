@@ -14,6 +14,8 @@ A geo hash is a representation of a coordinate that interleaves the bit represen
 
 Geohashes are super useful if you are building e.g. search engines. Though if you are, there are better data structures such as Quad Trees or BKD Trees that Elasticsearch uses in more recent versions. 
 
+Here's an example of a [few geohashes rendered on a map](tools/geohashrenderer.html): 
+
 # Features
 
 * GeoGeometry class with methods that allow you to:
@@ -61,18 +63,10 @@ Use the latest jitpack releases:
 
 It's a gradle project. So, checking it out and doing a `gradle build` should do the trick.
 
-Note. this is a kotlin multiplatform build and currently it also produces a javascript build as well as a jvm jar. 
-
-Alternatively, you can exercise your rights under the license and simply copy and adapt as needed. The [license](https://github.com/jillesvangurp/geogeometry/blob/master/LICENSE) allows you to do this and I have no problems with this although I do appreciate attribution.
-
-Should anyone like this licensed differently, please contact me.
-
-# Contribute
-
-If anyone wants to fix stuff just send me a pull request. 
+Note. this is a kotlin multiplatform build and currently it produces a javascript build as well as a jvm jar.  Adding IOS native and other platforms should be straightforward as well. The project has no run time dependencies beyond the standard kotlin library.
 
 # License
 
-Like all my other projects, this project is licensed under the so-called MIT license. However, GeoHashUtils.java was copied and adapted from Apache Lucene and I have retained the Apache License for that file, as required in that license. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
+Like all my other projects, this project is licensed under the so-called MIT license. However, `GeoHashUtils` was copied and adapted from Apache Lucene (a long time ago) and I have retained the Apache License for that file, as required in that license. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
 
 For more details see the [LICENSE](LICENSE) file
