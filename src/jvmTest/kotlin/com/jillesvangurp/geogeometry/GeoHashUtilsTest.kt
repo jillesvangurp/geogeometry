@@ -621,7 +621,7 @@ class GeoHashUtilsTest {
         val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0)?: throw IllegalStateException())
 
 
-        // println(gson.toJson(FeatureCollection.fromGeoHashes(hashes)))
+        println(gson.toJson(FeatureCollection.fromGeoHashes(hashes)))
 
         val area = hashes.map { GeoHashUtils.decodeBbox(it) }.map { area(it) }.sum()
         val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))

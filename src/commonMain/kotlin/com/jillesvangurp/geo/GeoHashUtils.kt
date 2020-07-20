@@ -473,6 +473,11 @@ class GeoHashUtils {
             return hashesForPoly
         }
 
+        fun geoHashesForPolygon(coordinates: MultiPolygonCoordinates): Set<String> {
+            return coordinates.flatMap {
+                geoHashesForPolygon(it)
+            }.toSet()
+        }
 
         /**
          * Cover the polygon with geo hashes. Call getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a

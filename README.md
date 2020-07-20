@@ -14,6 +14,10 @@ A geo hash is a representation of a coordinate that interleaves the bit represen
 
 Geohashes are super useful if you are building e.g. search engines. Though if you are, there are better data structures such as Quad Trees or BKD Trees that Elasticsearch uses in more recent versions. 
 
+Here's a [simple example of the hashes for a concave polygon](http://geojson.io/#id=gist:/jillesvangurp/0e4e13a3c9f118af9c7adecafcd2866f) rendered on a map (courtesy of geojson.io).
+
+
+
 # Features
 
 * GeoGeometry class with methods that allow you to:
