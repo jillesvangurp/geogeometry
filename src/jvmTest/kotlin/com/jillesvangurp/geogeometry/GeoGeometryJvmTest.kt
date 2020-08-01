@@ -25,15 +25,15 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.toDecimalDegree
 import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.Test
 import java.util.Random
 
-class GeoGeometryTest {
+class GeoGeometryJvmTest {
     var sydney = doubleArrayOf(151.206146, -33.872796)
     var buenosaires = doubleArrayOf(-58.380449, -34.602875)
     var newyork = doubleArrayOf(-74.011237, 40.721119)
@@ -922,7 +922,7 @@ class GeoGeometryTest {
                 doubleArrayOf(0.0, 90.000001),
                 doubleArrayOf(0.0, -90.000001)
             ).forEach {
-                assertThrows<IllegalArgumentException> {
+                shouldThrow<IllegalArgumentException> {
                     validate(it)
                 }
             }

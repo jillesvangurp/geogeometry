@@ -38,10 +38,10 @@ import io.kotest.matchers.shouldBe
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import kotlin.math.abs
 
-class GeoHashUtilsTest {
+class GeoHashUtilsJvmTest {
     val coordinatesWithHashes = arrayOf(
         row(0.1, -0.1, "ebpbtdpntc6e"),
         row(52.530888, 13.394904, "u33dbfcyegk2")
@@ -56,31 +56,6 @@ class GeoHashUtilsTest {
         arrayOf(1, 1, 1, 2),
         arrayOf(1, 1, 1, 2)
     )
-
-    @Test
-    fun `decode hash`() {
-        forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
-            val decoded = GeoHashUtils.decode(geoHash)
-            decoded.latitude shouldBeApproximately lat
-            decoded.longitude shouldBeApproximately lon
-        }
-    }
-
-    @Test
-    fun `encode hash`() {
-        forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
-            GeoHashUtils.encode(lat, lon) shouldBe geoHash
-            GeoHashUtils.encode(doubleArrayOf(lon, lat)) shouldBe geoHash
-        }
-    }
-
-    @Test
-    fun `hash bbox should contain coordinate`() {
-        forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
-            GeoHashUtils.contains(geoHash, lat, lon) shouldBe true
-            GeoHashUtils.contains(geoHash, lon, lat) shouldBe false
-        }
-    }
 
     @Test
     fun `decode bbox`() {

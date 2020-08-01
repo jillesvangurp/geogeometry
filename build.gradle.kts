@@ -20,93 +20,89 @@ val slf4jVersion = "1.7.26"
 val junitVersion = "5.6.2"
 
 kotlin {
+    jvm {
+        val main by compilations.getting {
+            kotlinOptions {
+                // Setup the Kotlin compiler options for the 'main' compilation:
+                jvmTarget = "1.8"
+            }
+        }
+        val test by compilations.getting {
+            kotlinOptions {
+                // Setup the Kotlin compiler options for the 'main' compilation:
+                jvmTarget = "1.8"
+            }
+        }
+    }
+    js {
+        browser {
+        }
+    }
 
     sourceSets {
+
         val commonMain by getting {
+                dependencies {
+                    implementation(kotlin("stdlib-common"))
+                }
+            }
+
+        val commonTest by getting {
+                dependencies {
+                    implementation(kotlin("test-common"))
+                    implementation(kotlin("test-annotations-common"))
+                    // yay kotest does multiplatform
+                    implementation("io.kotest:kotest-assertions-core:4.1.3")
+                }
+            }
+
+        val jvmMain by getting {
+
             dependencies {
-                implementation(kotlin("stdlib-common"))
+                implementation(kotlin("stdlib-jdk8"))
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                runtimeOnly("org.junit.jupiter:junit-jupiter:$junitVersion")
+                implementation(kotlin("test-junit"))
+
+                implementation("org.hamcrest:hamcrest-all:1.3")
+
+                // kotlintest runner needs this to enable logging
+                implementation("org.slf4j:slf4j-api:$slf4jVersion")
+                implementation("org.slf4j:jcl-over-slf4j:$slf4jVersion")
+                implementation("org.slf4j:log4j-over-slf4j:$slf4jVersion")
+                implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
+                implementation("ch.qos.logback:logback-classic:1.2.3")
+
+                implementation("com.google.code.gson:gson:2.8.6")
             }
         }
 
-        js() {
-            // this.mavenPublication {
-            //     groupId = artifactGroup
-            //     artifactId = project.name
-            // }
-            val main by compilations.getting {
+        val jsMain by getting {
                 dependencies {
                     implementation(kotlin("stdlib-js"))
                 }
-            }
-            nodejs {
-
-            }
         }
-        // JVM-specific tests and their dependencies:
-        jvm() {
-            val main by compilations.getting {
-                this.kotlinOptions {
-                    jvmTarget = "1.8"
-                }
-                dependencies {
-                    implementation(kotlin("stdlib-jdk8"))
-                }
-            }
-            val test by compilations.getting {
-                this.kotlinOptions {
-                    jvmTarget = "1.8"
-                }
-                dependencies {
-                    implementation("org.junit.jupiter:junit-jupiter:$junitVersion")
-                    implementation("io.kotest:kotest-assertions-core-jvm:4.1.1")
-                    implementation("org.hamcrest:hamcrest-all:1.3")
 
-                    // kotlintest runner needs this to enable logging
-                    implementation("org.slf4j:slf4j-api:$slf4jVersion")
-                    implementation("org.slf4j:jcl-over-slf4j:$slf4jVersion")
-                    implementation("org.slf4j:log4j-over-slf4j:$slf4jVersion")
-                    implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
-                    implementation("ch.qos.logback:logback-classic:1.2.3")
-
-                    implementation("com.google.code.gson:gson:2.8.6")
-                }
+        val jsTest by getting {
+            dependencies {
+                implementation(kotlin("test-js"))
             }
         }
     }
 }
 
-val artifactName = "geogeometry"
-val artifactGroup = "com.github.jillesvangurp"
 
 publishing {
     repositories {
         maven {
-            name="localrepo"
-            url = uri("file://$buildDir/$name")
+            url = uri("file://$buildDir/localRepo")
         }
     }
-    // publications {
-    //
-    //     create<MavenPublication>("lib") {
-    //         groupId = artifactGroup
-    //         artifactId = artifactName
-    //         from(components["jvmMain"])
-    //     }
-    // }
 }
 
 kotlinter {
     ignoreFailures = true
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging.exceptionFormat = TestExceptionFormat.FULL
-    testLogging.events = setOf(
-        TestLogEvent.FAILED,
-        TestLogEvent.PASSED,
-        TestLogEvent.SKIPPED,
-        TestLogEvent.STANDARD_ERROR,
-        TestLogEvent.STANDARD_OUT
-    )
 }
