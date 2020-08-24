@@ -35,7 +35,7 @@ kotlin {
         }
     }
     js {
-        browser {
+        nodejs {
         }
     }
 
