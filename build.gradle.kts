@@ -1,6 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
-
 plugins {
     kotlin("multiplatform") version "1.3.72"
     id("com.github.ben-manes.versions") version "0.28.0" // gradle dependencyUpdates -Drevision=release
@@ -12,8 +9,6 @@ repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
 }
-group = "com.github.jillesvangurp"
-version = "0.1-SNAPSHOT"
 
 val kotlinVersion = "1.3.72"
 val slf4jVersion = "1.7.26"
@@ -98,7 +93,7 @@ kotlin {
 publishing {
     repositories {
         maven {
-            url = uri("file://$buildDir/localRepo")
+            url = uri("file://$projectDir/localRepo")
         }
     }
 }

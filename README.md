@@ -1,5 +1,4 @@
 ![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg)
-[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
 # Introduction
 
@@ -57,9 +56,30 @@ with this approach is that details that are too small, are not covered by hashes
 
 # Get it 
 
-Use the latest jitpack releases:
+This is a kotlin multiplatform distribution with packages for `-jvm` and `-js` (currently). Currently, 
+multiplatform does not work with `jitpack.io` which I use on other projects. Older versions are still 
+available on [jitpack](https://jitpack.io/#jillesvangurp/geogeometry/v3.1.1). If you are interested,
+there's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
 
-[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
+So, as a workaround, I currently distribute jars via my website. To add the repository, add something 
+like this to your `build.gradle.kts` file:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven { url = uri("https://www.jillesvangurp.com/maven") }
+}
+```
+
+and then add the dependency:
+
+```kotlin
+implementation("com.github.jillesvangurp:geogeometry:3.1.5")
+```
+
+For older versions of gradle you may have to specify a postfix `-jvm` or `-js`. Supposedly recent versions are smarter about figuring out multiplatform.
+
+Let me know if you have issues accessing.
 
 # Building from source
 
