@@ -23,7 +23,7 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
     - Calculate the area of a polygon
     - Simplify polygons using the *Douglas Peucker*- algorithm. Sometimes polygons can be very detailed, which makes handling them very CPU/memory intensive. E.g. some polygons for New Zealand are more than 200MB.
     - check bounding box containment for a point
-    - check *polygon containment- for a point
+    - check *polygon containment* for a point
     - get the center for a polygon
     - get bounding box for a polygon
     - convert a *circle to a polygon*
