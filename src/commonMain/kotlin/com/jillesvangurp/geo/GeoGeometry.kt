@@ -21,16 +21,7 @@
  */
 package com.jillesvangurp.geo
 
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.asin
-import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.roundToLong
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 /**
  * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
@@ -64,7 +55,8 @@ class GeoGeometry {
         const val EARTH_RADIUS_METERS = 6371000.0
         const val EARTH_CIRCUMFERENCE_METERS = EARTH_RADIUS_METERS * PI * 2.0
         const val DEGREE_LATITUDE_METERS = EARTH_RADIUS_METERS * PI / 180.0
-        const val DEGREES_TO_RADIANS = 2 * PI / 360
+        const val DEGREES_TO_RADIANS = 2.0 * PI / 360.0
+        const val RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
 
         /**
          * @param pointCoordinates point
@@ -1029,6 +1021,35 @@ class GeoGeometry {
                 }
             }
             return (degrees + minutes / 60 + seconds / 60.0 / 60.0) * factor
+        }
+
+        private fun mod(x: Double, m: Double): Double {
+            return (x % m + m) % m
+        }
+
+        fun wrap(n: Double, min: Double, max: Double): Double {
+            return if (n >= min && n < max) n else mod(n - min, max - min) + min
+        }
+
+        /**
+         * Returns the heading from one LatLng to another LatLng. Headings are
+         * expressed in degrees clockwise from North within the range [-180,180).
+         *
+         * @see https://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
+         *
+         * @return The heading in degrees clockwise from north.
+         */
+        fun headingFromTwoPoints(from: PointCoordinates, to: PointCoordinates): Double {
+            val fromLat = toRadians(from.latitude)
+            val fromLng = toRadians(from.longitude)
+            val toLat = toRadians(to.latitude)
+            val toLng = toRadians(to.longitude)
+            val dLng = toLng - fromLng
+            val heading = atan2(
+                sin(dLng) * cos(toLat),
+                cos(fromLat) * sin(toLat) - sin(fromLat) * cos(toLat) * cos(dLng)
+            )
+            return wrap(RADIANS_TO_DEGREES * heading , -180.0, 180.0)
         }
 
         /**
