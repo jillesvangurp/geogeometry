@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.jillesvangurp.geo
 
 import kotlin.math.*
@@ -1058,7 +1060,7 @@ class GeoGeometry {
          */
 
         fun toJson(point: DoubleArray): String {
-            return if (point.size == 0) {
+            return if (point.isEmpty()) {
                 "[]"
             } else {
                 "[" + point[0] + ','.toString() + point[1] + "]"

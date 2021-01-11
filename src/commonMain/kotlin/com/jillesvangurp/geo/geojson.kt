@@ -145,14 +145,25 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
  *
  * Note, the names are camel case in the spec and the enum name matches that.
  */
-enum class GeometryType(val geometryClass: KClass<*>) {
-    Point(PointGeometry::class),
-    MultiPoint(MultiPointGeometry::class),
-    LineString(LineStringGeometry::class),
-    MultiLineString(MultiLineStringGeometry::class),
-    Polygon(PolygonGeometry::class),
-    MultiPolygon(MultiPolygonGeometry::class),
-    GeometryCollection(GeometryCollection::class);
+enum class GeometryType() {
+
+    Point,
+    MultiPoint,
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    GeometryCollection;
+
+    fun clazz() : KClass<*> = when(this) {
+        Point -> PointGeometry::class
+        MultiPoint -> MultiPointGeometry::class
+        LineString -> LineStringGeometry::class
+        MultiLineString -> MultiLineStringGeometry::class
+        Polygon -> PolygonGeometry::class
+        MultiPolygon -> MultiPolygonGeometry::class
+        GeometryCollection -> GeometryCollection::class
+    }
 }
 
 data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
