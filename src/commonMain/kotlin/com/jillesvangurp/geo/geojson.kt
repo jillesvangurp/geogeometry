@@ -2,6 +2,8 @@
 
 package com.jillesvangurp.geo
 
+import kotlin.reflect.KClass
+
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
  */
@@ -138,8 +140,19 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
     }
 }
 
-enum class GeometryType {
-    Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection
+/**
+ * Enum with all the types of geometries in https://tools.ietf.org/html/rfc7946#section-3.1.1
+ *
+ * Note, the names are camel case in the spec and the enum name matches that.
+ */
+enum class GeometryType(val geometryClass: KClass<*>) {
+    Point(PointGeometry::class),
+    MultiPoint(MultiPointGeometry::class),
+    LineString(LineStringGeometry::class),
+    MultiLineString(MultiLineStringGeometry::class),
+    Polygon(PolygonGeometry::class),
+    MultiPolygon(MultiPolygonGeometry::class),
+    GeometryCollection(GeometryCollection::class);
 }
 
 data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
