@@ -27,6 +27,8 @@ and then add the dependency:
 implementation("com.github.jillesvangurp:geogeometry:3.1.6")
 ```
 
+Alternatively feel free to lift code that you need in your own project; just make sure to respect copyright & [licensing (MIT & Apache 2.0)](LICENSE).
+
 # History of this project
 
 I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users. At this point, the library is a multiplatform Kotlin project. This means it can be compiled to Jvm, Javascript, and native (not currently tested).
