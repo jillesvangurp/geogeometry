@@ -1,11 +1,10 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.FeatureCollection
+import com.jillesvangurp.geo.*
 import com.jillesvangurp.geo.GeoGeometry.Companion.area
 import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
 import com.jillesvangurp.geo.GeoGeometry.Companion.distance
 import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
-import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geo.GeoHashUtils.Companion.contains
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decode
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decodeBbox
@@ -23,18 +22,11 @@ import com.jillesvangurp.geo.GeoHashUtils.Companion.south
 import com.jillesvangurp.geo.GeoHashUtils.Companion.subHashes
 import com.jillesvangurp.geo.GeoHashUtils.Companion.suitableHashLength
 import com.jillesvangurp.geo.GeoHashUtils.Companion.west
-import com.jillesvangurp.geo.PolygonCoordinates
-import com.jillesvangurp.geo.PolygonGeometry
-import com.jillesvangurp.geo.eastLongitude
-import com.jillesvangurp.geo.latitude
-import com.jillesvangurp.geo.longitude
-import com.jillesvangurp.geo.northLatitude
-import com.jillesvangurp.geo.southLatitude
-import com.jillesvangurp.geo.westLongitude
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.Json
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -42,6 +34,7 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GeoHashUtilsJvmTest {
+    val json = Json {}
     val coordinatesWithHashes = arrayOf(
         row(0.1, -0.1, "ebpbtdpntc6e"),
         row(52.530888, 13.394904, "u33dbfcyegk2")
@@ -591,12 +584,11 @@ class GeoHashUtilsJvmTest {
         ]
       }            
 """.trimIndent()
+        val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.PolygonGeometry
+        val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0) ?: throw IllegalStateException())
 
-        val p = gson.fromJson(concavePolygon, PolygonGeometry::class.java)
-        val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0)?: throw IllegalStateException())
 
-
-        println(gson.toJson(FeatureCollection.fromGeoHashes(hashes)))
+        println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
 
         val area = hashes.map { GeoHashUtils.decodeBbox(it) }.map { area(it) }.sum()
         val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))

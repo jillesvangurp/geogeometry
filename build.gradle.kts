@@ -1,6 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "1.4.20"
-    kotlin("plugin.serialization") version "1.4.20"
+    kotlin("multiplatform") version "1.4.21"
+    kotlin("plugin.serialization") version "1.4.21"
     id("com.github.ben-manes.versions") version "0.28.0" // gradle dependencyUpdates -Drevision=release
     id("org.jmailen.kotlinter") version "2.4.1"
     `maven-publish`
@@ -53,12 +53,11 @@ kotlin {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
                     // yay kotest does multiplatform
-                    implementation("io.kotest:kotest-assertions-core:4.1.3")
+                    implementation("io.kotest:kotest-assertions-core:4.3.2")
                 }
             }
 
         val jvmMain by getting {
-
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
@@ -77,8 +76,6 @@ kotlin {
                 implementation("org.slf4j:log4j-over-slf4j:$slf4jVersion")
                 implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
                 implementation("ch.qos.logback:logback-classic:1.2.3")
-
-                implementation("com.google.code.gson:gson:2.8.6")
             }
         }
 
