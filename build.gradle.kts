@@ -1,5 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "1.3.72"
+    kotlin("multiplatform") version "1.4.20"
+    kotlin("plugin.serialization") version "1.4.20"
     id("com.github.ben-manes.versions") version "0.28.0" // gradle dependencyUpdates -Drevision=release
     id("org.jmailen.kotlinter") version "2.4.1"
     `maven-publish`
@@ -7,12 +8,16 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven(url = "https://jitpack.io")
+    jcenter()
+    maven("https://kotlin.bintray.com/kotlinx") {
+        name = "bintray-kotlinx"
+    }
 }
 
 val kotlinVersion = "1.3.72"
 val slf4jVersion = "1.7.26"
 val junitVersion = "5.6.2"
+val serializationVersion = "1.0.1"
 
 kotlin {
     jvm {
@@ -39,6 +44,7 @@ kotlin {
         val commonMain by getting {
                 dependencies {
                     implementation(kotlin("stdlib-common"))
+                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 }
             }
 
@@ -55,6 +61,7 @@ kotlin {
 
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
             }
         }
         val jvmTest by getting {
@@ -78,6 +85,7 @@ kotlin {
         val jsMain by getting {
                 dependencies {
                     implementation(kotlin("stdlib-js"))
+                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 }
         }
 
@@ -92,9 +100,9 @@ kotlin {
 
 publishing {
     repositories {
-        maven {
-            url = uri("file://$projectDir/localRepo")
-        }
+//        maven {
+//            url = uri("file://$projectDir/localRepo")
+//        }
     }
 }
 
