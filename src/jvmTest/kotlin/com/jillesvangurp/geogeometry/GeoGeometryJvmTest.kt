@@ -25,6 +25,7 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.toDecimalDegree
 import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
+import com.jillesvangurp.geo.vicentyDistance
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -172,8 +173,9 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldCalculateShortDistance() {
-        val d = distance(bergstr16Berlin, bergstr16InvalidenBerlin)
-        round(d) shouldBe 135.0
+        round(distance(bergstr16Berlin, bergstr16InvalidenBerlin)) shouldBe 135.0
+        round(vicentyDistance(bergstr16Berlin, bergstr16InvalidenBerlin)) shouldBe 135.0
+        round(vicentyDistance(52.53088449754002, 13.394759130486978, 52.5321898099938, 13.394067126896921)) shouldBe 153.0
     }
 
     @Test
