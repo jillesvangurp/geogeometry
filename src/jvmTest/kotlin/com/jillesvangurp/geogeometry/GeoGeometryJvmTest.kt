@@ -24,8 +24,8 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
 import com.jillesvangurp.geo.GeoGeometry.Companion.toDecimalDegree
 import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
+import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
-import com.jillesvangurp.geo.vicentyDistance
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -164,18 +164,16 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldCalculateDistance() {
-        val d = distance(sydney, berlin)
-        MatcherAssert.assertThat(
-            "should be about 16100km but was " + d / 1000 + "km.",
-            Math.abs(d - 16000000) < 100000
-        )
+        distance(sydney, berlin).toLong() shouldBe 16_095_663
+        // vicenty is a bit more accurate by about 7km
+        vicentyDistance(sydney, berlin).toLong() shouldBe 16_089_576
     }
 
     @Test
     fun shouldCalculateShortDistance() {
         round(distance(bergstr16Berlin, bergstr16InvalidenBerlin)) shouldBe 135.0
+        // no difference over short distances at this latitude
         round(vicentyDistance(bergstr16Berlin, bergstr16InvalidenBerlin)) shouldBe 135.0
-        round(vicentyDistance(52.53088449754002, 13.394759130486978, 52.5321898099938, 13.394067126896921)) shouldBe 153.0
     }
 
     @Test

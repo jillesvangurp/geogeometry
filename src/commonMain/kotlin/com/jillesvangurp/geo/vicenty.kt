@@ -72,7 +72,7 @@ private const val RADIUS_AT_EQUATOR: Double = 6378137.0 // radius at equator
  * This provides better accuracy than Haversine as it takes into account the flattening of the earth. Note, this
  * is still an approximation of course. Over short distances, there should not be any difference.
  */
-private fun vincenty(p1: PointCoordinates, p2: PointCoordinates): Vincenty {
+fun vincenty(p1: PointCoordinates, p2: PointCoordinates): Vincenty {
     val lon1Rad: Double = toRadians(p1.longitude)
     val lon2Rad: Double = toRadians(p2.longitude)
     val lat1Rad: Double = toRadians(p1.latitude)
@@ -135,8 +135,4 @@ private fun vincenty(p1: PointCoordinates, p2: PointCoordinates): Vincenty {
     return Vincenty(distance, fromRadians(initialBearing), fromRadians(finalBearing))
 }
 
-fun vicentyDistance(p1: PointCoordinates, p2: PointCoordinates) = vincenty(p1, p2).distance
-fun vicentyDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) = vicentyDistance(
-    doubleArrayOf(lon1, lat1),
-    doubleArrayOf(lon2, lat2)
-)
+

@@ -587,6 +587,25 @@ class GeoGeometry {
         }
 
         /**
+         * Calculate distance in meters using the Vicenty algorithm.
+         *
+         * This provides better accuracy than Haversine as it takes into account the flattening of the earth.
+         * Note, this is still an approximation of course. Over short distances, there should not be any difference.
+         */
+        fun vicentyDistance(p1: PointCoordinates, p2: PointCoordinates) = vincenty(p1, p2).distance
+
+        /**
+         * Calculate distance in meters using the Vicenty algorithm.
+         *
+         * This provides better accuracy than Haversine as it takes into account the flattening of the earth.
+         * Note, this is still an approximation of course. Over short distances, there should not be any difference.
+         */
+        fun vicentyDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) = vicentyDistance(
+            doubleArrayOf(lon1, lat1),
+            doubleArrayOf(lon2, lat2)
+        )
+
+        /**
          * Calculate distance of a point (pLat,pLon) to a line defined by two other points (lat1,lon1) and (lat2,lon2)
          * @param x1 double
          * @param y1 double
