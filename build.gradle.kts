@@ -97,9 +97,9 @@ kotlin {
 
 publishing {
     repositories {
-//        maven {
-//            url = uri("file://$projectDir/localRepo")
-//        }
+        maven {
+            url = uri("file://$projectDir/localRepo")
+        }
     }
 }
 
