@@ -26,12 +26,17 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveAtMostSize
+import io.kotest.matchers.doubles.shouldBeGreaterThan
+import io.kotest.matchers.doubles.shouldBeLessThan
+import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers
 import org.junit.Test
 import java.util.Random
+import kotlin.math.abs
 
 class GeoGeometryJvmTest {
     var sydney = doubleArrayOf(151.206146, -33.872796)
@@ -58,18 +63,12 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldCheckThatLinesCross() {
-        MatcherAssert.assertThat(
-            "should intersect",
-            linesCross(1.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0)
-        )
-        MatcherAssert.assertThat(
-            "should intersect (vertical)",
-            linesCross(1.0, 1.0, 1.0, 10.0, 1.0, 3.0, 1.0, 4.0)
-        )
-        MatcherAssert.assertThat(
-            "should intersect (horizontal)",
-            linesCross(1.0, 666.0, 10.0, 666.0, 3.0, 666.0, 4.0, 666.0)
-        )
+        // should intersect
+        linesCross(1.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0) shouldBe true
+        // should intersect (vertical)",
+        linesCross(1.0, 1.0, 1.0, 10.0, 1.0, 3.0, 1.0, 4.0) shouldBe true
+        // should intersect (horizontal)",
+        linesCross(1.0, 666.0, 10.0, 666.0, 3.0, 666.0, 4.0, 666.0) shouldBe true
     }
 
     @Test
@@ -94,30 +93,18 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldCheckContainmentForPolygonCorrectly() {
-        MatcherAssert.assertThat(
-            "origin should be in there",
-            polygonContains(0.0, 0.0, *samplePolygon)
-        )
-        MatcherAssert.assertThat(
-            "should be outside",
-            !polygonContains(20.0, 20.0, *samplePolygon)
-        )
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(0.5, 0.5, *samplePolygon)
-        )
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(0.5, -0.5, *samplePolygon)
-        )
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(-0.5, 0.5, *samplePolygon)
-        )
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(-0.5, -0.5, *samplePolygon)
-        )
+        // origin should be in there
+        polygonContains(0.0, 0.0, *samplePolygon) shouldBe true
+        // should be outside
+        !polygonContains(20.0, 20.0, *samplePolygon) shouldBe true
+        // should be inside
+        polygonContains(0.5, 0.5, *samplePolygon) shouldBe true
+        // should be inside
+        polygonContains(0.5, -0.5, *samplePolygon) shouldBe true
+        // should be inside
+        polygonContains(-0.5, 0.5, *samplePolygon) shouldBe true
+        // should be inside
+        polygonContains(-0.5, -0.5, *samplePolygon) shouldBe true
     }
 
     @Test
@@ -291,40 +278,32 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldConvertCircleToPolygonOn180() {
-        val circle2polygon =
-            circle2polygon(6, -18.0, 180.0, 1000.0)
+        val circle2polygon = circle2polygon(6, -18.0, 180.0, 1000.0)
         var countEast = 0
         for (point in circle2polygon[0]) {
             val distance = distance(-18.0, 180.0, point[1], point[0])
-            MatcherAssert.assertThat(
-                Math.abs(1000 - distance),
-                Matchers.lessThan(1.0)
-            )
+            abs(1000 - distance) shouldBeLessThan 1.0
             if (isWest(180.0, point[0])) {
                 countEast++
             }
         }
-        MatcherAssert.assertThat(countEast, Matchers.greaterThan(1))
+        countEast shouldBeGreaterThan 1
     }
 
     @Test
     fun shouldConvertCircleToPolygonOnNorthPole() {
         val lat = 89.9
         val lon = 0.0
-        val circle2polygon =
-            circle2polygon(6, lat, lon, 1000.0)
+        val circle2polygon = circle2polygon(6, lat, lon, 1000.0)
         var countEast = 0
         for (point in circle2polygon[0]) {
             val distance = distance(lat, lon, point[1], point[0])
-            MatcherAssert.assertThat(
-                Math.abs(1000 - distance),
-                Matchers.lessThan(20.0)
-            )
+            abs(1000 - distance) shouldBeLessThan 20.0
             if (isWest(180.0, point[0])) {
                 countEast++
             }
         }
-        MatcherAssert.assertThat(countEast, Matchers.greaterThan(1))
+        countEast shouldBeGreaterThan 1
     }
 
     @Test
@@ -386,34 +365,17 @@ class GeoGeometryJvmTest {
         val bbox = boundingBox(filtered)
 
         // the four bad pois should be gone
-        MatcherAssert.assertThat(
-            bbox[1],
-            Matchers.allOf(
-                Matchers.greaterThan(52.0),
-                Matchers.lessThan(53.0)
-            )
-        )
-        MatcherAssert.assertThat(
-            bbox[3],
-            Matchers.allOf(
-                Matchers.greaterThan(52.0),
-                Matchers.lessThan(53.0)
-            )
-        )
-        MatcherAssert.assertThat(
-            bbox[0],
-            Matchers.allOf(
-                Matchers.greaterThan(13.0),
-                Matchers.lessThan(14.0)
-            )
-        )
-        MatcherAssert.assertThat(
-            bbox[2],
-            Matchers.allOf(
-                Matchers.greaterThan(13.0),
-                Matchers.lessThan(14.0)
-            )
-        )
+        bbox[1] shouldBeGreaterThan 52.0
+        bbox[1] shouldBeLessThan 53.0
+
+        bbox[3] shouldBeGreaterThan 52.0
+        bbox[3] shouldBeLessThan 53.0
+
+        bbox[0] shouldBeGreaterThan 13.0
+        bbox[0] shouldBeLessThan 14.0
+
+        bbox[2] shouldBeGreaterThan 13.0
+        bbox[2] shouldBeLessThan 14.0
     }
 
     @Test
@@ -512,78 +474,54 @@ class GeoGeometryJvmTest {
     @Test
     fun shouldCalculateCorrectBbox() {
         val bbox = bbox(berlin[1], berlin[0], 1000.0, 1000.0)
-        MatcherAssert.assertThat(
-            distance(
-                bbox[1],
-                berlin[0],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.greaterThan(499.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                bbox[1],
-                berlin[0],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.lessThan(501.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                bbox[3],
-                berlin[0],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.greaterThan(499.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                bbox[3],
-                berlin[0],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.lessThan(501.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                berlin[1],
-                bbox[0],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.greaterThan(499.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                berlin[1],
-                bbox[0],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.lessThan(501.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                berlin[1],
-                bbox[2],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.greaterThan(499.0)
-        )
-        MatcherAssert.assertThat(
-            distance(
-                berlin[1],
-                bbox[2],
-                berlin[1],
-                berlin[0]
-            ),
-            Matchers.lessThan(501.0)
-        )
+        distance(
+            bbox[1],
+            berlin[0],
+            berlin[1],
+            berlin[0]
+        ) shouldBeGreaterThan 499.0
+        distance(
+            bbox[1],
+            berlin[0],
+            berlin[1],
+            berlin[0]
+        ) shouldBeLessThan  501.0
+        distance(
+            bbox[3],
+            berlin[0],
+            berlin[1],
+            berlin[0]
+        ) shouldBeGreaterThan 499.0
+        distance(
+            bbox[3],
+            berlin[0],
+            berlin[1],
+            berlin[0]
+        )  shouldBeLessThan 501.0
+        distance(
+            berlin[1],
+            bbox[0],
+            berlin[1],
+            berlin[0]
+        ) shouldBeGreaterThan 499.0
+        distance(
+            berlin[1],
+            bbox[0],
+            berlin[1],
+            berlin[0]
+        ) shouldBeLessThan 501.0
+        distance(
+            berlin[1],
+            bbox[2],
+            berlin[1],
+            berlin[0]
+        ) shouldBeGreaterThan 499.0
+        distance(
+            berlin[1],
+            bbox[2],
+            berlin[1],
+            berlin[0]
+        ) shouldBeLessThan 501.0
     }
 
     @Test
@@ -682,16 +620,8 @@ class GeoGeometryJvmTest {
             )
             val distToPoint1 = distance(x1, y1, px, py)
             val distToPoint2 = distance(x1, y1, px, py)
-            MatcherAssert.assertThat(
-                "",
-                distance,
-                Matchers.lessThanOrEqualTo(distToPoint1)
-            )
-            MatcherAssert.assertThat(
-                "",
-                distance,
-                Matchers.lessThanOrEqualTo(distToPoint2)
-            )
+            distance shouldBeLessThanOrEqual  distToPoint1
+            distance shouldBeLessThanOrEqual distToPoint2
         }
     }
 
@@ -788,11 +718,8 @@ class GeoGeometryJvmTest {
             circle2polygon(5000, 52.0, 13.0, 1000.0)
         val calculatedArea = area(circle)
         val circleArea = Math.PI * 1000 * 1000
-        MatcherAssert.assertThat(
-            "0.005% difference allowed perfect circle area and calculated area",
-            Math.abs(circleArea - calculatedArea),
-            Matchers.lessThan(calculatedArea / 200)
-        )
+        // 0.005% difference allowed perfect circle area and calculated area
+        abs(circleArea - calculatedArea) shouldBeLessThan calculatedArea / 200
     }
 
     @Test
@@ -813,11 +740,9 @@ class GeoGeometryJvmTest {
 //        l.add(new Feature(new Point(new double[]{bboxForCircle[0],bboxForCircle[1]},null),null,null));
 //        l.add(new Feature(new Point(new double[]{bboxForCircle[2],bboxForCircle[3]},null),null,null));
 //        System.out.println(gson.toJson(new FeatureCollection(l,null)));
-        MatcherAssert.assertThat(
-            "area should be roughly similar to that of the ideal rectangle of 2000x2000",
-            Math.abs(area - expectedArea),
-            Matchers.lessThan(expectedArea * 0.05)
-        )
+
+        // area should be roughly similar to that of the ideal rectangle of 2000x2000
+        Math.abs(area - expectedArea) shouldBeLessThan expectedArea * 0.05
     }
 
     @Test
@@ -900,7 +825,7 @@ class GeoGeometryJvmTest {
         val poly =
             circle2polygon(10000, 52.0, 13.0, 1000.0)[0] // 10000 segments!
         val simplified = simplifyLine(poly, 100.0)
-        MatcherAssert.assertThat(simplified.size, Matchers.lessThan(poly.size))
+        simplified shouldHaveAtMostSize poly.size
     }
 
     @Test

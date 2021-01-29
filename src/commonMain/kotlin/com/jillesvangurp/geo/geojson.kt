@@ -2,6 +2,10 @@
 
 package com.jillesvangurp.geo
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.json.JsonObject
 import kotlin.reflect.KClass
 
 /**
@@ -56,7 +60,7 @@ val BoundingBox.eastLongitude: Double
         return this[2]
     }
 
-fun BoundingBox.polygon(): PolygonGeometry {
+fun BoundingBox.polygon(): Geometry.PolygonGeometry {
     val coordinates = arrayOf(
         arrayOf(
             doubleArrayOf(this.westLongitude, this.southLatitude),
@@ -66,17 +70,242 @@ fun BoundingBox.polygon(): PolygonGeometry {
             doubleArrayOf(this.westLongitude, this.southLatitude)
         )
     )
-    return PolygonGeometry(coordinates)
+    return Geometry.PolygonGeometry(coordinates)
 }
 
-interface Geometry {
-    val type: GeometryType
+@Serializable
+sealed class Geometry {
+    @Transient
+    abstract val geometryType: GeometryType
 
-    fun asFeature(properties: Map<String, Any?>? = null, bbox: BoundingBox? = null) =
+    fun asFeature(properties: JsonObject? = null, bbox: BoundingBox? = null) =
         Feature(this, properties, bbox)
+
+    @Serializable
+    @SerialName("Point")
+    data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.Point
+        infix fun line(other: PointGeometry) = arrayOf(this.coordinates, other.coordinates)
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as PointGeometry
+
+            if (coordinates != null) {
+                if (other.coordinates == null) return false
+                if (!coordinates.contentEquals(other.coordinates)) return false
+            } else if (other.coordinates != null) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = coordinates?.contentHashCode() ?: 0
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+
+        companion object {
+
+            fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
+
+
+            fun of(lon: Double, lat: Double) = PointGeometry(doubleArrayOf(lon, lat))
+        }
+    }
+
+    @Serializable
+    @SerialName("MultiPoint")
+    data class MultiPointGeometry(val coordinates: MultiPointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.MultiPoint
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as MultiPointGeometry
+
+            if (coordinates != null) {
+                if (other.coordinates == null) return false
+                if (!coordinates.contentDeepEquals(other.coordinates)) return false
+            } else if (other.coordinates != null) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = coordinates?.contentDeepHashCode() ?: 0
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+    }
+
+
+    @Serializable
+    @SerialName("LineString")
+    data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.LineString
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as LineStringGeometry
+
+            if (coordinates != null) {
+                if (other.coordinates == null) return false
+                if (!coordinates.contentDeepEquals(other.coordinates)) return false
+            } else if (other.coordinates != null) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = coordinates?.contentDeepHashCode() ?: 0
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+    }
+
+    @Serializable
+    @SerialName("MultiLineString")
+    data class MultiLineStringGeometry(val coordinates: MultiLineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.MultiLineString
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as MultiLineStringGeometry
+
+            if (coordinates != null) {
+                if (other.coordinates == null) return false
+                if (!coordinates.contentDeepEquals(other.coordinates)) return false
+            } else if (other.coordinates != null) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = coordinates?.contentDeepHashCode() ?: 0
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+    }
+
+    @Serializable
+    @SerialName("Polygon")
+    data class PolygonGeometry(val coordinates: PolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.Polygon
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as PolygonGeometry
+
+            if (coordinates != null) {
+                if (other.coordinates == null) return false
+                if (!coordinates.contentDeepEquals(other.coordinates)) return false
+            } else if (other.coordinates != null) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = coordinates?.contentDeepHashCode() ?: 0
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+    }
+
+    @Serializable
+    @SerialName("MultiPolygon")
+    data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.MultiPolygon
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as MultiPolygonGeometry
+
+            if (coordinates != null) {
+                if (other.coordinates == null) return false
+                if (!coordinates.contentDeepEquals(other.coordinates)) return false
+            } else if (other.coordinates != null) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = coordinates?.contentDeepHashCode() ?: 0
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+    }
+
+    @Serializable
+    @SerialName("GeometryCollection")
+    data class GeometryCollection(val geometries: Array<Geometry>, val bbox: BoundingBox? = null) : Geometry() {
+        override val geometryType = GeometryType.GeometryCollection
+
+        operator fun plus(other: GeometryCollection) = GeometryCollection(this.geometries + other.geometries)
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if(other == null) return false
+            if (this::class != other::class) return false
+
+            other as GeometryCollection
+
+            if (!geometries.contentEquals(other.geometries)) return false
+            if (bbox != null) {
+                if (other.bbox == null) return false
+                if (!bbox.contentEquals(other.bbox)) return false
+            } else if (other.bbox != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = geometries.contentHashCode()
+            result = 31 * result + (bbox?.contentHashCode() ?: 0)
+            return result
+        }
+    }
+
 }
 
-data class Feature(val geometry: Geometry?, val properties: Map<String, Any?>? = null, val bbox: BoundingBox? = null) {
+@Serializable
+data class Feature(val geometry: Geometry?, val properties: JsonObject? = null, val bbox: BoundingBox? = null) {
     val type = "Feature"
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -104,6 +333,7 @@ data class Feature(val geometry: Geometry?, val properties: Map<String, Any?>? =
     }
 }
 
+@Serializable
 data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox? = null) {
     val type: String = "FeatureCollection"
     override fun equals(other: Any?): Boolean {
@@ -156,221 +386,13 @@ enum class GeometryType() {
     GeometryCollection;
 
     fun clazz() : KClass<*> = when(this) {
-        Point -> PointGeometry::class
-        MultiPoint -> MultiPointGeometry::class
-        LineString -> LineStringGeometry::class
-        MultiLineString -> MultiLineStringGeometry::class
-        Polygon -> PolygonGeometry::class
-        MultiPolygon -> MultiPolygonGeometry::class
-        GeometryCollection -> GeometryCollection::class
+        Point -> Geometry.PointGeometry::class
+        MultiPoint -> Geometry.MultiPointGeometry::class
+        LineString -> Geometry.LineStringGeometry::class
+        MultiLineString -> Geometry.MultiLineStringGeometry::class
+        Polygon -> Geometry.PolygonGeometry::class
+        MultiPolygon -> Geometry.MultiPolygonGeometry::class
+        GeometryCollection -> Geometry.GeometryCollection::class
     }
 }
 
-data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
-    override val type = GeometryType.Point
-    infix fun line(other: PointGeometry) = arrayOf(this.coordinates, other.coordinates)
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as PointGeometry
-
-        if (coordinates != null) {
-            if (other.coordinates == null) return false
-            if (!coordinates.contentEquals(other.coordinates)) return false
-        } else if (other.coordinates != null) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = coordinates?.contentHashCode() ?: 0
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-
-    companion object {
-
-        fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
-
-
-        fun of(lon: Double, lat: Double) = PointGeometry(doubleArrayOf(lon, lat))
-    }
-}
-
-data class MultiPointGeometry(val coordinates: MultiPointCoordinates?, val bbox: BoundingBox? = null) : Geometry {
-    override val type = GeometryType.MultiPoint
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as MultiPointGeometry
-
-        if (coordinates != null) {
-            if (other.coordinates == null) return false
-            if (!coordinates.contentDeepEquals(other.coordinates)) return false
-        } else if (other.coordinates != null) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = coordinates?.contentDeepHashCode() ?: 0
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-}
-
-data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) :
-    Geometry {
-    override val type = GeometryType.LineString
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as LineStringGeometry
-
-        if (coordinates != null) {
-            if (other.coordinates == null) return false
-            if (!coordinates.contentDeepEquals(other.coordinates)) return false
-        } else if (other.coordinates != null) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = coordinates?.contentDeepHashCode() ?: 0
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-}
-
-data class MultiLineStringGeometry(val coordinates: MultiLineStringCoordinates? = null, val bbox: BoundingBox? = null) :
-    Geometry {
-    override val type = GeometryType.MultiLineString
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as MultiLineStringGeometry
-
-        if (coordinates != null) {
-            if (other.coordinates == null) return false
-            if (!coordinates.contentDeepEquals(other.coordinates)) return false
-        } else if (other.coordinates != null) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = coordinates?.contentDeepHashCode() ?: 0
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-}
-
-data class PolygonGeometry(val coordinates: PolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry {
-    override val type = GeometryType.Polygon
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as PolygonGeometry
-
-        if (coordinates != null) {
-            if (other.coordinates == null) return false
-            if (!coordinates.contentDeepEquals(other.coordinates)) return false
-        } else if (other.coordinates != null) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = coordinates?.contentDeepHashCode() ?: 0
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-}
-
-data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) :
-    Geometry {
-    override val type = GeometryType.MultiPolygon
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as MultiPolygonGeometry
-
-        if (coordinates != null) {
-            if (other.coordinates == null) return false
-            if (!coordinates.contentDeepEquals(other.coordinates)) return false
-        } else if (other.coordinates != null) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = coordinates?.contentDeepHashCode() ?: 0
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-}
-
-data class GeometryCollection(val geometries: Array<Geometry>, val bbox: BoundingBox? = null) : Geometry {
-    override val type = GeometryType.GeometryCollection
-
-    operator fun plus(other: GeometryCollection) = GeometryCollection(this.geometries + other.geometries)
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if(other == null) return false
-        if (this::class != other::class) return false
-
-        other as GeometryCollection
-
-        if (!geometries.contentEquals(other.geometries)) return false
-        if (bbox != null) {
-            if (other.bbox == null) return false
-            if (!bbox.contentEquals(other.bbox)) return false
-        } else if (other.bbox != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = geometries.contentHashCode()
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
-        return result
-    }
-}

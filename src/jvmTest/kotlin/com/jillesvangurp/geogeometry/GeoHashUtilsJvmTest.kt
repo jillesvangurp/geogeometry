@@ -1,11 +1,10 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.FeatureCollection
+import com.jillesvangurp.geo.*
 import com.jillesvangurp.geo.GeoGeometry.Companion.area
 import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
 import com.jillesvangurp.geo.GeoGeometry.Companion.distance
 import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
-import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geo.GeoHashUtils.Companion.contains
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decode
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decodeBbox
@@ -23,23 +22,14 @@ import com.jillesvangurp.geo.GeoHashUtils.Companion.south
 import com.jillesvangurp.geo.GeoHashUtils.Companion.subHashes
 import com.jillesvangurp.geo.GeoHashUtils.Companion.suitableHashLength
 import com.jillesvangurp.geo.GeoHashUtils.Companion.west
-import com.jillesvangurp.geo.PolygonCoordinates
-import com.jillesvangurp.geo.PolygonGeometry
-import com.jillesvangurp.geo.eastLongitude
-import com.jillesvangurp.geo.latitude
-import com.jillesvangurp.geo.longitude
-import com.jillesvangurp.geo.northLatitude
-import com.jillesvangurp.geo.southLatitude
-import com.jillesvangurp.geo.westLongitude
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers
 import org.junit.Test
 import kotlin.math.abs
+import kotlin.math.min
 
 class GeoHashUtilsJvmTest {
     val coordinatesWithHashes = arrayOf(
@@ -71,32 +61,20 @@ class GeoHashUtilsJvmTest {
     fun shouldCalculateEastOn180() {
         val hash = encode(-18.0, 179.9, 3)
         var bbox = decodeBbox(hash)
-        MatcherAssert.assertThat(
-            bbox[2],
-            CoreMatchers.equalTo(180.0)
-        )
+        bbox[2] shouldBe 180.0
         val east = east(hash)
         bbox = decodeBbox(east)
-        MatcherAssert.assertThat(
-            bbox[0],
-            CoreMatchers.equalTo(-180.0)
-        )
+        bbox[0] shouldBe -180.0
     }
 
     @Test
     fun shouldCalculateWestOn180() {
         val hash = encode(-18.0, -179.9, 3)
         var bbox = decodeBbox(hash)
-        MatcherAssert.assertThat(
-            bbox[0],
-            CoreMatchers.equalTo(-180.0)
-        )
+        bbox[0] shouldBe -180.0
         val west = west(hash)
         bbox = decodeBbox(west)
-        MatcherAssert.assertThat(
-            bbox[2],
-            CoreMatchers.equalTo(180.0)
-        )
+        bbox[2] shouldBe 180.0
     }
 
     @Test
@@ -112,17 +90,12 @@ class GeoHashUtilsJvmTest {
             8, *polygon
         )
         for (h in geoHashesForPolygon) {
-            min = Math.min(min, h.length)
+            min = min(min, h.length)
         }
-        MatcherAssert.assertThat(
-            "there should be some hashes with length=3",
-            min,
-            CoreMatchers.`is`(3)
-        )
-        MatcherAssert.assertThat(
-            "huge area, should generate lots of hashes",
-            geoHashesForPolygon.size > 1000
-        )
+        // there should be some hashes with length=3
+        min shouldBe 3
+        // huge area, should generate lots of hashes
+        geoHashesForPolygon shouldHaveAtLeastSize 1000
     }
 
     @Test
@@ -132,49 +105,54 @@ class GeoHashUtilsJvmTest {
         for (hash in hashesForCircle) {
             val point = decode(hash)
             val distance = distance(point, doubleArrayOf(13.0, 52.0))
-            MatcherAssert.assertThat(
-                distance,
-                Matchers.lessThan(2000.0)
-            )
+            distance shouldBeLessThan 2000.0
         }
     }
 
     @Test
     fun shouldCheckIfWest() {
-        MatcherAssert.assertThat("should be west", isWest(90.0, 91.0))
-        MatcherAssert.assertThat("should be west", isWest(-1.0, 1.0))
-        MatcherAssert.assertThat("should be west", isWest(-89.0, 90.0))
-        MatcherAssert.assertThat("should be west", isWest(180.0, -178.0))
-        MatcherAssert.assertThat("should be west", isWest(180.0, -179.99527198651967))
-        MatcherAssert.assertThat("should not be west", !isWest(-179.0, 180.0))
-        MatcherAssert.assertThat("should not be west", !isWest(91.0, 90.0))
-        MatcherAssert.assertThat("should not be west", !isWest(-179.0, 180.0))
-        MatcherAssert.assertThat("should not be west", !isWest(89.0, -90.0))
-        MatcherAssert.assertThat("should not be west", !isWest(1.0, -1.0))
-        MatcherAssert.assertThat("should not be west", !isWest(91.0, 90.0))
-        MatcherAssert.assertThat("should not be west", !isWest(-91.0, 90.0))
+        // should be west
+        isWest(90.0, 91.0) shouldBe true
+        isWest(-1.0, 1.0) shouldBe true
+        isWest(-89.0, 90.0) shouldBe true
+        isWest(180.0, -178.0) shouldBe true
+        isWest(180.0, -179.99527198651967) shouldBe true
+
+        // should not be west
+        isWest(-179.0, 180.0) shouldBe false
+        isWest(91.0, 90.0) shouldBe false
+        isWest(-179.0, 180.0) shouldBe false
+        isWest(89.0, -90.0) shouldBe false
+        isWest(1.0, -1.0) shouldBe false
+        isWest(91.0, 90.0) shouldBe false
+        isWest(-91.0, 90.0) shouldBe false
     }
 
     @Test
     fun shouldCheckIfEast() {
-        MatcherAssert.assertThat("should not be east", !isEast(90.0, 91.0))
-        MatcherAssert.assertThat("should not be east", !isEast(-1.0, 1.0))
-        MatcherAssert.assertThat("should not be east", !isEast(-89.0, 90.0))
-        MatcherAssert.assertThat("should not be east", !isEast(180.0, -178.0))
-        MatcherAssert.assertThat("should not be west", !isEast(180.0, -179.99527198651967))
-        MatcherAssert.assertThat("should be east", isEast(-179.0, 180.0))
-        MatcherAssert.assertThat("should be east", isEast(91.0, 90.0))
-        MatcherAssert.assertThat("should be east", isEast(-179.0, 180.0))
-        MatcherAssert.assertThat("should be east", isEast(89.0, -90.0))
-        MatcherAssert.assertThat("should be east", isEast(1.0, -1.0))
-        MatcherAssert.assertThat("should be east", isEast(91.0, 90.0))
-        MatcherAssert.assertThat("should be east", isEast(-91.0, 90.0))
+        // should not be east
+        isEast(90.0, 91.0) shouldBe false
+        isEast(-1.0, 1.0) shouldBe false
+        isEast(-89.0, 90.0) shouldBe false
+        isEast(180.0, -178.0) shouldBe false
+        isEast(180.0, -179.99527198651967) shouldBe false
+
+        // should be east
+        isEast(-179.0, 180.0) shouldBe true
+        isEast(91.0, 90.0) shouldBe true
+        isEast(-179.0, 180.0) shouldBe true
+        isEast(89.0, -90.0) shouldBe true
+        isEast(1.0, -1.0) shouldBe true
+        isEast(91.0, 90.0) shouldBe true
+        isEast(-91.0, 90.0) shouldBe true
     }
 
     @Test
     fun shouldBeNeitherWestNorEast() {
-        MatcherAssert.assertThat("should not be west", !isWest(-90.0, 90.0))
-        MatcherAssert.assertThat("should not be east", !isEast(-90.0, 90.0))
+        // should not be west
+        isWest(-90.0, 90.0) shouldBe false
+        // should not be east
+        isEast(-90.0, 90.0) shouldBe false
     }
 
     @Test
@@ -182,20 +160,16 @@ class GeoHashUtilsJvmTest {
         val latitude = 52.529731
         val longitude = 13.401284
         val radius = 500
-        val hashes =
-            geoHashesForCircle(8, latitude, longitude, radius.toDouble())
+        val hashes = geoHashesForCircle(8, latitude, longitude, radius.toDouble())
         for (hash in hashes) {
-            MatcherAssert.assertThat(
-                distance(
-                    decode(
-                        hash
-                    ),
-                    doubleArrayOf(longitude, latitude)
+           distance(
+                decode(
+                    hash
                 ),
-                Matchers.lessThan(500.0)
-            )
+                doubleArrayOf(longitude, latitude)
+            ) shouldBeLessThan 500.0
         }
-        MatcherAssert.assertThat(hashes.size, Matchers.greaterThan(radius))
+        hashes shouldHaveAtLeastSize radius
     }
 
     @Test
@@ -257,7 +231,7 @@ class GeoHashUtilsJvmTest {
             val hash = encode(latitude, longitude, length)
             val bbox = decodeBbox(hash)
             val distance = distance(bbox[0], bbox[1], bbox[0], bbox[3])
-            MatcherAssert.assertThat(distance, Matchers.lessThan(m))
+            distance shouldBeLessThan m
         }
     }
 
@@ -289,11 +263,7 @@ class GeoHashUtilsJvmTest {
 //        LineStringGeometry lineGeo = new LineStringGeometry(line,null);
 //        System.out.println(gson.toJson(
 //                FeatureCollection.of(p1.asFeature(null,null), p2.asFeature(null,null), lineGeo.asFeature(null,null)).plus( FeatureCollection.fromGeoHashes(hashes))));
-            MatcherAssert.assertThat(
-                "number of hashes, orientation",
-                hashes.size,
-                Matchers.greaterThan(10)
-            )
+            hashes shouldHaveAtLeastSize 10
         }
     }
 
@@ -366,32 +336,22 @@ class GeoHashUtilsJvmTest {
     fun shouldEncode() {
         coordinates.forEach { (point, geoHash) ->
 
-            MatcherAssert.assertThat(
-                encode(
-                    point.latitude,
-                    point.longitude,
-                    GeoHashUtils.DEFAULT_GEO_HASH_LENGTH
-                ),
-                CoreMatchers.`is`(geoHash)
-            )
-            MatcherAssert.assertThat(
-                encode(point),
-                CoreMatchers.`is`(geoHash)
-            )
+            encode(
+                point.latitude,
+                point.longitude,
+                GeoHashUtils.DEFAULT_GEO_HASH_LENGTH
+            ) shouldBe geoHash
+            encode(point) shouldBe geoHash
         }
     }
 
     @Test
     fun shouldContainCoordinate() {
         coordinates.forEach { (point, geoHash) ->
-            MatcherAssert.assertThat(
-                "hash should contain the coordinate",
-                contains(geoHash, point.latitude, point.longitude)
-            )
-            MatcherAssert.assertThat(
-                "hash should not contain the swapped coordinate",
-                !contains(geoHash, point.longitude, point.latitude)
-            )
+            // hash should contain the coordinate
+            contains(geoHash, point.latitude, point.longitude) shouldBe true
+            // hash should not contain the swapped coordinate
+            contains(geoHash, point.longitude, point.latitude) shouldBe false
         }
     }
 
@@ -400,14 +360,8 @@ class GeoHashUtilsJvmTest {
         coordinates.forEach { (point, geoHash) ->
 
             val bbox = decodeBbox(geoHash)
-            MatcherAssert.assertThat(
-                abs((bbox[0] + bbox[2]) / 2 - point.longitude),
-                Matchers.lessThan(0.0001)
-            )
-            MatcherAssert.assertThat(
-                abs((bbox[1] + bbox[3]) / 2 - point.latitude),
-                Matchers.lessThan(0.0001)
-            )
+            abs((bbox[0] + bbox[2]) / 2 - point.longitude) shouldBeLessThan 0.0001
+            abs((bbox[1] + bbox[3]) / 2 - point.latitude) shouldBeLessThan 0.0001
         }
     }
 
@@ -417,10 +371,8 @@ class GeoHashUtilsJvmTest {
 
             val original = geoHash.substring(0, 3)
             val calculated = east(geoHash.substring(0, 3))
-            MatcherAssert.assertThat(
-                "east hash should not contain the coordinate",
-                !contains(calculated, point.latitude, point.longitude)
-            )
+            // east hash should not contain the coordinate
+            contains(calculated, point.latitude, point.longitude) shouldBe false
             val bbox = decodeBbox(original)
             val eastBbox = decodeBbox(calculated)
             assertSimilar(bbox[1], eastBbox[1])
@@ -429,10 +381,8 @@ class GeoHashUtilsJvmTest {
             assertSimilar((eastBbox[2] - bbox[0]) / 2, bbox[2] - bbox[0])
             val nl = decode(calculated)[0]
             val ol = decode(original)[0]
-            MatcherAssert.assertThat(
-                "decoded hash lon should be east of original",
-                isEast(nl, ol)
-            )
+            // decoded hash lon should be east of original
+            isEast(nl, ol) shouldBe true
         }
     }
 
@@ -445,10 +395,8 @@ class GeoHashUtilsJvmTest {
             //        System.out.println(original + " " + calculatedHash);
             val oBox = decodeBbox(original)
             val cBox = decodeBbox(calculatedHash)
-            MatcherAssert.assertThat(
-                "calculated hash should not contain the coordinate",
-                !contains(calculatedHash, point.latitude, point.longitude)
-            )
+            // calculated hash should not contain the coordinate
+            contains(calculatedHash, point.latitude, point.longitude) shouldBe false
             val oWest = oBox[0]
             val oSouth = oBox[1]
             val oEast = oBox[2]
@@ -463,10 +411,8 @@ class GeoHashUtilsJvmTest {
             assertSimilar(oWest, cWest)
             val nl = decode(calculatedHash)[1]
             val ol = decode(original)[1]
-            MatcherAssert.assertThat(
-                "decoded hash lat should be south of original",
-                isSouth(nl, ol)
-            )
+            // decoded hash lat should be south of original
+            isSouth(nl, ol) shouldBe true
         }
     }
 
@@ -477,10 +423,8 @@ class GeoHashUtilsJvmTest {
             val calculatedHash = north(original)
             val oBox = decodeBbox(original)
             val cBox = decodeBbox(calculatedHash)
-            MatcherAssert.assertThat(
-                "calculated hash should not contain the coordinate",
-                !contains(calculatedHash, point.latitude, point.longitude)
-            )
+            // calculated hash should not contain the coordinate
+            contains(calculatedHash, point.latitude, point.longitude) shouldBe false
             val oWest = oBox[0]
             val oSouth = oBox[1]
             val oEast = oBox[2]
@@ -496,10 +440,8 @@ class GeoHashUtilsJvmTest {
             //        System.out.println();
             val nl = decode(calculatedHash)[1]
             val ol = decode(original)[1]
-            MatcherAssert.assertThat(
-                "decoded hash lat should be north of original",
-                isNorth(nl, ol)
-            )
+            // decoded hash lat should be north of original
+            isNorth(nl, ol) shouldBe true
         }
     }
 
@@ -511,10 +453,8 @@ class GeoHashUtilsJvmTest {
             val calculatedHash = west(original)
             val oBox = decodeBbox(original)
             val cBox = decodeBbox(calculatedHash)
-            MatcherAssert.assertThat(
-                "calculated hash should not contain the coordinate",
-                !contains(calculatedHash, point.latitude, point.longitude)
-            )
+            // calculated hash should not contain the coordinate
+            contains(calculatedHash, point.latitude, point.longitude) shouldBe false
             val oWest = oBox[0]
             val oSouth = oBox[1]
             val oEast = oBox[2]
@@ -529,19 +469,15 @@ class GeoHashUtilsJvmTest {
             assertSimilar(oWest, cEast)
             val nl = decode(calculatedHash)[0]
             val ol = decode(original)[0]
-            MatcherAssert.assertThat(
-                "decoded hash lon should be west of original",
-                isWest(nl, ol)
-            )
+            // decoded hash lon should be west of original
+            isWest(nl, ol) shouldBe true
         }
     }
 
     private fun assertSimilar(d1: Double, d2: Double) {
         // allow for some margin of error
-        MatcherAssert.assertThat(
-            "should be similar$d1 and $d2", Math.abs(d1 - d2),
-            Matchers.lessThan(0.0000001)
-        )
+        // should be similar$d1 and $d2
+         abs(d1 - d2) shouldBeLessThan 0.0000001
     }
 
     @Test
@@ -591,12 +527,11 @@ class GeoHashUtilsJvmTest {
         ]
       }            
 """.trimIndent()
+        val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.PolygonGeometry
+        val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0) ?: throw IllegalStateException())
 
-        val p = gson.fromJson(concavePolygon, PolygonGeometry::class.java)
-        val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0)?: throw IllegalStateException())
 
-
-        println(gson.toJson(FeatureCollection.fromGeoHashes(hashes)))
+        println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
 
         val area = hashes.map { GeoHashUtils.decodeBbox(it) }.map { area(it) }.sum()
         val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))

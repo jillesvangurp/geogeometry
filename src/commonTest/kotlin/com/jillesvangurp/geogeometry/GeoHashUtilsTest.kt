@@ -1,3 +1,5 @@
+package com.jillesvangurp.geogeometry
+
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geo.latitude
 import com.jillesvangurp.geo.longitude
