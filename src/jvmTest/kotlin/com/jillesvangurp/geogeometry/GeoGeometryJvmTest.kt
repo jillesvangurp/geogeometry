@@ -37,24 +37,27 @@ import org.hamcrest.MatcherAssert
 import org.junit.Test
 import java.util.Random
 import kotlin.math.abs
+import kotlin.math.round
 
 class GeoGeometryJvmTest {
-    var sydney = doubleArrayOf(151.206146, -33.872796)
-    var buenosaires = doubleArrayOf(-58.380449, -34.602875)
-    var newyork = doubleArrayOf(-74.011237, 40.721119)
-    var amsterdam = doubleArrayOf(4.894252, 52.372103)
-    var berlin = doubleArrayOf(13.385721, 52.527109)
-    var london = doubleArrayOf(-0.123656, 51.51283)
+    val bergstr16InvalidenBerlin = doubleArrayOf(13.393674,52.5310059)
+    val bergstr16Berlin = doubleArrayOf(13.3941763, 52.5298311)
+    val berlin = doubleArrayOf(13.385721, 52.527109)
+    val sydney = doubleArrayOf(151.206146, -33.872796)
+    val buenosaires = doubleArrayOf(-58.380449, -34.602875)
+    val newyork = doubleArrayOf(-74.011237, 40.721119)
+    val amsterdam = doubleArrayOf(4.894252, 52.372103)
+    val london = doubleArrayOf(-0.123656, 51.51283)
 
-    var brandenBurgerGate = doubleArrayOf(13.377157, 52.516279)
-    var potsDammerPlatz = doubleArrayOf(13.376599, 52.509515)
-    var moritzPlatz = doubleArrayOf(13.410717, 52.503663)
-    var senefelderPlatz = doubleArrayOf(13.412949, 52.532755)
-    var naturkundeMuseum = doubleArrayOf(13.381921, 52.531188)
-    var rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
-    var oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
+    val brandenBurgerGate = doubleArrayOf(13.377157, 52.516279)
+    val potsDammerPlatz = doubleArrayOf(13.376599, 52.509515)
+    val moritzPlatz = doubleArrayOf(13.410717, 52.503663)
+    val senefelderPlatz = doubleArrayOf(13.412949, 52.532755)
+    val naturkundeMuseum = doubleArrayOf(13.381921, 52.531188)
+    val rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
+    val oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
 
-    var samplePolygon = arrayOf(
+    val samplePolygon = arrayOf(
         doubleArrayOf(1.0, 1.0),
         doubleArrayOf(1.0, -1.0),
         doubleArrayOf(-1.0, -1.0),
@@ -165,6 +168,12 @@ class GeoGeometryJvmTest {
             "should be about 16100km but was " + d / 1000 + "km.",
             Math.abs(d - 16000000) < 100000
         )
+    }
+
+    @Test
+    fun shouldCalculateShortDistance() {
+        val d = distance(bergstr16Berlin, bergstr16InvalidenBerlin)
+        round(d) shouldBe 135.0
     }
 
     @Test

@@ -527,12 +527,12 @@ class GeoGeometry {
             return doubleArrayOf(westLon, southLat, eastLon, northLat)
         }
 
-        /**
-         * Kotlin math seems to not have this unlike Java  But it is easily replicated like this
-         */
-
         fun toRadians(degrees: Double): Double {
             return degrees * DEGREES_TO_RADIANS
+        }
+
+        fun fromRadians(degrees: Double): Double {
+            return degrees * 1/DEGREES_TO_RADIANS
         }
 
         /**
@@ -563,10 +563,7 @@ class GeoGeometry {
             val deltaLon = toRadians(long2 - long1)
 
             val a =
-                sin(deltaLat / 2) * sin(deltaLat / 2) + cos(toRadians(lat1)) * cos(toRadians(lat2)) * sin(
-                    deltaLon / 2
-                ) * sin(
-                    deltaLon / 2
+                sin(deltaLat / 2) * sin(deltaLat / 2) + cos(toRadians(lat1)) * cos(toRadians(lat2)) * sin(deltaLon / 2) * sin(deltaLon / 2
                 )
 
             val c = 2 * asin(sqrt(a))
