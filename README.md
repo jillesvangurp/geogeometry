@@ -44,27 +44,27 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
 # Features
 
 - GeoGeometry class with methods that allow you to:
-  - Calculate distance between two coordinates using the *Haversine- algorithm*.
-  - Calculate distance of a point to a line. lineString, and polygon
-  - Calculate the area of a polygon
-  - Simplify polygons using the *Douglas Peucker*- algorithm. Sometimes polygons can be very detailed, which makes handling them very CPU/memory intensive. E.g. some polygons for New Zealand are more than 200MB.
+  - **Calculate distance** between two coordinates using the **Haversine** or **Vicenty** algorithm
+  - Calculate perpendicular distance of a point to a line. lineString, and polygon
+  - Calculate the **area** of a polygon
+  - **Simplify polygons** using the **Douglas Peucker** - algorithm. Sometimes polygons can be very detailed, which makes handling them very CPU/memory intensive. E.g. some polygons for New Zealand are more than 200MB.
   - check bounding box containment for a point
-  - check *polygon containment* for a point
+  - check **polygon containment** for a point
   - get the center for a polygon
   - get bounding box for a polygon
-  - convert a *circle to a polygon*
-  - create a *polygon from a point cloud*
-  - *translate a wgs84 coordinate* by x & y meters along the latitude and longitude
+  - convert a **circle to a polygon**
+  - create a **polygon from a point cloud**
+  - **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
 
 - GeoHashUtils class with methods that allow you to: 
-  - encode and decode geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
-  - find out the boundingbox of a geohash   
-  - check containment of a point in a geohash (must have the hash as a prefix of its own hash).
-  - find out neighboring geohashes east, west, south, or north of a geohash.
-  - get the 32 sub geo hashes for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
-  - cover lines, paths, polygons, or circles with geo hashes for indexing purposes.
+  - **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
+  - find out the **boundingbox** of a geohash   
+  - check **containment** of a point in a geohash (must have the hash as a prefix of its own hash).
+  - find out **neighboring geohashes** east, west, south, or north of a geohash.
+  - get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
+  - **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
 
-- geojson.kt file with type aliases and model classes that allow you to work with geojson content.
+- geojson classes to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive.
 
 - Kotlin Multiplatform
   - Currently there are two build targets for js and jvm. 
