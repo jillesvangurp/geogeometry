@@ -3,6 +3,7 @@
 package com.jillesvangurp.geo
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -80,6 +81,7 @@ fun BoundingBox.polygon(): Geometry.PolygonGeometry {
 
 @Serializable(with = Geometry.Companion::class)
 sealed class Geometry {
+    @Required
     abstract val type: GeometryType
 
     fun asFeature(properties: JsonObject? = null, bbox: BoundingBox? = null) =
