@@ -81,7 +81,6 @@ fun BoundingBox.polygon(): Geometry.PolygonGeometry {
 
 @Serializable(with = Geometry.Companion::class)
 sealed class Geometry {
-    @Required
     abstract val type: GeometryType
 
     fun asFeature(properties: JsonObject? = null, bbox: BoundingBox? = null) =
@@ -90,6 +89,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("Point")
     data class PointGeometry(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.Point
         infix fun line(other: PointGeometry) = arrayOf(this.coordinates, other.coordinates)
 
@@ -130,6 +130,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("MultiPoint")
     data class MultiPointGeometry(val coordinates: MultiPointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.MultiPoint
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -161,6 +162,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("LineString")
     data class LineStringGeometry(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.LineString
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -191,6 +193,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("MultiLineString")
     data class MultiLineStringGeometry(val coordinates: MultiLineStringCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.MultiLineString
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -221,6 +224,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("Polygon")
     data class PolygonGeometry(val coordinates: PolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.Polygon
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -251,6 +255,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("MultiPolygon")
     data class MultiPolygonGeometry(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.MultiPolygon
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -281,6 +286,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("GeometryCollection")
     data class GeometryCollection(val geometries: Array<Geometry>, val bbox: BoundingBox? = null) : Geometry() {
+        @Required
         override val type = GeometryType.GeometryCollection
 
         operator fun plus(other: GeometryCollection) = GeometryCollection(this.geometries + other.geometries)
