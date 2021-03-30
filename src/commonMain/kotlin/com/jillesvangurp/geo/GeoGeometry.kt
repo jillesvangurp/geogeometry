@@ -891,19 +891,19 @@ class GeoGeometry {
         }
 
         /**
-         * Attempts to expand the polygon by calculating points around each of the polygon points that are translated the
+         * Attempts to expand the linearRing by calculating points around each of the polygon points that are translated the
          * specified amount of meters away. A new polygon is constructed from the resulting point cloud.
          *
-         * Given that the contains algorithm disregards polygon points as not contained in the polygon, it is useful to
-         * expand the polygon a little if you do require this.
+         * Given that the contains algorithm disregards linearRing points as not contained in the polygon, it is useful to
+         * expand the linearRing a little if you do require this.
          *
          * @param meters distance
          * @param points linestring polygon
-         * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
+         * @return a new linearRing that fully contains the old polygon and is roughly the specified meters wider.
          */
-
         fun expandPolygon(meters: Int, points: LinearRingCoordinates): LinearRingCoordinates {
             val expanded = Array(points.size * 8) { DoubleArray(0) }
+            // generate eight variants of each point
             for (i in points.indices) {
                 val p = points[i]
                 val lonPos = translateLongitude(p[0], p[1], meters.toDouble())[0]
@@ -920,7 +920,23 @@ class GeoGeometry {
                 expanded[i * 8 + 6] = doubleArrayOf(p[0], latPos)
                 expanded[i * 8 + 7] = doubleArrayOf(p[1], latNeg)
             }
+            // create a polygon that surrounds all the points
             return polygonForPoints(expanded)
+        }
+
+        /**
+         * Attempts to expand the polygon by calculating points around each of the polygon points that are translated the
+         * specified amount of meters away. A new polygon is constructed from the resulting point cloud.
+         *
+         * Given that the contains algorithm disregards polygon points as not contained in the polygon, it is useful to
+         * expand the polygon a little if you do require this.
+         *
+         * @param meters distance
+         * @param points linestring polygon
+         * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
+         */
+        fun expandPolygon(meters: Int, points: PolygonCoordinates): PolygonCoordinates {
+            return arrayOf(expandPolygon(meters,points[0]))
         }
 
         /**
