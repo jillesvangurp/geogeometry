@@ -1,8 +1,8 @@
 plugins {
-    kotlin("multiplatform") version "1.4.31"
-    kotlin("plugin.serialization") version "1.4.31"
-    id("com.github.ben-manes.versions") version "0.28.0" // gradle dependencyUpdates -Drevision=release
-    id("org.jmailen.kotlinter") version "3.3.0"
+    kotlin("multiplatform") version "1.4.32"
+    kotlin("plugin.serialization") version "1.4.32"
+    id("com.github.ben-manes.versions") version "0.38.0" // gradle dependencyUpdates -Drevision=release
+    id("org.jmailen.kotlinter") version "3.4.0"
     `maven-publish`
 }
 
@@ -53,7 +53,7 @@ kotlin {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
                     // yay kotest does multiplatform
-                    implementation("io.kotest:kotest-assertions-core:4.4.1")
+                    implementation("io.kotest:kotest-assertions-core:4.4.3")
                 }
             }
 
