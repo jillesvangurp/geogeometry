@@ -1,8 +1,8 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.GeoHashUtils
-import com.jillesvangurp.geo.latitude
-import com.jillesvangurp.geo.longitude
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.shouldBe

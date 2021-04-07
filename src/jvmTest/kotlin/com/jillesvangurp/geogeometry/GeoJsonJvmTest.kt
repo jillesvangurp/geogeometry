@@ -1,8 +1,8 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.FeatureCollection
 import com.jillesvangurp.geo.GeoHashUtils
-import com.jillesvangurp.geo.Geometry
+import com.jillesvangurp.geojson.FeatureCollection
+import com.jillesvangurp.geojson.Geometry
 import org.junit.Test
 
 class GeoJsonJvmTest {
@@ -15,6 +15,11 @@ class GeoJsonJvmTest {
             berlin.coordinates ?: throw IllegalArgumentException("coordinates missing")
         )
         val hashesCollection = FeatureCollection.fromGeoHashes(hashes)
-        println(json.encodeToString(FeatureCollection.serializer(), hashesCollection + FeatureCollection(listOf(berlin.asFeature()))))
+        println(
+            json.encodeToString(
+                FeatureCollection.serializer(),
+                hashesCollection + FeatureCollection(listOf(berlin.asFeature()))
+            )
+        )
     }
 }

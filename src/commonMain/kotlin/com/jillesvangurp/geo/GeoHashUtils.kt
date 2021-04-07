@@ -18,6 +18,7 @@
  */
 package com.jillesvangurp.geo
 
+import com.jillesvangurp.geojson.*
 import kotlin.math.min
 
 private val BITS = intArrayOf(16, 8, 4, 2, 1)
@@ -304,7 +305,7 @@ class GeoHashUtils {
          * -------------------------------------
          * u33dbfcn u33dbfcq | u33dbfcw u33dbfcy
          * u33dbfcp u33dbfcr | u33dbfcx u33dbfcz
-         </pre> *
+        </pre> *
          *
          * the first 4 share the north east 1/8th the first 8 share the north east 1/4th the first 16 share the north 1/2
          * and so on.
@@ -320,7 +321,7 @@ class GeoHashUtils {
          * 17 19 25 27
          * 20 22 28 30
          * 21 23 29 31
-         </pre> *
+        </pre> *
          *
          * Some useful properties: Anything ending with
          *
@@ -332,7 +333,7 @@ class GeoHashUtils {
          * 8-g = NE
          * h-r = SW
          * s-z = SE
-         </pre> *
+        </pre> *
          *
          * @param geoHash geo hash
          * @return String array with the geo hashes.
@@ -663,54 +664,54 @@ class GeoHashUtils {
                         for (i in 1 until polygonPoints.size) {
                             val current = polygonPoints[i]
                             if (GeoGeometry.linesCross(
-                                southLat,
-                                westLon,
-                                southLat,
-                                eastLon,
-                                last.latitude,
-                                last.longitude,
-                                current.latitude,
-                                current.longitude
-                            )
+                                    southLat,
+                                    westLon,
+                                    southLat,
+                                    eastLon,
+                                    last.latitude,
+                                    last.longitude,
+                                    current.latitude,
+                                    current.longitude
+                                )
                             ) {
                                 stillPartial.add(h)
                                 break
                             } else if (GeoGeometry.linesCross(
-                                southLat,
-                                eastLon,
-                                northLat,
-                                eastLon,
-                                last.latitude,
-                                last.longitude,
-                                current.latitude,
-                                current.longitude
-                            )
+                                    southLat,
+                                    eastLon,
+                                    northLat,
+                                    eastLon,
+                                    last.latitude,
+                                    last.longitude,
+                                    current.latitude,
+                                    current.longitude
+                                )
                             ) {
                                 stillPartial.add(h)
                                 break
                             } else if (GeoGeometry.linesCross(
-                                northLat,
-                                eastLon,
-                                northLat,
-                                westLon,
-                                last.latitude,
-                                last.longitude,
-                                current.latitude,
-                                current.longitude
-                            )
+                                    northLat,
+                                    eastLon,
+                                    northLat,
+                                    westLon,
+                                    last.latitude,
+                                    last.longitude,
+                                    current.latitude,
+                                    current.longitude
+                                )
                             ) {
                                 stillPartial.add(h)
                                 break
                             } else if (GeoGeometry.linesCross(
-                                northLat,
-                                westLon,
-                                southLat,
-                                westLon,
-                                last.latitude,
-                                last.longitude,
-                                current.latitude,
-                                current.longitude
-                            )
+                                    northLat,
+                                    westLon,
+                                    southLat,
+                                    westLon,
+                                    last.latitude,
+                                    last.longitude,
+                                    current.latitude,
+                                    current.longitude
+                                )
                             ) {
                                 stillPartial.add(h)
                                 break

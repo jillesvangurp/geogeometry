@@ -36,12 +36,12 @@ import io.kotest.matchers.shouldBe
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.junit.Test
-import java.util.Random
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.round
 
 class GeoGeometryJvmTest {
-    val bergstr16InvalidenBerlin = doubleArrayOf(13.393674,52.5310059)
+    val bergstr16InvalidenBerlin = doubleArrayOf(13.393674, 52.5310059)
     val bergstr16Berlin = doubleArrayOf(13.3941763, 52.5298311)
     val berlin = doubleArrayOf(13.385721, 52.527109)
     val sydney = doubleArrayOf(151.206146, -33.872796)
@@ -403,7 +403,7 @@ class GeoGeometryJvmTest {
         ) to arrayOf(london, potsDammerPlatz, moritzPlatz),
 
         arrayOf(rosenthalerPlatz, moritzPlatz, brandenBurgerGate) to
-            arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
+                arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
 
     )
 
@@ -494,7 +494,7 @@ class GeoGeometryJvmTest {
             berlin[0],
             berlin[1],
             berlin[0]
-        ) shouldBeLessThan  501.0
+        ) shouldBeLessThan 501.0
         distance(
             bbox[3],
             berlin[0],
@@ -506,7 +506,7 @@ class GeoGeometryJvmTest {
             berlin[0],
             berlin[1],
             berlin[0]
-        )  shouldBeLessThan 501.0
+        ) shouldBeLessThan 501.0
         distance(
             berlin[1],
             bbox[0],
@@ -629,7 +629,7 @@ class GeoGeometryJvmTest {
             )
             val distToPoint1 = distance(x1, y1, px, py)
             val distToPoint2 = distance(x1, y1, px, py)
-            distance shouldBeLessThanOrEqual  distToPoint1
+            distance shouldBeLessThanOrEqual distToPoint1
             distance shouldBeLessThanOrEqual distToPoint2
         }
     }
@@ -897,7 +897,13 @@ class GeoGeometryJvmTest {
 
     @Test
     fun headingFromTwoPoints() {
-        GeoGeometry.headingFromTwoPoints(doubleArrayOf(13.0,52.0), doubleArrayOf(14.0,53.0)) shouldBeApproximately  30.93571619
-        GeoGeometry.headingFromTwoPoints(doubleArrayOf(14.0,53.0),doubleArrayOf(13.0,52.0)) shouldBeApproximately  -148.270892801
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(13.0, 52.0),
+            doubleArrayOf(14.0, 53.0)
+        ) shouldBeApproximately 30.93571619
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(14.0, 53.0),
+            doubleArrayOf(13.0, 52.0)
+        ) shouldBeApproximately -148.270892801
     }
 }

@@ -39,13 +39,10 @@ package com.jillesvangurp.geo
 
 import com.jillesvangurp.geo.GeoGeometry.Companion.fromRadians
 import com.jillesvangurp.geo.GeoGeometry.Companion.toRadians
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
-import kotlin.math.tan
+import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
+import kotlin.math.*
 
 /**
  * Outcome of the vicenty algorithm.
@@ -113,7 +110,8 @@ fun vincenty(p1: PointCoordinates, p2: PointCoordinates): Vincenty {
         if (cos2SigmaM.isNaN()) cos2SigmaM = 0.0 // equatorial line: cosSqα=0
         val c: Double = flattening / 16 * cosSqAlpha * (4 + flattening * (4 - 3 * cosSqAlpha))
         lambdaPrevious = lambda
-        lambda = lonRadDifference + (1 - c) * flattening * sinAlpha * (sigma + c * sinSigma * (cos2SigmaM + c * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)))
+        lambda =
+            lonRadDifference + (1 - c) * flattening * sinAlpha * (sigma + c * sinSigma * (cos2SigmaM + c * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)))
     } while (abs(lambda - lambdaPrevious) > 1e-12 && --iterationLimit > 0)
     check(iterationLimit != 0.0) { "Formula failed to converge" }
     val uSq: Double =

@@ -13,4 +13,4 @@ infix fun Double.shouldBeApproximately(other: Double) {
     this.shouldBeApproximately(other, 0.0000001)
 }
 
-val json: Json = Json {  }
+val json: Json = Json { }

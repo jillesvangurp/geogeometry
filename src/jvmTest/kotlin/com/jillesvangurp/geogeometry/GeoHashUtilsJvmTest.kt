@@ -1,10 +1,10 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.*
 import com.jillesvangurp.geo.GeoGeometry.Companion.area
 import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
 import com.jillesvangurp.geo.GeoGeometry.Companion.distance
 import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
+import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geo.GeoHashUtils.Companion.contains
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decode
 import com.jillesvangurp.geo.GeoHashUtils.Companion.decodeBbox
@@ -22,6 +22,7 @@ import com.jillesvangurp.geo.GeoHashUtils.Companion.south
 import com.jillesvangurp.geo.GeoHashUtils.Companion.subHashes
 import com.jillesvangurp.geo.GeoHashUtils.Companion.suitableHashLength
 import com.jillesvangurp.geo.GeoHashUtils.Companion.west
+import com.jillesvangurp.geojson.*
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -162,7 +163,7 @@ class GeoHashUtilsJvmTest {
         val radius = 500
         val hashes = geoHashesForCircle(8, latitude, longitude, radius.toDouble())
         for (hash in hashes) {
-           distance(
+            distance(
                 decode(
                     hash
                 ),
@@ -477,7 +478,7 @@ class GeoHashUtilsJvmTest {
     private fun assertSimilar(d1: Double, d2: Double) {
         // allow for some margin of error
         // should be similar$d1 and $d2
-         abs(d1 - d2) shouldBeLessThan 0.0000001
+        abs(d1 - d2) shouldBeLessThan 0.0000001
     }
 
     @Test
@@ -537,7 +538,7 @@ class GeoHashUtilsJvmTest {
         val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))
         // it's a concave polygon so the area of the hashes should be much smaller than that of the
         // bounding box containing the polygon
-        area shouldBeLessThan bboxArea*0.6
+        area shouldBeLessThan bboxArea * 0.6
 
     }
 }

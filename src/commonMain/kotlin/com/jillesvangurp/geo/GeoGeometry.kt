@@ -23,6 +23,7 @@
 
 package com.jillesvangurp.geo
 
+import com.jillesvangurp.geojson.*
 import kotlin.math.*
 
 /**
@@ -210,7 +211,11 @@ class GeoGeometry {
          * @return true if the polygon contains the coordinate
          */
 
-        fun polygonContains(latitude: Double, longitude: Double, polygonCoordinatesPoints: PolygonCoordinates): Boolean {
+        fun polygonContains(
+            latitude: Double,
+            longitude: Double,
+            polygonCoordinatesPoints: PolygonCoordinates
+        ): Boolean {
             validate(latitude, longitude, false)
             return polygonContains(latitude, longitude, *polygonCoordinatesPoints[0])
         }
@@ -343,8 +348,22 @@ class GeoGeometry {
         }
 
 
-        fun linesCross(l1p1: PointCoordinates, l1p2: PointCoordinates, l2p1: PointCoordinates, l2p2: PointCoordinates): Boolean {
-            return linesCross(l1p1.longitude, l1p1.latitude, l1p2.longitude, l1p2.latitude, l2p1.longitude, l2p1.latitude, l2p2.longitude, l2p2.latitude)
+        fun linesCross(
+            l1p1: PointCoordinates,
+            l1p2: PointCoordinates,
+            l2p1: PointCoordinates,
+            l2p2: PointCoordinates
+        ): Boolean {
+            return linesCross(
+                l1p1.longitude,
+                l1p1.latitude,
+                l1p2.longitude,
+                l1p2.latitude,
+                l2p1.longitude,
+                l2p1.latitude,
+                l2p2.longitude,
+                l2p2.latitude
+            )
         }
 
         /**
@@ -425,9 +444,9 @@ class GeoGeometry {
                         val yi = a1 + gradient1 * xi
 
                         (x1 - xi) * (xi - x2) >= 0 &&
-                            (u1 - xi) * (xi - u2) >= 0 &&
-                            (y1 - yi) * (yi - y2) >= 0 &&
-                            (v1 - yi) * (yi - v2) >= 0
+                                (u1 - xi) * (xi - u2) >= 0 &&
+                                (y1 - yi) * (yi - y2) >= 0 &&
+                                (v1 - yi) * (yi - v2) >= 0
                     }
                 }
             }
@@ -532,7 +551,7 @@ class GeoGeometry {
         }
 
         fun fromRadians(degrees: Double): Double {
-            return degrees * 1/DEGREES_TO_RADIANS
+            return degrees * 1 / DEGREES_TO_RADIANS
         }
 
         /**
@@ -563,7 +582,8 @@ class GeoGeometry {
             val deltaLon = toRadians(long2 - long1)
 
             val a =
-                sin(deltaLat / 2) * sin(deltaLat / 2) + cos(toRadians(lat1)) * cos(toRadians(lat2)) * sin(deltaLon / 2) * sin(deltaLon / 2
+                sin(deltaLat / 2) * sin(deltaLat / 2) + cos(toRadians(lat1)) * cos(toRadians(lat2)) * sin(deltaLon / 2) * sin(
+                    deltaLon / 2
                 )
 
             val c = 2 * asin(sqrt(a))
@@ -684,7 +704,10 @@ class GeoGeometry {
          * @return the distance of the point to the line
          */
 
-        fun distanceToLineString(pointCoordinates: PointCoordinates, lineStringCoordinates: LineStringCoordinates): Double {
+        fun distanceToLineString(
+            pointCoordinates: PointCoordinates,
+            lineStringCoordinates: LineStringCoordinates
+        ): Double {
             if (lineStringCoordinates.size < 2) {
                 throw IllegalArgumentException("not enough segments in line")
             }
@@ -936,7 +959,7 @@ class GeoGeometry {
          * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
          */
         fun expandPolygon(meters: Int, points: PolygonCoordinates): PolygonCoordinates {
-            return arrayOf(expandPolygon(meters,points[0]))
+            return arrayOf(expandPolygon(meters, points[0]))
         }
 
         /**
@@ -974,10 +997,10 @@ class GeoGeometry {
                 lUpperSize++
 
                 while (lUpperSize > 2 && !rightTurn(
-                    lUpper[lUpperSize - 3],
-                    lUpper[lUpperSize - 2],
-                    lUpper[lUpperSize - 1]
-                )
+                        lUpper[lUpperSize - 3],
+                        lUpper[lUpperSize - 2],
+                        lUpper[lUpperSize - 1]
+                    )
                 ) {
                     // Remove the middle point of the three last
                     lUpper[lUpperSize - 2] = lUpper[lUpperSize - 1]
@@ -997,10 +1020,10 @@ class GeoGeometry {
                 lLowerSize++
 
                 while (lLowerSize > 2 && !rightTurn(
-                    lLower[lLowerSize - 3],
-                    lLower[lLowerSize - 2],
-                    lLower[lLowerSize - 1]
-                )
+                        lLower[lLowerSize - 3],
+                        lLower[lLowerSize - 2],
+                        lLower[lLowerSize - 1]
+                    )
                 ) {
                     // Remove the middle point of the three last
                     lLower[lLowerSize - 2] = lLower[lLowerSize - 1]
@@ -1050,7 +1073,10 @@ class GeoGeometry {
             var factor = 1
             if (direction != null) {
 
-                if (direction.startsWith("w") || direction.startsWith("s") || direction.startsWith("W") || direction.startsWith("S")) {
+                if (direction.startsWith("w") || direction.startsWith("s") || direction.startsWith("W") || direction.startsWith(
+                        "S"
+                    )
+                ) {
                     factor = -1
                 }
             }
@@ -1083,7 +1109,7 @@ class GeoGeometry {
                 sin(dLng) * cos(toLat),
                 cos(fromLat) * sin(toLat) - sin(fromLat) * cos(toLat) * cos(dLng)
             )
-            return wrap(RADIANS_TO_DEGREES * heading , -180.0, 180.0)
+            return wrap(RADIANS_TO_DEGREES * heading, -180.0, 180.0)
         }
 
         /**
@@ -1282,7 +1308,7 @@ class GeoGeometry {
             for (p in lineCoordinates) {
                 buf.append(pointToString(p)).append(",")
             }
-            return buf.toString().substring(0, buf.length-1)
+            return buf.toString().substring(0, buf.length - 1)
         }
 
         /**
