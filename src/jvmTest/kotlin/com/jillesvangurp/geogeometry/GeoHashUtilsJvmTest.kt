@@ -528,7 +528,7 @@ class GeoHashUtilsJvmTest {
         ]
       }            
 """.trimIndent()
-        val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.PolygonGeometry
+        val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
         val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0) ?: throw IllegalStateException())
 
 
