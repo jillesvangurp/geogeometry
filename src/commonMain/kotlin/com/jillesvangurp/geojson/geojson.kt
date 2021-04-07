@@ -93,6 +93,8 @@ private fun deepEquals(left: DoubleArray?, right: DoubleArray?): Boolean {
     // compiler weirdness right == null produces a reference not found: == ;-/
     return left?.contentEquals(right) ?: right?.equals(null) ?: false
 }
+infix fun Geometry.Point.line(other: Geometry.Point) = arrayOf(this.coordinates, other.coordinates)
+operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection) = Geometry.GeometryCollection(this.geometries + other.geometries)
 
 @Serializable(with = Geometry.Companion::class)
 sealed class Geometry {
@@ -102,7 +104,6 @@ sealed class Geometry {
     data class Point(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
         @Required
         override val type = GeometryType.Point
-        infix fun line(other: Point) = arrayOf(this.coordinates, other.coordinates)
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -255,8 +256,6 @@ sealed class Geometry {
     data class GeometryCollection(val geometries: Array<Geometry>, val bbox: BoundingBox? = null) : Geometry() {
         @Required
         override val type = GeometryType.GeometryCollection
-
-        operator fun plus(other: GeometryCollection) = GeometryCollection(this.geometries + other.geometries)
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
