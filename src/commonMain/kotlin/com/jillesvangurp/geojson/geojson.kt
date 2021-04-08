@@ -83,22 +83,31 @@ fun Geometry.asFeature(properties: JsonObject? = null, bbox: BoundingBox? = null
     Feature(this, properties, bbox)
 
 private fun deepEquals(left: Array<*>?, right: Array<*>?): Boolean {
-    return left?.contentDeepEquals(right) ?: (right == null)
+    // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
+    // so hack around it with right?.let { false } ?: true, which is ugly
+    return left?.let { it.contentDeepEquals(right) } ?: right?.let { false } ?: true
 }
 
 private fun deepEquals(left: DoubleArray?, right: DoubleArray?): Boolean {
-    // compiler weirdness right == null produces a reference not found: == ;-/
-    return left?.contentEquals(right) ?: right?.equals(null) ?: false
+    // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
+    // so hack around it with right?.let { false } ?: true, which is ugly
+    return left?.let {
+        it.contentEquals(right)
+
+    } ?: right?.let { false } ?: true
+
 }
+
 infix fun Geometry.Point.line(other: Geometry.Point) = arrayOf(this.coordinates, other.coordinates)
-operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection) = Geometry.GeometryCollection(this.geometries + other.geometries)
+operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection) =
+    Geometry.GeometryCollection(this.geometries + other.geometries)
 
 @Serializable(with = Geometry.Companion::class)
 sealed class Geometry {
     abstract val type: GeometryType
 
     override fun toString(): String {
-        return Json.encodeToString(serializer(),this)
+        return Json.encodeToString(serializer(), this)
     }
 
     @Serializable
