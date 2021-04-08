@@ -11,10 +11,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonEncoder
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.*
 import kotlin.reflect.KClass
 
 /**
@@ -99,6 +96,10 @@ operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection
 @Serializable(with = Geometry.Companion::class)
 sealed class Geometry {
     abstract val type: GeometryType
+
+    override fun toString(): String {
+        return Json.encodeToString(serializer(),this)
+    }
 
     @Serializable
     data class Point(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
