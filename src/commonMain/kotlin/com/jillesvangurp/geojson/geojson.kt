@@ -2,6 +2,7 @@
 
 package com.jillesvangurp.geojson
 
+import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoHashUtils
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
@@ -27,44 +28,61 @@ typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
 
 typealias BoundingBox = DoubleArray
 
-fun PointCoordinates.stringify() = "[${this[0]},${this[1]}]"
+fun PointCoordinates.stringify() = "[${this.longitude},${this.latitude}]"
 fun LineStringCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
 fun PolygonCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
 fun MultiPolygonCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
 
+fun PointCoordinates.geometry() = Geometry.Point(coordinates = this)
+fun MultiPointCoordinates.multiPointGeometry() = Geometry.MultiPoint(coordinates = this)
+fun LineStringCoordinates.lineStringGeometry() = Geometry.LineString(coordinates = this)
+fun MultiLineStringCoordinates.multiLineStringGeometry() = Geometry.MultiLineString(coordinates = this)
+fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
+fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
+
+fun Geometry.ensureFollowsRightHandSideRule() = when(this) {
+    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
+    is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
+    else -> this
+}
+
+fun Geometry.ensureHasAltitude() =  when(this) {
+    is Geometry.Point -> if(this.coordinates?.size == 3) this else this.copy()
+    is Geometry.MultiPoint -> TODO()
+    is Geometry.LineString -> TODO()
+    is Geometry.MultiLineString -> TODO()
+    is Geometry.Polygon -> TODO()
+    is Geometry.MultiPolygon -> TODO()
+    is Geometry.GeometryCollection -> TODO()
+}
 fun BoundingBox.isValid(): Boolean {
     return this.westLongitude <= this.eastLongitude && this.southLatitude <= this.northLatitude
 }
 
+fun PointCoordinates.ensureHasAltitude() = if(this.size == 3) this else doubleArrayOf(this.longitude,this.latitude,0.0)
+//fun MultiPointCoordinates.ensureHasAltitude() =
+
+
 val PointCoordinates.latitude: Double
-    get() {
-        return this[1]
-    }
+    get() = this[1]
 
 val PointCoordinates.longitude: Double
-    get() {
-        return this[0]
-    }
+    get() = this[0]
+
+val PointCoordinates.altitude: Double
+    get() = if(this.size == 3) this[2] else 0.0
 
 val BoundingBox.southLatitude: Double
-    get() {
-        return this[1]
-    }
+    get() = this[1]
 
 val BoundingBox.northLatitude: Double
-    get() {
-        return this[3]
-    }
+    get() = this[3]
 
 val BoundingBox.westLongitude: Double
-    get() {
-        return this[0]
-    }
+    get() = this[0]
 
 val BoundingBox.eastLongitude: Double
-    get() {
-        return this[2]
-    }
+    get() = this[2]
 
 fun BoundingBox.polygon(): Geometry.Polygon {
     val coordinates = arrayOf(
