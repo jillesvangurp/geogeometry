@@ -5,7 +5,9 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geojson.Geometry
+import com.jillesvangurp.geojson.deDupCoordinates
 import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
+import com.jillesvangurp.geojson.polygonGeometry
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
@@ -19,10 +21,10 @@ class GeoGeometryTest {
     val rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
     val oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
 
+    val bigRing = arrayOf(potsDammerPlatz,brandenBurgerGate,naturkundeMuseum,senefelderPlatz,moritzPlatz,potsDammerPlatz)
+    val smallRing = arrayOf(rosenthalerPlatz,oranienburgerTor,bergstr16Berlin,rosenthalerPlatz)
     @Test
     fun shouldBeValidPolygon() {
-        val bigRing = arrayOf(potsDammerPlatz,brandenBurgerGate,naturkundeMuseum,senefelderPlatz,moritzPlatz,potsDammerPlatz)
-        val smallRing = arrayOf(rosenthalerPlatz,oranienburgerTor,bergstr16Berlin,rosenthalerPlatz)
         bigRing.hasSameStartAndEnd() shouldBe true
         smallRing.hasSameStartAndEnd() shouldBe true
 
@@ -32,10 +34,8 @@ class GeoGeometryTest {
         arrayOf(smallRing).isValid() shouldBe false
         arrayOf(smallRing.changeOrder()).isValid() shouldBe true
 
-        arrayOf(bigRing, smallRing.changeOrder()).also { println(Geometry.Polygon(it)) }.isValid() shouldBe false
-        arrayOf(bigRing.changeOrder(), smallRing).also {
-            println(Geometry.Polygon(it))
-        }.isValid() shouldBe true
+        arrayOf(bigRing, smallRing.changeOrder()).isValid() shouldBe false
+        arrayOf(bigRing.changeOrder(), smallRing).isValid() shouldBe true
         arrayOf(bigRing.changeOrder(), smallRing.changeOrder()).isValid() shouldBe false
 
         arrayOf(bigRing, smallRing.changeOrder()).ensureFollowsRightHandSideRule().isValid() shouldBe true
@@ -47,7 +47,18 @@ class GeoGeometryTest {
     fun shouldBeValid() {
         val polygon = json.decodeFromString(Geometry.Polygon.serializer(), badGeo)
         polygon.coordinates?.isValid() shouldBe false
-        (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).also { print(it) }.coordinates?.isValid() shouldBe true
+        (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.isValid() shouldBe true
+    }
+
+    @Test
+    fun shouldDeDupGeometry() {
+        val coordinates = arrayOf(arrayOf(moritzPlatz, moritzPlatz, bergstr16Berlin, oranienburgerTor, moritzPlatz))
+        val orig = coordinates.polygonGeometry().ensureFollowsRightHandSideRule()
+        val geo = orig.deDupCoordinates()
+        geo as Geometry.Polygon
+        val newSize = geo.coordinates?.get(0)?.size ?: 0
+        val oldSize = (orig as Geometry.Polygon).coordinates?.get(0)?.size ?: 0
+        newSize shouldBe oldSize -1
     }
 
     val badGeo = """
