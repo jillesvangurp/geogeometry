@@ -475,12 +475,22 @@ fun Geometry.deDupCoordinates(): Geometry = when(this) {
     is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.map { line ->
         val deduped = line.distinct()
         // close the polygon again
-        (deduped + listOf(deduped[0])).toTypedArray() }?.toTypedArray())
+        if(deduped.size<line.size) {
+            (deduped + listOf(deduped[0])).toTypedArray()
+        } else {
+            line
+        }
+
+    }?.toTypedArray())
     is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.map {
         it.map { line ->
             val deduped = line.distinct()
-            // close the polygon again
-            (deduped + listOf(deduped[0])).toTypedArray() }.toTypedArray()
+            if(deduped.size<line.size) {
+                (deduped + listOf(deduped[0])).toTypedArray()
+            } else {
+                line
+            }
+        }.toTypedArray()
     }?.toTypedArray())
     is Geometry.GeometryCollection -> {
         this.copy(geometries = this.geometries.map { it.deDupCoordinates() }.toTypedArray())
