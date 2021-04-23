@@ -4,6 +4,7 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.changeOrder
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
+import com.jillesvangurp.geojson.Geometry
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
@@ -23,12 +24,20 @@ class GeoGeometryTest {
         val smallRing = arrayOf(rosenthalerPlatz,oranienburgerTor,bergstr16Berlin,rosenthalerPlatz)
         bigRing.hasSameStartAndEnd() shouldBe true
         smallRing.hasSameStartAndEnd() shouldBe true
-        arrayOf(bigRing).isValid() shouldBe true
-        arrayOf(smallRing).isValid() shouldBe true
-        arrayOf(bigRing, smallRing.changeOrder()).isValid() shouldBe true
-        arrayOf(bigRing, smallRing).isValid() shouldBe false
-        arrayOf(bigRing, smallRing).ensureFollowsRightHandSideRule().isValid() shouldBe true
-        arrayOf(bigRing.changeOrder(), smallRing).isValid() shouldBe false
+
+        arrayOf(bigRing).isValid() shouldBe false
+        arrayOf(bigRing.changeOrder()).isValid() shouldBe true
+
+        arrayOf(smallRing).isValid() shouldBe false
+        arrayOf(smallRing.changeOrder()).isValid() shouldBe true
+
+        arrayOf(bigRing, smallRing.changeOrder()).also { println(Geometry.Polygon(it)) }.isValid() shouldBe false
+        arrayOf(bigRing.changeOrder(), smallRing).also {
+            println(Geometry.Polygon(it))
+        }.isValid() shouldBe true
+        arrayOf(bigRing.changeOrder(), smallRing.changeOrder()).isValid() shouldBe false
+
+        arrayOf(bigRing, smallRing.changeOrder()).ensureFollowsRightHandSideRule().isValid() shouldBe true
         arrayOf(bigRing.changeOrder(), smallRing).ensureFollowsRightHandSideRule().isValid() shouldBe true
         arrayOf(bigRing.changeOrder(), smallRing.changeOrder()).ensureFollowsRightHandSideRule().isValid() shouldBe true
     }

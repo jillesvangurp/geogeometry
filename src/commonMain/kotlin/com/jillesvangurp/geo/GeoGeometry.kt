@@ -1401,13 +1401,22 @@ class GeoGeometry {
             }
         }
 
+        /**
+         * Checks if the polygon follows the geojson right hand side rule that requires
+         * the outer linear ring to have the coordinates in counter clockwise order (right hand)
+         * and the inner ones in clockwise order.
+         *
+         * Returns a copy of the polygon with the outer ring and inner rings corrected.
+         *
+         * https://tools.ietf.org/html/rfc7946#section-3.1.6
+         */
         fun PolygonCoordinates.ensureFollowsRightHandSideRule(): PolygonCoordinates {
             val holes = holes()
             if(this.isValid()) {
                 return this
             } else {
                 val newPolygonCoordinates = listOf(outer().let {
-                    if (it.isClockWise()) {
+                    if (it.isCounterClockWise()) {
                         it
                     } else {
                         it.changeOrder()
@@ -1415,7 +1424,7 @@ class GeoGeometry {
                 })
                 val inner = holes.map { it ->
                     it.let { hole ->
-                        if (hole.isCounterClockWise()) {
+                        if (hole.isClockWise()) {
                             hole
                         } else {
                             hole.changeOrder()
@@ -1425,22 +1434,60 @@ class GeoGeometry {
                 return (newPolygonCoordinates + inner).toTypedArray()
             }
         }
+
+        /**
+         * Applies the right hand rule to all of the polygons. Returns a corrected copy.
+         *
+         * https://tools.ietf.org/html/rfc7946#section-3.1.6
+         */
         fun MultiPolygonCoordinates.ensureFollowsRightHandSideRule() = this.map { it.ensureFollowsRightHandSideRule() }.toTypedArray()
 
+        /**
+         * True if start and end are the same.
+         */
         fun LinearRingCoordinates.hasSameStartAndEnd() = this.first().contentEquals(this.last()) && this.size>1
-        fun LinearRingCoordinates.isCounterClockWise() = !this.isClockWise()
-        fun PolygonCoordinates.outer() = this[0]
-        fun PolygonCoordinates.holes() = if(this.size > 1) this.slice(1 until this.size) else listOf()
-        fun PolygonCoordinates.isValid() = this[0].isClockWise() && this.holes().map { it.isClockWise() }.none { it } && this.all { it.hasSameStartAndEnd() }
 
+        /**
+         * Returns the first linear ring, which is the outer ring of the polygon. The remaining rings are holes.
+         */
+        fun PolygonCoordinates.outer() = this[0]
+
+        /**
+         * Return the holes in the polygon.
+         */
+        fun PolygonCoordinates.holes() = if(this.size > 1) this.slice(1 until this.size) else listOf()
+
+        /**
+         * True if the rings are in the correct order (right hand rule), all rings have the same start and end, and all rings have at least 3 points.
+         */
+        fun PolygonCoordinates.isValid() = this[0].isCounterClockWise() && this.holes().map { it.isCounterClockWise() }.none { it } && this.all { it.hasSameStartAndEnd() } && this.all {it.size>2}
+
+        /**
+         * True if all polygons in the multipolygon are valid.
+         */
         fun MultiPolygonCoordinates.isValid() = this.all { it.isValid() }
 
+        /**
+         * Returns a copy of the ring with the points in reverse order.
+         */
         fun LinearRingCoordinates.changeOrder() = this.let {
+            // make a copy because reverse modifies the array in place.
             val copy = it.copyOf()
             copy.reverse()
             copy
         }
 
+        /**
+         * True if the order of the coordinates in the ring is counter clockwise. You can use this to check
+         * for the [right hand rule]( https://tools.ietf.org/html/rfc7946#section-3.1.6) on polygons
+         */
+        fun LinearRingCoordinates.isCounterClockWise() = !this.isClockWise()
+
+        /**
+         * True if the order of the coordinates in the ring is clockwise.
+         *
+         * Based on some suggestions on [stackoverflow](https://stackoverflow.com/a/1165943/1041442)
+         */
         fun LinearRingCoordinates.isClockWise() : Boolean {
             // Sum over the edges, (x2 − x1)(y2 + y1): https://stackoverflow.com/a/1165943/1041442
             if(this.size <2) {

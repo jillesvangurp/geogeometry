@@ -106,10 +106,6 @@ operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection
 sealed class Geometry {
     abstract val type: GeometryType
 
-    override fun toString(): String {
-        return Json.encodeToString(serializer(), this)
-    }
-
     @Serializable
     data class Point(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
         @Required
@@ -131,6 +127,8 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
+        override fun toString(): String = Json.encodeToString(serializer(), this)
 
         companion object {
 
@@ -161,6 +159,8 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
+        override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
 
@@ -186,6 +186,8 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
+        override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
     @Serializable
@@ -212,6 +214,8 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
+        override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
     @Serializable
@@ -236,6 +240,8 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
+        override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
     @Serializable
@@ -260,6 +266,7 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+        override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
     @Serializable
@@ -288,6 +295,8 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
+        override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
     companion object : KSerializer<Geometry> {
@@ -371,6 +380,8 @@ data class Feature(val geometry: Geometry?, val properties: JsonObject? = null, 
         result = 31 * result + type.hashCode()
         return result
     }
+
+    override fun toString(): String = Json.encodeToString(serializer(), this)
 }
 
 @Serializable
@@ -407,6 +418,8 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
 
         fun of(vararg features: Feature) = FeatureCollection(features.toList())
     }
+
+    override fun toString(): String = Json.encodeToString(serializer(),this)
 }
 
 /**
