@@ -3,6 +3,7 @@
 package com.jillesvangurp.geojson
 
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
+import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoHashUtils
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
@@ -475,20 +476,21 @@ fun Geometry.deDupCoordinates(): Geometry = when(this) {
     is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.map { line ->
         val deduped = line.distinct()
         // close the polygon again
-        if(deduped.size<line.size) {
-            (deduped + listOf(deduped[0])).toTypedArray()
+        val deDuped = line.distinct().toTypedArray()
+        if(deDuped.hasSameStartAndEnd()) {
+            deDuped
         } else {
-            line
+            (deDuped + arrayOf(deDuped[0]))
         }
 
     }?.toTypedArray())
     is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.map {
         it.map { line ->
-            val deduped = line.distinct()
-            if(deduped.size<line.size) {
-                (deduped + listOf(deduped[0])).toTypedArray()
+            val deDuped = line.distinct().toTypedArray()
+            if(deDuped.hasSameStartAndEnd()) {
+                deDuped
             } else {
-                line
+                (deDuped + arrayOf(deDuped[0]))
             }
         }.toTypedArray()
     }?.toTypedArray())
