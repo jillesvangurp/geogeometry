@@ -24,7 +24,7 @@ repositories {
 and then add the dependency:
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.1.6")
+implementation("com.github.jillesvangurp:geogeometry:3.1.22")
 ```
 
 Alternatively feel free to lift code that you need in your own project; just make sure to respect copyright & [licensing (MIT & Apache 2.0)](LICENSE).
