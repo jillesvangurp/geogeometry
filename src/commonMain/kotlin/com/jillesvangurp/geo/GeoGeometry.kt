@@ -1400,5 +1400,56 @@ class GeoGeometry {
                 }
             }
         }
+
+        fun PolygonCoordinates.ensureFollowsRightHandSideRule(): PolygonCoordinates {
+            val holes = holes()
+            if(this.isValid()) {
+                return this
+            } else {
+                val newPolygonCoordinates = listOf(outer().let {
+                    if (it.isClockWise()) {
+                        it
+                    } else {
+                        it.changeOrder()
+                    }
+                })
+                val inner = holes.map { it ->
+                    it.let { hole ->
+                        if (hole.isCounterClockWise()) {
+                            hole
+                        } else {
+                            hole.changeOrder()
+                        }
+                    }
+                }
+                return (newPolygonCoordinates + inner).toTypedArray()
+            }
+        }
+
+        fun PolygonCoordinates.outer() = this[0]
+        fun PolygonCoordinates.holes() = if(this.size > 1) this.slice(1 until this.size) else listOf()
+        fun PolygonCoordinates.isValid() = this[0].isClockWise() && this.holes().map { it.isClockWise() }.none { it } && this.all { it.hasSameStartAndEnd() }
+        fun LinearRingCoordinates.hasSameStartAndEnd() = this.first().contentEquals(this.last()) && this.size>1
+        fun LinearRingCoordinates.isCounterClockWise() = !this.isClockWise()
+
+        fun LinearRingCoordinates.changeOrder() = this.let {
+            val copy = it.copyOf()
+            copy.reverse()
+            copy
+        }
+
+        fun LinearRingCoordinates.isClockWise() : Boolean {
+            // Sum over the edges, (x2 − x1)(y2 + y1): https://stackoverflow.com/a/1165943/1041442
+            if(this.size <2) {
+                return true
+            }
+            var last=this[0]
+            var sum=0.0
+            this.slice(1 until this.size).forEach { current ->
+                sum+= (current.longitude - last.longitude) * (current.latitude + last.latitude)
+                last = current
+            }
+            return sum > 0
+        }
     }
 }
