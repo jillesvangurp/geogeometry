@@ -1425,12 +1425,15 @@ class GeoGeometry {
                 return (newPolygonCoordinates + inner).toTypedArray()
             }
         }
+        fun MultiPolygonCoordinates.ensureFollowsRightHandSideRule() = this.map { it.ensureFollowsRightHandSideRule() }.toTypedArray()
 
+        fun LinearRingCoordinates.hasSameStartAndEnd() = this.first().contentEquals(this.last()) && this.size>1
+        fun LinearRingCoordinates.isCounterClockWise() = !this.isClockWise()
         fun PolygonCoordinates.outer() = this[0]
         fun PolygonCoordinates.holes() = if(this.size > 1) this.slice(1 until this.size) else listOf()
         fun PolygonCoordinates.isValid() = this[0].isClockWise() && this.holes().map { it.isClockWise() }.none { it } && this.all { it.hasSameStartAndEnd() }
-        fun LinearRingCoordinates.hasSameStartAndEnd() = this.first().contentEquals(this.last()) && this.size>1
-        fun LinearRingCoordinates.isCounterClockWise() = !this.isClockWise()
+
+        fun MultiPolygonCoordinates.isValid() = this.all { it.isValid() }
 
         fun LinearRingCoordinates.changeOrder() = this.let {
             val copy = it.copyOf()
