@@ -5,9 +5,7 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geojson.Geometry
-import com.jillesvangurp.geojson.deDupCoordinates
 import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
-import com.jillesvangurp.geojson.polygonGeometry
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
@@ -48,17 +46,6 @@ class GeoGeometryTest {
         val polygon = json.decodeFromString(Geometry.Polygon.serializer(), badGeo)
         polygon.coordinates?.isValid() shouldBe false
         (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.isValid() shouldBe true
-    }
-
-    @Test
-    fun shouldDeDupGeometry() {
-        val coordinates = arrayOf(arrayOf(moritzPlatz, moritzPlatz, bergstr16Berlin, oranienburgerTor, moritzPlatz))
-        val orig = coordinates.polygonGeometry().ensureFollowsRightHandSideRule()
-        val geo = orig.deDupCoordinates()
-        geo as Geometry.Polygon
-        val newSize = geo.coordinates?.get(0)?.size ?: 0
-        val oldSize = (orig as Geometry.Polygon).coordinates?.get(0)?.size ?: 0
-        newSize shouldBe oldSize -1
     }
 
     val badGeo = """

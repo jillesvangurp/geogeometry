@@ -467,35 +467,3 @@ enum class GeometryType {
         GeometryCollection -> Geometry.GeometryCollection::class
     }
 }
-
-fun Geometry.deDupCoordinates(): Geometry = when(this) {
-    is Geometry.Point -> this
-    is Geometry.MultiPoint -> this.copy(coordinates = this.coordinates?.distinct()?.toTypedArray())
-    is Geometry.LineString -> this.copy(coordinates = this.coordinates?.distinct()?.toTypedArray())
-    is Geometry.MultiLineString -> this.copy(coordinates = this.coordinates?.map { line -> line.distinct().toTypedArray() }?.toTypedArray())
-    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.map { line ->
-        val deduped = line.distinct()
-        // close the polygon again
-        val deDuped = line.distinct().toTypedArray()
-        if(deDuped.hasSameStartAndEnd()) {
-            deDuped
-        } else {
-            (deDuped + arrayOf(deDuped[0]))
-        }
-
-    }?.toTypedArray())
-    is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.map {
-        it.map { line ->
-            val deDuped = line.distinct().toTypedArray()
-            if(deDuped.hasSameStartAndEnd()) {
-                deDuped
-            } else {
-                (deDuped + arrayOf(deDuped[0]))
-            }
-        }.toTypedArray()
-    }?.toTypedArray())
-    is Geometry.GeometryCollection -> {
-        this.copy(geometries = this.geometries.map { it.deDupCoordinates() }.toTypedArray())
-    }
-}
-
