@@ -93,8 +93,8 @@ class GeoHashUtilsJvmTest {
         for (h in geoHashesForPolygon) {
             min = min(min, h.length)
         }
-        // there should be some hashes with length=3
-        min shouldBe 3
+        // there should be some hashes with length=4
+        min shouldBe 4
         // huge area, should generate lots of hashes
         geoHashesForPolygon shouldHaveAtLeastSize 1000
     }
@@ -537,9 +537,9 @@ class GeoHashUtilsJvmTest {
 
         val area = hashes.map { GeoHashUtils.decodeBbox(it) }.map { area(it) }.sum()
         val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))
-        // it's a concave polygon so the area of the hashes should be much smaller than that of the
+        // it's a concave polygon so the area of the hashes should be smaller than that of the
         // bounding box containing the polygon
-        area shouldBeLessThan bboxArea * 0.6
+        area shouldBeLessThan bboxArea * 0.7
 
     }
 }

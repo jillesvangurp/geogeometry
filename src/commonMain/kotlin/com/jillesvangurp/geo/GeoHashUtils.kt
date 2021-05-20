@@ -530,7 +530,7 @@ class GeoHashUtils {
             val eastLon = bbox.eastLongitude
 
             val diagonal = GeoGeometry.distance(southLat, westLon, northLat, eastLon)
-            val hashLength = suitableHashLength(diagonal, southLat, westLon)
+            val hashLength = suitableHashLength(diagonal, southLat, westLon) + 1 // (tiny boxes on the border)
 
             var partiallyContained: MutableSet<String> = HashSet()
             // now lets generate all geohashes for the containing bounding box
