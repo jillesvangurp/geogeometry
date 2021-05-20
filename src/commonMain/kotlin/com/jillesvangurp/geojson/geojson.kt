@@ -3,11 +3,13 @@
 package com.jillesvangurp.geojson
 
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
-import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoHashUtils
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
@@ -41,14 +43,14 @@ fun MultiLineStringCoordinates.multiLineStringGeometry() = Geometry.MultiLineStr
 fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
 fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
 
-fun Geometry.ensureFollowsRightHandSideRule() = when(this) {
+fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
     is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
     is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
     else -> this
 }
 
-fun Geometry.ensureHasAltitude() =  when(this) {
-    is Geometry.Point -> if(this.coordinates?.size == 3) this else this.copy()
+fun Geometry.ensureHasAltitude() = when (this) {
+    is Geometry.Point -> if (this.coordinates?.size == 3) this else this.copy()
     is Geometry.MultiPoint -> TODO()
     is Geometry.LineString -> TODO()
     is Geometry.MultiLineString -> TODO()
@@ -56,11 +58,13 @@ fun Geometry.ensureHasAltitude() =  when(this) {
     is Geometry.MultiPolygon -> TODO()
     is Geometry.GeometryCollection -> TODO()
 }
+
 fun BoundingBox.isValid(): Boolean {
     return this.westLongitude <= this.eastLongitude && this.southLatitude <= this.northLatitude
 }
 
-fun PointCoordinates.ensureHasAltitude() = if(this.size == 3) this else doubleArrayOf(this.longitude,this.latitude,0.0)
+fun PointCoordinates.ensureHasAltitude() =
+    if (this.size == 3) this else doubleArrayOf(this.longitude, this.latitude, 0.0)
 //fun MultiPointCoordinates.ensureHasAltitude() =
 
 
@@ -71,7 +75,7 @@ val PointCoordinates.longitude: Double
     get() = this[0]
 
 val PointCoordinates.altitude: Double
-    get() = if(this.size == 3) this[2] else 0.0
+    get() = if (this.size == 3) this[2] else 0.0
 
 val BoundingBox.southLatitude: Double
     get() = this[1]
@@ -285,6 +289,7 @@ sealed class Geometry {
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
+
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
@@ -373,7 +378,13 @@ sealed class Geometry {
 }
 
 @Serializable
-data class Feature(val geometry: Geometry?, val properties: JsonObject? = null, val bbox: BoundingBox? = null) {
+data class Feature(
+    val geometry: Geometry?,
+    @Required
+    val properties: JsonObject? = null,
+    val bbox: BoundingBox? = null
+) {
+    @Required
     val type = "Feature"
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -401,11 +412,14 @@ data class Feature(val geometry: Geometry?, val properties: JsonObject? = null, 
     }
 
     override fun toString(): String = Json.encodeToString(serializer(), this)
+
 }
 
 @Serializable
 data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox? = null) {
+    @Required // forces this to be serialized
     val type: String = "FeatureCollection"
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null) return false
@@ -430,6 +444,8 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
         return result
     }
 
+    override fun toString(): String = Json.encodeToString(serializer(), this)
+
     companion object {
 
         fun fromGeoHashes(hashes: Iterable<String>) =
@@ -437,8 +453,6 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
 
         fun of(vararg features: Feature) = FeatureCollection(features.toList())
     }
-
-    override fun toString(): String = Json.encodeToString(serializer(),this)
 }
 
 /**
