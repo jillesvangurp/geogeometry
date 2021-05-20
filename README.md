@@ -73,8 +73,6 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
 
 # Limitations
 
-- The geohash covering algorithm fills polygons from the inside. Currently, the hash bbox has to be fully contained to be included. One obvious limitation
-with this approach is that details that are too small, are not covered by hashes. The solution to that would be either using smaller (i.e. more) hashes or changing the algorithm to also allow partially containment. 
 - Some of the algorithms used have limitations with respect to where you can use them. Generally things should be fine around the date line (if not report bugs). However, the poles are tricky and some of the algorithms get inaccurate or simply fail to exit. Because most data sets lack data for the poles, this should not be a big issue for most. Some of the algorithms now throw an exception if you try this. I'm not currently planning a fix but would appreciate pull requests for this.
 - Some of the algorithms have quadratic or exponential complexity and you can easily trigger situations where execution time is going to be substantial and/or you run out of memory. For example covering a circle with a radius of a few hundred kilometers with geohashes of length 10 is probably not a great idea. If you are unsure, use getSuitableHashLength() and add 1 or 2 to get good enough granularity.
 - Beware of the `[longitude,latitude]` order in geojson arrays vs. the latitude, longitude order when not using arrays. This is based on the (unfortunate) geojson convention of specifying longitude before latitude in arrays. When not using arrays, I use latitude followed by longitude, just like everyone else.
