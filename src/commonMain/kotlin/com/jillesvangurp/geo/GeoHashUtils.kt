@@ -572,7 +572,7 @@ class GeoHashUtils {
             // we need to sometimes go beyond maxLength if we found no fully contained hashes.
             // WARNING this can get ugly in terms of numbers of hashes
             while (detail < maxLength?:hashLength || fullyContained.isEmpty()) {
-                partiallyContained = splitAndFilter(coordinates, fullyContained, partiallyContained, includePartial)
+                partiallyContained = splitAndFilter(coordinates, fullyContained, partiallyContained)
                 detail++
             }
             // fallback
@@ -644,8 +644,7 @@ class GeoHashUtils {
         private fun splitAndFilter(
             polygonPoints: Array<out DoubleArray>,
             fullyContained: MutableSet<String>,
-            partiallyContained: Set<String>,
-            includePartial: Boolean
+            partiallyContained: Set<String>
         ): MutableSet<String> {
             val stillPartial = HashSet<String>()
             val checkCompleteArea = HashSet<String>(32, 1.0f)
