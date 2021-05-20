@@ -4,24 +4,33 @@ import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geogeometry.json
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldInclude
 import org.junit.Test
 
 class GeoJsonJvmTest {
-    val berlinJson = this.javaClass.classLoader.getResource("berlin.geojson").readText()
+    val berlinJson by lazy { this.javaClass.classLoader.getResource("berlin.geojson")!!.readText() }
 
     @Test
-    fun `cover berlin with hashes`() {
+    fun `cover berlin with hashes and produce valid feature collection json`() {
         val berlin = json.decodeFromString(Geometry.serializer(), berlinJson) as Geometry.MultiPolygon
 
-        val hashes = GeoHashUtils.geoHashesForPolygon(
-            berlin.coordinates ?: throw IllegalArgumentException("coordinates missing")
+        val hashes = GeoHashUtils.geoHashesForMultiPolygon(
+            coordinates = berlin.coordinates ?: throw IllegalArgumentException("coordinates missing"),
+            includePartial = true,
+            maxLength = 6
         )
         val hashesCollection = FeatureCollection.fromGeoHashes(hashes)
+        val json = json.encodeToString(
+            FeatureCollection.serializer(),
+            hashesCollection + FeatureCollection(listOf(berlin.asFeature()))
+        )
+        // make sure we serialize these fields; they are required.
+        json shouldInclude """"type":"Feature""""
+        json shouldInclude """"type":"FeatureCollection""""
+        json shouldInclude """"properties":null"""
+        // you can copy paste this to geojson.io
         println(
-            json.encodeToString(
-                FeatureCollection.serializer(),
-                hashesCollection + FeatureCollection(listOf(berlin.asFeature()))
-            )
+            json
         )
     }
 
