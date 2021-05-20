@@ -463,14 +463,14 @@ class GeoHashUtils {
 //        }
 
 
-        fun geoHashesForMultiPolygon(coordinates: PolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
+        fun geoHashesForPolygon(coordinates: PolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
             // TODO implement removal of hole hashes?
             return geoHashesForLinearRing(coordinates=coordinates[0],maxLength = maxLength, includePartial = includePartial)
         }
 
         fun geoHashesForMultiPolygon(coordinates: MultiPolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
             return coordinates.flatMap {
-                geoHashesForMultiPolygon(
+                geoHashesForPolygon(
                     coordinates = it,
                     maxLength = maxLength,
                     includePartial = includePartial
@@ -747,7 +747,7 @@ class GeoHashUtils {
          * @return set of geo hashes along the path with the specified geo hash length
          */
 
-        fun geoHashesForPath(hashLength: Int, vararg wayPoints: DoubleArray): Set<String> {
+        fun geoHashesForPath(hashLength: Int, wayPoints: LineStringCoordinates): Set<String> {
             if (wayPoints.size < 2) {
                 throw IllegalArgumentException("must have at least two way points on the path")
             }
@@ -804,6 +804,7 @@ class GeoHashUtils {
             } else {
                 geoHashesForLinearRing(
                     maxLength = hashLength,
+                    // linear ring around the line
                     coordinates = arrayOf(
                         doubleArrayOf(b1.westLongitude, b1.southLatitude),
                         doubleArrayOf(b1.eastLongitude, b1.southLatitude),
@@ -869,14 +870,16 @@ class GeoHashUtils {
          * @param latitude latitude
          * @param longitude longitude
          * @param radius radius in meters
+         * @param includePartial include hashes on the circle polygon border as well; defaults to false
          * @return set of geohashes
          */
 
-        fun geoHashesForCircle(length: Int, latitude: Double, longitude: Double, radius: Double): Set<String> {
+        fun geoHashesForCircle(length: Int, latitude: Double, longitude: Double, radius: Double, includePartial: Boolean = false): Set<String> {
             // bit of a wet finger approach here: it doesn't make much sense to have
             // lots of segments unless we have a long geohash or a large radius
             val segments: Int
             val suitableHashLength = suitableHashLength(radius, latitude, longitude)
+            // wet finger approach here, should be good enough
             segments = when {
                 length > suitableHashLength - 3 -> 200
                 length > suitableHashLength - 2 -> 100
@@ -886,7 +889,7 @@ class GeoHashUtils {
             }
 
             val circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius)
-            return geoHashesForLinearRing(maxLength = length, coordinates = circle2polygon[0])
+            return geoHashesForLinearRing(maxLength = length, coordinates = circle2polygon[0], includePartial = includePartial)
         }
 
         /**
