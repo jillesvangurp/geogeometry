@@ -12,7 +12,7 @@ import com.jillesvangurp.geo.GeoHashUtils.Companion.east
 import com.jillesvangurp.geo.GeoHashUtils.Companion.encode
 import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForCircle
 import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForLine
-import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForPolygon
+import com.jillesvangurp.geo.GeoHashUtils.Companion.geoHashesForLinearRing
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isEast
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isNorth
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isSouth
@@ -87,8 +87,8 @@ class GeoHashUtilsJvmTest {
             doubleArrayOf(-2.0, -4.0)
         )
         var min = 10
-        val geoHashesForPolygon = geoHashesForPolygon(
-            8, *polygon
+        val geoHashesForPolygon = geoHashesForLinearRing(
+            maxLength = 8, coordinates = polygon
         )
         for (h in geoHashesForPolygon) {
             min = min(min, h.length)
@@ -529,7 +529,8 @@ class GeoHashUtilsJvmTest {
       }            
 """.trimIndent()
         val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
-        val hashes = GeoHashUtils.geoHashesForPolygon(*p.coordinates?.get(0) ?: throw IllegalStateException())
+        val coordinates = p.coordinates?.get(0) ?: throw IllegalStateException()
+        val hashes = GeoHashUtils.geoHashesForLinearRing(coordinates = coordinates, includePartial = true)
 
 
         println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))

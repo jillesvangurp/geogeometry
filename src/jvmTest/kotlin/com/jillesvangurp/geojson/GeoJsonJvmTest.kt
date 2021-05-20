@@ -14,8 +14,10 @@ class GeoJsonJvmTest {
     fun `cover berlin with hashes and produce valid feature collection json`() {
         val berlin = json.decodeFromString(Geometry.serializer(), berlinJson) as Geometry.MultiPolygon
 
-        val hashes = GeoHashUtils.geoHashesForPolygon(
-            berlin.coordinates ?: throw IllegalArgumentException("coordinates missing")
+        val hashes = GeoHashUtils.geoHashesForMultiPolygon(
+            coordinates = berlin.coordinates ?: throw IllegalArgumentException("coordinates missing"),
+            includePartial = true,
+            maxLength = 6
         )
         val hashesCollection = FeatureCollection.fromGeoHashes(hashes)
         val json = json.encodeToString(

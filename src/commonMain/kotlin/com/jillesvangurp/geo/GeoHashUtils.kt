@@ -438,45 +438,43 @@ class GeoHashUtils {
             return list.toTypedArray()
         }
 
-        /**
-         * Cover the polygon with geo hashes. Calls getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
-         * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
-         * boxes, specify your own maxLength.
-         *
-         * Note, the algorithm 'fills' the polygon from the inside with hashes. So, if a geohash partially falls outside the
-         * polygon, it is omitted. So, if you have a polygon with a lot of detail, this may result in large portions not
-         * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
-         * geohashes around the edges.
-         *
-         * The algorithm works for both convex and concave algorithms. However, for concave algorithms the suitable hash
-         * size calculation may be wrong. Use the variant of this method that allows you to specify one.
-         *
-         * @param polygonPoints linestring
-         * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
-         * @return a set of geo hashes that cover the polygon area.
-         */
-        @Suppress("UNCHECKED_CAST")
-        fun geoHashesForPolygon(vararg polygonPoints: PointCoordinates): Set<String> {
-            val bbox = GeoGeometry.boundingBox(polygonPoints as Array<PointCoordinates>)
-            // first lets figure out an appropriate geohash length
-            val diagonalDistance =
-                GeoGeometry.distance(bbox.southLatitude, bbox.eastLongitude, bbox.northLatitude, bbox.westLongitude)
-            val hashLength = suitableHashLength(diagonalDistance, bbox.southLatitude, bbox.eastLongitude)
-            // using 2 here means we get a lot of hashes back but it reduces the chance of problems
-            // beware of using this with very large polygons
-            return geoHashesForPolygon(hashLength + 2, *polygonPoints)
-        }
+//        /**
+//         * Cover the polygon with geo hashes. Calls getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
+//         * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
+//         * boxes, specify your own maxLength.
+//         *
+//         * Note, the algorithm 'fills' the polygon from the inside with hashes. So, if a geohash partially falls outside the
+//         * polygon, it is omitted. So, if you have a polygon with a lot of detail, this may result in large portions not
+//         * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
+//         * geohashes around the edges.
+//         *
+//         * The algorithm works for both convex and concave algorithms. However, for concave algorithms the suitable hash
+//         * size calculation may be wrong. Use the variant of this method that allows you to specify one.
+//         *
+//         * @param polygonPoints linestring
+//         * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
+//         * @return a set of geo hashes that cover the polygon area.
+//         */
+//        @Suppress("UNCHECKED_CAST")
+//        fun geoHashesForPolygon(polygonPoints: LineStringCoordinates, maxLength: Int? = null): Set<String> {
+//            // using 2 here means we get a lot of hashes back but it reduces the chance of problems
+//            // beware of using this with very large polygons
+//            return geoHashesForPolygon(hashLength + 2, polygonPoints)
+//        }
 
 
-        fun geoHashesForPolygon(coordinates: PolygonCoordinates): Set<String> {
-            val hashesForPoly = geoHashesForPolygon(*coordinates[0])
+        fun geoHashesForMultiPolygon(coordinates: PolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
             // TODO implement removal of hole hashes?
-            return hashesForPoly
+            return geoHashesForLinearRing(coordinates=coordinates[0],maxLength = maxLength, includePartial = includePartial)
         }
 
-        fun geoHashesForPolygon(coordinates: MultiPolygonCoordinates): Set<String> {
+        fun geoHashesForMultiPolygon(coordinates: MultiPolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
             return coordinates.flatMap {
-                geoHashesForPolygon(it)
+                geoHashesForMultiPolygon(
+                    coordinates = it,
+                    maxLength = maxLength,
+                    includePartial = includePartial
+                )
             }.toSet()
         }
 
@@ -496,13 +494,14 @@ class GeoHashUtils {
          *
          * @param maxLength
          * maximum length of the geoHash; the more you specify, the more expensive it gets
-         * @param outerPolygonLinearRing
+         * @param coordinates
+         * @param includePartial when true it includes hashes on the border of he polygon. When false, it fills from the inside without including the partial hashes.
          * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
          * @return a set of geo hashes that cover the polygon area.
          */
 
-        fun geoHashesForPolygon(maxLength: Int, vararg outerPolygonLinearRing: PointCoordinates): Set<String> {
-            for (point in outerPolygonLinearRing) {
+        fun geoHashesForLinearRing(maxLength: Int?=null, coordinates: Array<PointCoordinates>, includePartial: Boolean = false): Set<String> {
+            for (point in coordinates) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
                 if (point.longitude < -89.5 || point.longitude > 89.5) {
                     throw IllegalArgumentException(
@@ -510,12 +509,15 @@ class GeoHashUtils {
                     )
                 }
             }
-            if (maxLength < 1 || maxLength >= DEFAULT_GEO_HASH_LENGTH) {
-                throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
-            }
 
-            @Suppress("UNCHECKED_CAST") val bbox =
-                GeoGeometry.boundingBox(outerPolygonLinearRing as Array<PointCoordinates>)
+            maxLength?.let {
+                if (maxLength < 1 || maxLength >= DEFAULT_GEO_HASH_LENGTH) {
+                    throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
+                }
+            }
+            val bbox = GeoGeometry.boundingBox(coordinates)
+            // first lets figure out an appropriate geohash length
+
             // if shit breaks, this is useful for wtf'ing in geojson.io
             // val f = arrayOf(outerPolygonLinearRing) as PolygonCoordinates
             // println(f.stringify())
@@ -569,13 +571,22 @@ class GeoHashUtils {
             // doesn't serve much purpose.
             // we need to sometimes go beyond maxLength if we found no fully contained hashes.
             // WARNING this can get ugly in terms of numbers of hashes
-            while (detail < maxLength || fullyContained.isEmpty()) {
-                partiallyContained = splitAndFilter(outerPolygonLinearRing, fullyContained, partiallyContained)
+            while (detail < maxLength?:hashLength || fullyContained.isEmpty()) {
+                partiallyContained = splitAndFilter(coordinates, fullyContained, partiallyContained, includePartial)
                 detail++
             }
             // fallback
             if (fullyContained.size == 0) {
                 fullyContained.addAll(partiallyContained)
+            }
+            if(includePartial) {
+                partiallyContained.forEach {  hash ->
+                    decodeBbox(hash).polygon().coordinates?.get(0)?.let { ring ->
+                        if (ring.firstOrNull { GeoGeometry.polygonContains(it, arrayOf(coordinates)) } != null) {
+                            fullyContained.add(hash)
+                        }
+                    }
+                }
             }
             return fullyContained
         }
@@ -633,7 +644,8 @@ class GeoHashUtils {
         private fun splitAndFilter(
             polygonPoints: Array<out DoubleArray>,
             fullyContained: MutableSet<String>,
-            partiallyContained: Set<String>
+            partiallyContained: Set<String>,
+            includePartial: Boolean
         ): MutableSet<String> {
             val stillPartial = HashSet<String>()
             val checkCompleteArea = HashSet<String>(32, 1.0f)
@@ -770,12 +782,19 @@ class GeoHashUtils {
          * @return set of geo hashes along the line with the specified geo hash length.
          */
 
-        fun geoHashesForLine(width: Double, lat1: Double, lon1: Double, lat2: Double, lon2: Double): Set<String> {
+        fun geoHashesForLine(
+            width: Double,
+            lat1: Double,
+            lon1: Double,
+            lat2: Double,
+            lon2: Double,
+            maxLength: Int? = null
+        ): Set<String> {
             if (lat1 == lat2 && lon1 == lon2) {
                 return setOf(encode(lat1, lon1))
             }
 
-            val hashLength = suitableHashLength(width, lat1, lon1)
+            val hashLength = maxLength ?: suitableHashLength(width, lat1, lon1)
             val (h1, b1) = encodeWithBbox(lat1, lon1, hashLength)
             val (h2, b2) = encodeWithBbox(lat2, lon2, hashLength)
 
@@ -783,13 +802,15 @@ class GeoHashUtils {
                 // same geohash for begin and end, effectively a point
                 setOf(h1)
             } else {
-                geoHashesForPolygon(
-                    hashLength,
-                    doubleArrayOf(b1.westLongitude, b1.southLatitude),
-                    doubleArrayOf(b1.eastLongitude, b1.southLatitude),
-                    doubleArrayOf(b2.eastLongitude, b2.northLatitude),
-                    doubleArrayOf(b2.westLongitude, b2.northLatitude),
-                    doubleArrayOf(b1.westLongitude, b1.southLatitude)
+                geoHashesForLinearRing(
+                    maxLength = hashLength,
+                    coordinates = arrayOf(
+                        doubleArrayOf(b1.westLongitude, b1.southLatitude),
+                        doubleArrayOf(b1.eastLongitude, b1.southLatitude),
+                        doubleArrayOf(b2.eastLongitude, b2.northLatitude),
+                        doubleArrayOf(b2.westLongitude, b2.northLatitude),
+                        doubleArrayOf(b1.westLongitude, b1.southLatitude)
+                    )
                 )
             }
         }
@@ -865,7 +886,7 @@ class GeoHashUtils {
             }
 
             val circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius)
-            return geoHashesForPolygon(length, *circle2polygon[0])
+            return geoHashesForLinearRing(maxLength = length, coordinates = circle2polygon[0])
         }
 
         /**
