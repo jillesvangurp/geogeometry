@@ -2,7 +2,9 @@
 
 # Introduction
 
-GeoGeometry started out as a simple side project to help me come up with a list of geo hashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality. In addition, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things.
+GeoGeometry started out as a simple side project while I was building a startup in 2012. The key feature I needed at time was a list of geo hashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, georeferencing coordinates from various location providers, etc.
+
+I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users. At this point, the library is a multiplatform Kotlin project. 
 
 # Get it
 
@@ -11,7 +13,7 @@ multiplatform does not work with `jitpack.io` which I use on other projects. Old
 available on [jitpack](https://jitpack.io/#jillesvangurp/geogeometry/v3.1.1). If you are interested,
 there's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
 
-So, as a workaround, I currently distribute jars via my website. To add the repository, add something 
+As a workaround, I currently distribute jars via my website. To add the repository, add something 
 like this to your `build.gradle.kts` file:
 
 ```kotlin
@@ -21,19 +23,14 @@ repositories {
 }
 ```
 
-and then add the dependency:
+and then add the dependency :
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.1.22")
+implementation("com.github.jillesvangurp:geogeometry:3.2.0")
 ```
+You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).
 
-Alternatively feel free to lift code that you need in your own project; just make sure to respect copyright & [licensing (MIT & Apache 2.0)](LICENSE).
-
-# History of this project
-
-I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users. At this point, the library is a multiplatform Kotlin project. This means it can be compiled to Jvm, Javascript, and native (not currently tested).
-
-## Geohashes
+## About Geohashes
 
 A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
 
@@ -64,10 +61,10 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
   - get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
   - **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
 
-- geojson classes to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive.
+- geojson classes to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use kotlinx.serialization for parsing and serializing this so this works across platforms as well!
 
 - Kotlin Multiplatform
-  - Currently there are two build targets for js and jvm. 
+  - Currently there are two build targets for js and jvm. I may add native targets later; this should just work but I have no easy way to test this.
   - No runtime dependencies other than the kotlin stdlib
   - Adding native targets should 'just work' but has not been tested.
 
@@ -77,10 +74,6 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
 - Some of the algorithms have quadratic or exponential complexity and you can easily trigger situations where execution time is going to be substantial and/or you run out of memory. For example covering a circle with a radius of a few hundred kilometers with geohashes of length 10 is probably not a great idea. If you are unsure, use getSuitableHashLength() and add 1 or 2 to get good enough granularity.
 - Beware of the `[longitude,latitude]` order in geojson arrays vs. the latitude, longitude order when not using arrays. This is based on the (unfortunate) geojson convention of specifying longitude before latitude in arrays. When not using arrays, I use latitude followed by longitude, just like everyone else.
 - I try to be good about adding tests but test coverage is not perfect and some of the algorithms have 'interesting' edge-cases. Better algorithms may be available. This is merely a best effort from my side and it works well enough for me. I welcome pull requests to improve things
-
-For older versions of gradle you may have to specify a postfix `-jvm` or `-js`. Supposedly recent versions are smarter about figuring out multiplatform.
-
-Let me know if you have issues accessing.
 
 # Building from source
 
