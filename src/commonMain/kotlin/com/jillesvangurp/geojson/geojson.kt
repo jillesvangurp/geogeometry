@@ -45,8 +45,8 @@ fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
 fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
 
 fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
-    is Geometry.Polygon -> this.copy(coordinates = this.arrayCoordinates?.ensureFollowsRightHandSideRule())
-    is Geometry.MultiPolygon -> this.copy(arrayCoordinates = this.arrayCoordinates?.ensureFollowsRightHandSideRule())
+    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.asArray?.ensureFollowsRightHandSideRule())
+    is Geometry.MultiPolygon -> this.copy(arrayCoordinates = this.coordinates?.asArray?.ensureFollowsRightHandSideRule())
     else -> this
 }
 
@@ -263,7 +263,6 @@ sealed class Geometry {
     ) : Geometry() {
         @Required
         override val type = GeometryType.Polygon
-        val arrayCoordinates: PolygonCoordinates? get() = coordinates?.toTypedArray()
 
         constructor(
             coordinates: PolygonCoordinates? = null,
@@ -278,13 +277,13 @@ sealed class Geometry {
                 other == null || this::class != other::class -> false
                 else -> {
                     other as Polygon
-                    type == other.type && deepEquals(arrayCoordinates, other.arrayCoordinates) && deepEquals(bbox, other.bbox)
+                    type == other.type && deepEquals(coordinates?.asArray, other.coordinates?.asArray) && deepEquals(bbox, other.bbox)
                 }
             }
         }
 
         override fun hashCode(): Int {
-            var result = arrayCoordinates?.contentDeepHashCode() ?: 0
+            var result = coordinates?.asArray?.contentDeepHashCode() ?: 0
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
@@ -300,7 +299,6 @@ sealed class Geometry {
     ) : Geometry() {
         @Required
         override val type = GeometryType.MultiPolygon
-        val arrayCoordinates: MultiPolygonCoordinates? get() = coordinates?.map { it.toTypedArray() }?.toTypedArray()
 
         constructor(
             coordinates: MultiPolygonCoordinates? = null,
@@ -315,13 +313,13 @@ sealed class Geometry {
                 other == null || this::class != other::class -> false
                 else -> {
                     other as MultiPolygon
-                    type == other.type && deepEquals(arrayCoordinates, other.arrayCoordinates) && deepEquals(bbox, other.bbox)
+                    type == other.type && deepEquals(coordinates?.asArray, other.coordinates?.asArray) && deepEquals(bbox, other.bbox)
                 }
             }
         }
 
         override fun hashCode(): Int {
-            var result = arrayCoordinates?.contentDeepHashCode() ?: 0
+            var result = coordinates?.asArray?.contentDeepHashCode() ?: 0
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
@@ -498,6 +496,9 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
         fun of(vararg features: Feature) = FeatureCollection(features.toList())
     }
 }
+
+val PolygonCoordinatesList.asArray: PolygonCoordinates get() = toTypedArray()
+val MultiPolygonCoordinatesList.asArray: MultiPolygonCoordinates get() = map { it.toTypedArray() }.toTypedArray()
 
 /**
  * Enum with all the types of geometries in https://tools.ietf.org/html/rfc7946#section-3.1.1

@@ -5,8 +5,12 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geojson.Geometry
+import com.jillesvangurp.geojson.asArray
 import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
+import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 
 class GeoGeometryTest {
@@ -44,9 +48,63 @@ class GeoGeometryTest {
     @Test
     fun shouldBeValid() {
         val polygon = json.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
-        polygon.arrayCoordinates?.isValid() shouldBe false
-        (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).arrayCoordinates?.isValid() shouldBe true
+        polygon.coordinates?.asArray?.isValid() shouldBe false
+        (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.asArray?.isValid() shouldBe true
     }
+
+    @Test
+    fun shouldSerializeToSame() {
+        val polygonObject = json.decodeFromString(JsonObject.serializer(), testPolygon)
+        val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
+        val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
+        jsonPretty.encodeToString(JsonElement.serializer(), serializedPolygonObject) shouldBe jsonPretty.encodeToString(JsonElement.serializer(), polygonObject)
+    }
+
+    val testPolygon = """
+        {
+        "coordinates": [
+          [
+            [
+              13.431665897369385,
+              52.52666584871098
+            ],
+            [
+              13.431397676467894,
+              52.52619587775743
+            ],
+            [
+              13.432052135467528,
+              52.52590214335785
+            ],
+            [
+              13.432599306106567,
+              52.52608491165957
+            ],
+            [
+              13.432663679122925,
+              52.52616324069894
+            ],
+            [
+              13.432663679122925,
+              52.526450445981496
+            ],
+            [
+              13.432331085205078,
+              52.52658099321639
+            ],
+            [
+              13.431966304779053,
+              52.52665279403019
+            ],
+            [
+              13.431665897369385,
+              52.52666584871098
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    """.trimIndent()
 
     val badGeo = """
 {

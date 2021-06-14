@@ -529,14 +529,14 @@ class GeoHashUtilsJvmTest {
       }            
 """.trimIndent()
         val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
-        val coordinates = p.arrayCoordinates?.get(0) ?: throw IllegalStateException()
+        val coordinates = p.coordinates?.asArray?.get(0) ?: throw IllegalStateException()
         val hashes = GeoHashUtils.geoHashesForLinearRing(coordinates = coordinates, includePartial = true)
 
 
         println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
 
         val area = hashes.map { GeoHashUtils.decodeBbox(it) }.map { area(it) }.sum()
-        val bboxArea = area(boundingBox(p.arrayCoordinates as PolygonCoordinates))
+        val bboxArea = area(boundingBox(p.coordinates?.asArray as PolygonCoordinates))
         // it's a concave polygon so the area of the hashes should be smaller than that of the
         // bounding box containing the polygon
         area shouldBeLessThan bboxArea * 0.7
