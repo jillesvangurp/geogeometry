@@ -43,7 +43,7 @@ class GeoGeometryTest {
 
     @Test
     fun shouldBeValid() {
-        val polygon = json.decodeFromString(Geometry.Polygon.serializer(), badGeo)
+        val polygon = json.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
         polygon.coordinates?.isValid() shouldBe false
         (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.isValid() shouldBe true
     }
