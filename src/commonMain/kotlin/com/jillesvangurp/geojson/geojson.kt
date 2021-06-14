@@ -8,8 +8,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.Serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
@@ -28,6 +27,8 @@ typealias LinearRingCoordinates = Array<PointCoordinates>
 typealias MultiLineStringCoordinates = Array<LineStringCoordinates> // Outer polygon + holes
 typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + holes
 typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
+private typealias PolygonCoordinatesList = List<LinearRingCoordinates>
+private typealias MultiPolygonCoordinatesList = List<PolygonCoordinatesList>
 
 typealias BoundingBox = DoubleArray
 
@@ -130,7 +131,11 @@ sealed class Geometry {
     abstract val type: GeometryType
 
     @Serializable
-    data class Point(val coordinates: PointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
+    @SerialName("Point")
+    data class Point(
+        val coordinates: PointCoordinates?,
+        val bbox: BoundingBox? = null,
+    ) : Geometry() {
         @Required
         override val type = GeometryType.Point
 
@@ -163,7 +168,11 @@ sealed class Geometry {
     }
 
     @Serializable
-    data class MultiPoint(val coordinates: MultiPointCoordinates?, val bbox: BoundingBox? = null) : Geometry() {
+    @SerialName("MultiPoint")
+    data class MultiPoint(
+        val coordinates: MultiPointCoordinates?,
+        val bbox: BoundingBox? = null,
+    ) : Geometry() {
         @Required
         override val type = GeometryType.MultiPoint
         override fun equals(other: Any?): Boolean {
@@ -188,8 +197,11 @@ sealed class Geometry {
 
 
     @Serializable
-    data class LineString(val coordinates: LineStringCoordinates? = null, val bbox: BoundingBox? = null) :
-        Geometry() {
+    @SerialName("LineString")
+    data class LineString(
+        val coordinates: LineStringCoordinates? = null,
+        val bbox: BoundingBox? = null
+    ) : Geometry() {
         @Required
         override val type = GeometryType.LineString
 
@@ -214,6 +226,7 @@ sealed class Geometry {
     }
 
     @Serializable
+    @SerialName("MultiLineString")
     data class MultiLineString(
         val coordinates: MultiLineStringCoordinates? = null,
         val bbox: BoundingBox? = null
@@ -242,10 +255,22 @@ sealed class Geometry {
     }
 
     @Serializable
-    data class Polygon(val coordinates: PolygonCoordinates? = null, val bbox: BoundingBox? = null) :
-        Geometry() {
+    @SerialName("Polygon")
+    data class Polygon(
+        @SerialName("coordinates")
+        val listCoordinates: PolygonCoordinatesList? = null,
+        val bbox: BoundingBox? = null
+    ) : Geometry() {
         @Required
         override val type = GeometryType.Polygon
+        val coordinates: PolygonCoordinates? get() = listCoordinates?.toTypedArray()
+
+        constructor(
+            coordinates: PolygonCoordinates? = null,
+            bbox: BoundingBox? = null
+        ): this(listCoordinates = coordinates?.toList(), bbox = bbox)
+
+        fun copy(coordinates: PolygonCoordinates?) = copy(listCoordinates = coordinates?.toList())
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -268,10 +293,22 @@ sealed class Geometry {
     }
 
     @Serializable
-    data class MultiPolygon(val coordinates: MultiPolygonCoordinates? = null, val bbox: BoundingBox? = null) :
-        Geometry() {
+    @SerialName("MultiPolygon")
+    data class MultiPolygon(
+        @SerialName("coordinates")
+        val listCoordinates: MultiPolygonCoordinatesList? = null,
+        val bbox: BoundingBox? = null
+    ) : Geometry() {
         @Required
         override val type = GeometryType.MultiPolygon
+        val coordinates: MultiPolygonCoordinates? get() = listCoordinates?.map { it.toTypedArray() }?.toTypedArray()
+
+        constructor(
+            coordinates: MultiPolygonCoordinates? = null,
+            bbox: BoundingBox? = null
+        ): this(listCoordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
+
+        fun copy(coordinates: MultiPolygonCoordinates?) = copy(listCoordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -294,7 +331,11 @@ sealed class Geometry {
     }
 
     @Serializable
-    data class GeometryCollection(val geometries: Array<Geometry>, val bbox: BoundingBox? = null) : Geometry() {
+    @SerialName("GeometryCollection")
+    data class GeometryCollection(
+        val geometries: Array<Geometry>,
+        val bbox: BoundingBox? = null,
+    ) : Geometry() {
         @Required
         override val type = GeometryType.GeometryCollection
 
@@ -323,6 +364,7 @@ sealed class Geometry {
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
+    @Serializer(forClass = Geometry::class)
     companion object : KSerializer<Geometry> {
         override fun deserialize(decoder: Decoder): Geometry {
             decoder as JsonDecoder
@@ -341,7 +383,10 @@ sealed class Geometry {
                     MultiLineString.serializer(),
                     jsonObject
                 )
-                GeometryType.Polygon -> decoder.json.decodeFromJsonElement(Polygon.serializer(), jsonObject)
+                GeometryType.Polygon -> decoder.json.decodeFromJsonElement(
+                    Polygon.serializer(),
+                    jsonObject
+                )
                 GeometryType.MultiPolygon -> decoder.json.decodeFromJsonElement(
                     MultiPolygon.serializer(),
                     jsonObject
@@ -462,7 +507,6 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
  */
 @Serializable
 enum class GeometryType {
-
     Point,
     MultiPoint,
     LineString,

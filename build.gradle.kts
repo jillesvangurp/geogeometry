@@ -1,6 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "1.4.32"
-    kotlin("plugin.serialization") version "1.4.32"
+    kotlin("multiplatform") version "1.5.10"
+    kotlin("plugin.serialization") version "1.5.10"
     id("com.github.ben-manes.versions") version "0.38.0" // gradle dependencyUpdates -Drevision=release
     id("org.jmailen.kotlinter") version "3.4.0"
     `maven-publish`
@@ -17,7 +17,7 @@ repositories {
 val kotlinVersion = "1.3.72"
 val slf4jVersion = "1.7.26"
 val junitVersion = "5.6.2"
-val serializationVersion = "1.1.0"
+val serializationVersion = "1.2.1"
 
 kotlin {
     jvm {
