@@ -45,8 +45,8 @@ fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
 fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
 
 fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
-    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
-    is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
+    is Geometry.Polygon -> this.copy(coordinates = this.arrayCoordinates?.ensureFollowsRightHandSideRule())
+    is Geometry.MultiPolygon -> this.copy(arrayCoordinates = this.arrayCoordinates?.ensureFollowsRightHandSideRule())
     else -> this
 }
 
@@ -258,19 +258,19 @@ sealed class Geometry {
     @SerialName("Polygon")
     data class Polygon(
         @SerialName("coordinates")
-        val listCoordinates: PolygonCoordinatesList? = null,
+        val coordinates: PolygonCoordinatesList? = null,
         val bbox: BoundingBox? = null
     ) : Geometry() {
         @Required
         override val type = GeometryType.Polygon
-        val coordinates: PolygonCoordinates? get() = listCoordinates?.toTypedArray()
+        val arrayCoordinates: PolygonCoordinates? get() = coordinates?.toTypedArray()
 
         constructor(
             coordinates: PolygonCoordinates? = null,
             bbox: BoundingBox? = null
-        ): this(listCoordinates = coordinates?.toList(), bbox = bbox)
+        ): this(coordinates = coordinates?.toList(), bbox = bbox)
 
-        fun copy(coordinates: PolygonCoordinates?) = copy(listCoordinates = coordinates?.toList())
+        fun copy(coordinates: PolygonCoordinates?) = copy(coordinates = coordinates?.toList())
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -278,13 +278,13 @@ sealed class Geometry {
                 other == null || this::class != other::class -> false
                 else -> {
                     other as Polygon
-                    type == other.type && deepEquals(coordinates, other.coordinates) && deepEquals(bbox, other.bbox)
+                    type == other.type && deepEquals(arrayCoordinates, other.arrayCoordinates) && deepEquals(bbox, other.bbox)
                 }
             }
         }
 
         override fun hashCode(): Int {
-            var result = coordinates?.contentDeepHashCode() ?: 0
+            var result = arrayCoordinates?.contentDeepHashCode() ?: 0
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }
@@ -295,20 +295,19 @@ sealed class Geometry {
     @Serializable
     @SerialName("MultiPolygon")
     data class MultiPolygon(
-        @SerialName("coordinates")
-        val listCoordinates: MultiPolygonCoordinatesList? = null,
+        val coordinates: MultiPolygonCoordinatesList? = null,
         val bbox: BoundingBox? = null
     ) : Geometry() {
         @Required
         override val type = GeometryType.MultiPolygon
-        val coordinates: MultiPolygonCoordinates? get() = listCoordinates?.map { it.toTypedArray() }?.toTypedArray()
+        val arrayCoordinates: MultiPolygonCoordinates? get() = coordinates?.map { it.toTypedArray() }?.toTypedArray()
 
         constructor(
             coordinates: MultiPolygonCoordinates? = null,
             bbox: BoundingBox? = null
-        ): this(listCoordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
+        ): this(coordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
 
-        fun copy(coordinates: MultiPolygonCoordinates?) = copy(listCoordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
+        fun copy(arrayCoordinates: MultiPolygonCoordinates?) = copy(coordinates = arrayCoordinates?.map { it.toList() }?.toList(), bbox = bbox)
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -316,13 +315,13 @@ sealed class Geometry {
                 other == null || this::class != other::class -> false
                 else -> {
                     other as MultiPolygon
-                    type == other.type && deepEquals(coordinates, other.coordinates) && deepEquals(bbox, other.bbox)
+                    type == other.type && deepEquals(arrayCoordinates, other.arrayCoordinates) && deepEquals(bbox, other.bbox)
                 }
             }
         }
 
         override fun hashCode(): Int {
-            var result = coordinates?.contentDeepHashCode() ?: 0
+            var result = arrayCoordinates?.contentDeepHashCode() ?: 0
             result = 31 * result + (bbox?.contentHashCode() ?: 0)
             return result
         }

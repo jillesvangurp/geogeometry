@@ -581,7 +581,7 @@ class GeoHashUtils {
             }
             if(includePartial) {
                 partiallyContained.forEach {  hash ->
-                    decodeBbox(hash).polygon().coordinates?.get(0)?.let { ring ->
+                    decodeBbox(hash).polygon().arrayCoordinates?.get(0)?.let { ring ->
                         if (ring.firstOrNull { GeoGeometry.polygonContains(it, arrayOf(coordinates)) } != null) {
                             fullyContained.add(hash)
                         }
