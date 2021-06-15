@@ -186,11 +186,7 @@ sealed class Geometry {
             }
         }
 
-        override fun hashCode(): Int {
-            var result = coordinates?.contentDeepHashCode() ?: 0
-            result = 31 * result + (bbox?.contentHashCode() ?: 0)
-            return result
-        }
+        override fun hashCode(): Int = coordinates.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
@@ -216,11 +212,7 @@ sealed class Geometry {
             }
         }
 
-        override fun hashCode(): Int {
-            var result = coordinates?.contentDeepHashCode() ?: 0
-            result = 31 * result + (bbox?.contentHashCode() ?: 0)
-            return result
-        }
+        override fun hashCode(): Int = coordinates.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
@@ -245,11 +237,7 @@ sealed class Geometry {
             }
         }
 
-        override fun hashCode(): Int {
-            var result = coordinates?.contentDeepHashCode() ?: 0
-            result = 31 * result + (bbox?.contentHashCode() ?: 0)
-            return result
-        }
+        override fun hashCode(): Int = coordinates.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
@@ -257,6 +245,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("Polygon")
     data class Polygon(
+        // work around for a bug in kotlinx serialization with multi dimensional arrays
         @SerialName("coordinates")
         val coordinates: PolygonCoordinatesList? = null,
         val bbox: BoundingBox? = null
@@ -282,11 +271,7 @@ sealed class Geometry {
             }
         }
 
-        override fun hashCode(): Int {
-            var result = coordinates?.asArray?.contentDeepHashCode() ?: 0
-            result = 31 * result + (bbox?.contentHashCode() ?: 0)
-            return result
-        }
+        override fun hashCode(): Int = coordinates.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
@@ -294,6 +279,7 @@ sealed class Geometry {
     @Serializable
     @SerialName("MultiPolygon")
     data class MultiPolygon(
+        // work around for a bug in kotlinx serialization with multi dimensional arrays
         val coordinates: MultiPolygonCoordinatesList? = null,
         val bbox: BoundingBox? = null
     ) : Geometry() {
@@ -318,11 +304,7 @@ sealed class Geometry {
             }
         }
 
-        override fun hashCode(): Int {
-            var result = coordinates?.asArray?.contentDeepHashCode() ?: 0
-            result = 31 * result + (bbox?.contentHashCode() ?: 0)
-            return result
-        }
+        override fun hashCode(): Int = coordinates.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
@@ -352,11 +334,7 @@ sealed class Geometry {
             return true
         }
 
-        override fun hashCode(): Int {
-            var result = geometries.contentHashCode()
-            result = 31 * result + (bbox?.contentHashCode() ?: 0)
-            return result
-        }
+        override fun hashCode(): Int = geometries.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
@@ -448,7 +426,7 @@ data class Feature(
     override fun hashCode(): Int {
         var result = geometry?.hashCode() ?: 0
         result = 31 * result + (properties?.hashCode() ?: 0)
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
+        result = 31 * result + (bbox?.hashCode() ?: 0)
         result = 31 * result + type.hashCode()
         return result
     }
@@ -482,7 +460,7 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
 
     override fun hashCode(): Int {
         var result = features.hashCode()
-        result = 31 * result + (bbox?.contentHashCode() ?: 0)
+        result = 31 * result + (bbox?.hashCode() ?: 0)
         return result
     }
 
@@ -497,6 +475,7 @@ data class FeatureCollection(val features: List<Feature>, val bbox: BoundingBox?
     }
 }
 
+// needed to workaround some serialization bugs with kotlinx serialization
 val PolygonCoordinatesList.asArray: PolygonCoordinates get() = toTypedArray()
 val MultiPolygonCoordinatesList.asArray: MultiPolygonCoordinates get() = map { it.toTypedArray() }.toTypedArray()
 
