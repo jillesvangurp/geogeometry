@@ -36,6 +36,12 @@ kotlin {
     }
     js(BOTH) {
         nodejs {
+            testTask {
+                useMocha {
+                    // javascript is a lot slower than Java, we hit the default timeout of 2000
+                    timeout = "20000"
+                }
+            }
         }
     }
 

@@ -90,6 +90,11 @@ val BoundingBox.westLongitude: Double
 val BoundingBox.eastLongitude: Double
     get() = this[2]
 
+val BoundingBox.northEast get() = doubleArrayOf(this.eastLongitude,this.northLatitude)
+val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude,this.northLatitude)
+val BoundingBox.southEast get() = doubleArrayOf(this.eastLongitude,this.southLatitude)
+val BoundingBox.southWest get() = doubleArrayOf(this.westLongitude,this.southLatitude)
+
 fun BoundingBox.polygon(): Geometry.Polygon {
     val coordinates = arrayOf(
         arrayOf(

@@ -195,10 +195,14 @@ class GeoGeometry {
          * @param polygonCoordinatesPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
          * @return true if the polygon contains the coordinate
          */
-
         fun polygonContains(pointCoordinates: PointCoordinates, polygonCoordinatesPoints: PolygonCoordinates): Boolean {
             validate(pointCoordinates)
             return polygonContains(pointCoordinates[1], pointCoordinates[0], *polygonCoordinatesPoints[0])
+        }
+
+        fun polygonContains(pointCoordinates: PointCoordinates, polygonCoordinatesPoints: LinearRingCoordinates): Boolean {
+            validate(pointCoordinates)
+            return polygonContains(pointCoordinates[1], pointCoordinates[0], *polygonCoordinatesPoints)
         }
 
         /**
@@ -210,7 +214,6 @@ class GeoGeometry {
          * @param polygonCoordinatesPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
          * @return true if the polygon contains the coordinate
          */
-
         fun polygonContains(
             latitude: Double,
             longitude: Double,
@@ -875,28 +878,25 @@ class GeoGeometry {
          */
 
         fun overlap(left: LinearRingCoordinates, right: LinearRingCoordinates): Boolean {
-            val point1 = polygonCenter(*right)
-            if (polygonContains(point1[1], point1[0], *left)) {
-                return true
-            }
-            val point = polygonCenter(*left)
-            if (polygonContains(point[1], point[0], *right)) {
+            if (polygonContains(polygonCenter(*right), left) || polygonContains(polygonCenter(*left), right)) {
                 return true
             }
 
             for (p in right) {
-                if (polygonContains(p[1], p[0], *left)) {
+                if (polygonContains(p, left)) {
                     return true
                 }
             }
             for (p in left) {
-                if (polygonContains(p[1], p[0], *right)) {
+                if (polygonContains(p, right)) {
                     return true
                 }
             }
 
             return false
         }
+
+        fun overlap(left:PolygonCoordinates,right:PolygonCoordinates) = overlap(left[0],right[0])
 
         /**
          * @param containingPolygon linestring polygon

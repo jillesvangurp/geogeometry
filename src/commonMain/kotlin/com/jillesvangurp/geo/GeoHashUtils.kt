@@ -18,6 +18,8 @@
  */
 package com.jillesvangurp.geo
 
+import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
+import com.jillesvangurp.geo.GeoGeometry.Companion.polygonContains
 import com.jillesvangurp.geojson.*
 import kotlin.math.min
 
@@ -438,37 +440,25 @@ class GeoHashUtils {
             return list.toTypedArray()
         }
 
-//        /**
-//         * Cover the polygon with geo hashes. Calls getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
-//         * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
-//         * boxes, specify your own maxLength.
-//         *
-//         * Note, the algorithm 'fills' the polygon from the inside with hashes. So, if a geohash partially falls outside the
-//         * polygon, it is omitted. So, if you have a polygon with a lot of detail, this may result in large portions not
-//         * being covered. To resolve this, manually choose a bigger geohash length. This results, in more but smaller
-//         * geohashes around the edges.
-//         *
-//         * The algorithm works for both convex and concave algorithms. However, for concave algorithms the suitable hash
-//         * size calculation may be wrong. Use the variant of this method that allows you to specify one.
-//         *
-//         * @param polygonPoints linestring
-//         * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
-//         * @return a set of geo hashes that cover the polygon area.
-//         */
-//        @Suppress("UNCHECKED_CAST")
-//        fun geoHashesForPolygon(polygonPoints: LineStringCoordinates, maxLength: Int? = null): Set<String> {
-//            // using 2 here means we get a lot of hashes back but it reduces the chance of problems
-//            // beware of using this with very large polygons
-//            return geoHashesForPolygon(hashLength + 2, polygonPoints)
-//        }
 
-
-        fun geoHashesForPolygon(coordinates: PolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
+        fun geoHashesForPolygon(
+            coordinates: PolygonCoordinates,
+            maxLength: Int? = null,
+            includePartial: Boolean = false
+        ): Set<String> {
             // TODO implement removal of hole hashes?
-            return geoHashesForLinearRing(coordinates=coordinates[0],maxLength = maxLength, includePartial = includePartial)
+            return geoHashesForLinearRing(
+                coordinates = coordinates[0],
+                maxLength = maxLength,
+                includePartial = includePartial
+            )
         }
 
-        fun geoHashesForMultiPolygon(coordinates: MultiPolygonCoordinates, maxLength: Int? = null, includePartial: Boolean = false): Set<String> {
+        fun geoHashesForMultiPolygon(
+            coordinates: MultiPolygonCoordinates,
+            maxLength: Int? = null,
+            includePartial: Boolean = false
+        ): Set<String> {
             return coordinates.flatMap {
                 geoHashesForPolygon(
                     coordinates = it,
@@ -479,7 +469,7 @@ class GeoHashUtils {
         }
 
         /**
-         * Cover the polygon with geo hashes. Call getGeoHashesForPolygon(int maxLength, double[]... polygonPoints) with a
+         * Cover the polygon with geo hashes. Call  with a
          * maxLength that is the suitable hashlength for the surrounding bounding box + 1. If you need more fine grained
          * boxes, specify your own maxLength.
          *
@@ -499,8 +489,11 @@ class GeoHashUtils {
          * 2d array of polygonPoints points that make up the polygon as arrays of [longitude, latitude]
          * @return a set of geo hashes that cover the polygon area.
          */
-
-        fun geoHashesForLinearRing(maxLength: Int?=null, coordinates: Array<PointCoordinates>, includePartial: Boolean = false): Set<String> {
+        fun geoHashesForLinearRing(
+            maxLength: Int? = null,
+            coordinates: LinearRingCoordinates,
+            includePartial: Boolean = false
+        ): Set<String> {
             for (point in coordinates) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
                 if (point.longitude < -89.5 || point.longitude > 89.5) {
@@ -530,13 +523,17 @@ class GeoHashUtils {
             val eastLon = bbox.eastLongitude
 
             val diagonal = GeoGeometry.distance(southLat, westLon, northLat, eastLon)
-            val hashLength = suitableHashLength(diagonal, southLat, westLon) + 1 // (tiny boxes on the border)
+            val hashLength = min(
+                maxLength ?: 12,
+                suitableHashLength(diagonal, southLat, westLon) + 1
+            )  // (+1 means small boxes on the border)
 
             var partiallyContained: MutableSet<String> = HashSet()
             // now lets generate all geohashes for the containing bounding box
             // lets start at the top left:
 
             var rowHash = encode(southLat, westLon, hashLength)
+
             // we start by covering the entire bbox with hashes of the same length
             // we do this by scanning west to east and south to north
             var rowBox = decodeBbox(rowHash)
@@ -545,6 +542,7 @@ class GeoHashUtils {
                 var columnBox = rowBox
 
                 while (isWest(columnBox.westLongitude, eastLon)) {
+
                     partiallyContained.add(columnHash)
                     // move column east
                     columnHash = east(columnHash)
@@ -571,78 +569,36 @@ class GeoHashUtils {
             // doesn't serve much purpose.
             // we need to sometimes go beyond maxLength if we found no fully contained hashes.
             // WARNING this can get ugly in terms of numbers of hashes
-            while (detail < maxLength?:hashLength || fullyContained.isEmpty()) {
-                partiallyContained = splitAndFilter(coordinates, fullyContained, partiallyContained)
+            while (detail < maxLength ?: hashLength || fullyContained.size == 0) {
+                partiallyContained =
+                    splitAndFilter(coordinates, fullyContained, partiallyContained)
                 detail++
             }
             // fallback
             if (fullyContained.size == 0) {
                 fullyContained.addAll(partiallyContained)
             }
-            if(includePartial) {
-                partiallyContained.forEach {  hash ->
+            if (includePartial) {
+                partiallyContained.forEach { hash ->
                     decodeBbox(hash).polygon().coordinates?.asArray?.get(0)?.let { ring ->
-                        if (ring.firstOrNull { GeoGeometry.polygonContains(it, arrayOf(coordinates)) } != null) {
+                        if (ring.firstOrNull { polygonContains(it, arrayOf(coordinates)) } != null) {
                             fullyContained.add(hash)
                         }
                     }
                 }
             }
-            return fullyContained
-        }
-
-        /**
-         * @param l1 longitude
-         * @param l2 longitude
-         * @return true if l1 is west of l2
-         */
-
-        fun isWest(l1: Double, l2: Double): Boolean {
-            val ll1 = l1 + 180
-            val ll2 = l2 + 180
-            return if (ll1 < ll2 && ll2 - ll1 < 180) {
-                true
-            } else
-                ll1 > ll2 && ll2 + 360 - ll1 < 180
-        }
-
-        /**
-         * @param l1 longitude
-         * @param l2 longitude
-         * @return true if l1 is east of l2
-         */
-
-        fun isEast(l1: Double, l2: Double): Boolean {
-            val ll1 = l1 + 180
-            val ll2 = l2 + 180
-            return if (ll1 > ll2 && ll1 - ll2 < 180) {
-                true
-            } else
-                ll1 < ll2 && ll1 + 360 - ll2 < 180
-        }
-
-        /**
-         * @param l1 latitude
-         * @param l2 latitude
-         * @return true if l1 is north of l2
-         */
-
-        fun isNorth(l1: Double, l2: Double): Boolean {
-            return l1 > l2
-        }
-
-        /**
-         * @param l1 latitude
-         * @param l2 latitude
-         * @return true if l1 is south of l2
-         */
-
-        fun isSouth(l1: Double, l2: Double): Boolean {
-            return l1 < l2
+            return if(maxLength!= null && detail>maxLength) {
+                // replace tiny hashes with bigger ones
+                val filtered= mutableSetOf<String>()
+                fullyContained.forEach { if(it.length<=hashLength) filtered.add(it) else filtered.add(it.subSequence(0,maxLength).toString()) }
+                filtered
+            } else {
+                fullyContained
+            }
         }
 
         private fun splitAndFilter(
-            polygonPoints: Array<out DoubleArray>,
+            coordinates: LinearRingCoordinates,
             fullyContained: MutableSet<String>,
             partiallyContained: Set<String>
         ): MutableSet<String> {
@@ -653,80 +609,19 @@ class GeoHashUtils {
                 checkCompleteArea.clear()
                 for (h in subHashes(hash)) {
                     val hashBbox = decodeBbox(h)
-                    val westLon = hashBbox.westLongitude
-                    val southLat = hashBbox.southLatitude
-                    val eastLon = hashBbox.eastLongitude
-                    val northLat = hashBbox.northLatitude
 
-                    val point3 = doubleArrayOf(westLon, southLat)
-                    val nw = GeoGeometry.polygonContains(point3[1], point3[0], *polygonPoints)
-                    val point2 = doubleArrayOf(eastLon, southLat)
-                    val ne = GeoGeometry.polygonContains(point2[1], point2[0], *polygonPoints)
-                    val point1 = doubleArrayOf(westLon, northLat)
-                    val sw = GeoGeometry.polygonContains(point1[1], point1[0], *polygonPoints)
-                    val point = doubleArrayOf(eastLon, northLat)
-                    val se = GeoGeometry.polygonContains(point[1], point[0], *polygonPoints)
-                    if (nw && ne && sw && se) {
-                        checkCompleteArea.add(h)
-                    } else if (nw || ne || sw || se) {
-                        stillPartial.add(h)
-                    } else {
-                        val last = polygonPoints[0]
-                        for (i in 1 until polygonPoints.size) {
-                            val current = polygonPoints[i]
-                            if (GeoGeometry.linesCross(
-                                    southLat,
-                                    westLon,
-                                    southLat,
-                                    eastLon,
-                                    last.latitude,
-                                    last.longitude,
-                                    current.latitude,
-                                    current.longitude
-                                )
-                            ) {
-                                stillPartial.add(h)
-                                break
-                            } else if (GeoGeometry.linesCross(
-                                    southLat,
-                                    eastLon,
-                                    northLat,
-                                    eastLon,
-                                    last.latitude,
-                                    last.longitude,
-                                    current.latitude,
-                                    current.longitude
-                                )
-                            ) {
-                                stillPartial.add(h)
-                                break
-                            } else if (GeoGeometry.linesCross(
-                                    northLat,
-                                    eastLon,
-                                    northLat,
-                                    westLon,
-                                    last.latitude,
-                                    last.longitude,
-                                    current.latitude,
-                                    current.longitude
-                                )
-                            ) {
-                                stillPartial.add(h)
-                                break
-                            } else if (GeoGeometry.linesCross(
-                                    northLat,
-                                    westLon,
-                                    southLat,
-                                    westLon,
-                                    last.latitude,
-                                    last.longitude,
-                                    current.latitude,
-                                    current.longitude
-                                )
-                            ) {
-                                stillPartial.add(h)
-                                break
-                            }
+                    val containsNw = polygonContains(hashBbox.northWest, coordinates)
+                    val containsNe = polygonContains(hashBbox.northEast, coordinates)
+                    val containsSw = polygonContains(hashBbox.southWest, coordinates)
+                    val containsSe = polygonContains(hashBbox.southEast, coordinates)
+
+                    when {
+                        containsNw && containsNe && containsSw && containsSe -> {
+                            // all four corners are inside the polygon
+                            checkCompleteArea.add(h)
+                        }
+                        overlap(hashBbox.polygon().coordinates!!.toTypedArray(), arrayOf(coordinates)) -> {
+                            stillPartial.add(h)
                         }
                     }
                 }
@@ -745,7 +640,6 @@ class GeoHashUtils {
          * @param wayPoints line string
          * @return set of geo hashes along the path with the specified geo hash length
          */
-
         fun geoHashesForPath(hashLength: Int, wayPoints: LineStringCoordinates): Set<String> {
             if (wayPoints.size < 2) {
                 throw IllegalArgumentException("must have at least two way points on the path")
@@ -815,6 +709,56 @@ class GeoHashUtils {
             }
         }
 
+        /**
+         * @param l1 longitude
+         * @param l2 longitude
+         * @return true if l1 is west of l2
+         */
+
+        fun isWest(l1: Double, l2: Double): Boolean {
+            val ll1 = l1 + 180
+            val ll2 = l2 + 180
+            return if (ll1 < ll2 && ll2 - ll1 < 180) {
+                true
+            } else
+                ll1 > ll2 && ll2 + 360 - ll1 < 180
+        }
+
+        /**
+         * @param l1 longitude
+         * @param l2 longitude
+         * @return true if l1 is east of l2
+         */
+
+        fun isEast(l1: Double, l2: Double): Boolean {
+            val ll1 = l1 + 180
+            val ll2 = l2 + 180
+            return if (ll1 > ll2 && ll1 - ll2 < 180) {
+                true
+            } else
+                ll1 < ll2 && ll1 + 360 - ll2 < 180
+        }
+
+        /**
+         * @param l1 latitude
+         * @param l2 latitude
+         * @return true if l1 is north of l2
+         */
+
+        fun isNorth(l1: Double, l2: Double): Boolean {
+            return l1 > l2
+        }
+
+        /**
+         * @param l1 latitude
+         * @param l2 latitude
+         * @return true if l1 is south of l2
+         */
+
+        fun isSouth(l1: Double, l2: Double): Boolean {
+            return l1 < l2
+        }
+
         private fun encodeWithBbox(latitude: Double, longitude: Double, length: Int): Pair<String, BoundingBox> {
             if (length < 1 || length > 12) {
                 throw IllegalArgumentException("length must be between 1 and 12")
@@ -865,7 +809,7 @@ class GeoHashUtils {
         }
 
         /**
-         * @param length geohash length
+         * @param maxLength geohash length
          * @param latitude latitude
          * @param longitude longitude
          * @param radius radius in meters
@@ -873,22 +817,20 @@ class GeoHashUtils {
          * @return set of geohashes
          */
 
-        fun geoHashesForCircle(length: Int, latitude: Double, longitude: Double, radius: Double, includePartial: Boolean = false): Set<String> {
-            // bit of a wet finger approach here: it doesn't make much sense to have
-            // lots of segments unless we have a long geohash or a large radius
-            val segments: Int
-            val suitableHashLength = suitableHashLength(radius, latitude, longitude)
-            // wet finger approach here, should be good enough
-            segments = when {
-                length > suitableHashLength - 3 -> 200
-                length > suitableHashLength - 2 -> 100
-                length > suitableHashLength - 1 -> 50
-                else -> // we don't seem to care about detail
-                    15
-            }
-
+        fun geoHashesForCircle(
+            maxLength: Int?,
+            latitude: Double,
+            longitude: Double,
+            radius: Double,
+            includePartial: Boolean = false,
+            segments: Int = 20
+        ): Set<String> {
             val circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius)
-            return geoHashesForLinearRing(maxLength = length, coordinates = circle2polygon[0], includePartial = includePartial)
+            return geoHashesForLinearRing(
+                maxLength = maxLength,
+                coordinates = circle2polygon[0],
+                includePartial = includePartial
+            )
         }
 
         /**
@@ -897,19 +839,16 @@ class GeoHashUtils {
          * @param longitude longitude
          * @return the largest hash length where the hash bbox has a width less than granularityInMeters.
          */
-
         fun suitableHashLength(granularityInMeters: Double, latitude: Double, longitude: Double): Int {
-            if (granularityInMeters < 5) {
-                return 10
-            }
             var hash = encode(latitude, longitude)
             var width = 0.0
             var length = hash.length
             // the height is the same at for any latitude given a length, but the width converges towards the poles
-            while (width < granularityInMeters && hash.length >= 2) {
+            while (width < granularityInMeters && hash.isNotEmpty()) {
                 length = hash.length
                 val bbox = decodeBbox(hash)
-                width = GeoGeometry.distance(bbox[0], bbox[1], bbox[0], bbox[3])
+                width =
+                    GeoGeometry.distance(bbox.westLongitude, bbox.northLatitude, bbox.eastLongitude, bbox.northLatitude)
                 hash = hash.substring(0, hash.length - 1)
             }
 
