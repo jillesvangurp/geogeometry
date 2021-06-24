@@ -26,6 +26,7 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
+import com.jillesvangurp.geojson.*
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -39,6 +40,7 @@ import org.junit.Test
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 class GeoGeometryJvmTest {
     val bergstr16InvalidenBerlin = doubleArrayOf(13.393674, 52.5310059)
@@ -328,31 +330,6 @@ class GeoGeometryJvmTest {
 
         GeoGeometry.linesCross(l1p1, l1p2, l2p1, l2p2) shouldBe false
         GeoGeometry.linesCross(l2p1, l2p2, l1p1, l1p2) shouldBe false
-    }
-
-    data class TestDegree(
-        val direction: String,
-        val degrees: Double,
-        val minutes: Double,
-        val seconds: Double,
-        val expected: Double
-    )
-
-    val degrees = listOf(
-        TestDegree("W", 111.0, 38.0, 45.40, -111.64594444444445),
-        TestDegree("E", 111.0, 38.0, 45.40, 111.64594444444445)
-    )
-
-    @Test
-    fun shouldConvertToDecimalDegree() {
-        degrees.forEach { (direction, degrees, minutes, seconds, expected) ->
-
-            val decimalDegree = toDecimalDegree(direction, degrees, minutes, seconds)
-            MatcherAssert.assertThat(
-                decimalDegree,
-                CoreMatchers.`is`(expected)
-            )
-        }
     }
 
     @Test

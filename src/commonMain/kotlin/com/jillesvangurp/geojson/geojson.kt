@@ -3,6 +3,7 @@
 package com.jillesvangurp.geojson
 
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
+import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoHashUtils
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
@@ -15,6 +16,9 @@ import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.roundToInt
 import kotlin.reflect.KClass
 
 /**
@@ -75,6 +79,19 @@ val PointCoordinates.latitude: Double
 val PointCoordinates.longitude: Double
     get() = this[0]
 
+enum class CompassDirection(val letter: Char) {East('E'),West('W'),South('S'),North('N')}
+
+typealias Degree = Double
+
+val Degree.degree: Int get() =  floor(abs(this)).roundToInt()
+val Degree.minutes: Int get() =  floor(((abs(this) - degree.toDouble())) *60).roundToInt()
+val Degree.seconds: Double get() =  roundToDecimals((abs(this) - degree - minutes/60.0) *60.0*60,2)
+val Degree.northOrSouth: CompassDirection get() = if(this>=0) CompassDirection.North else CompassDirection.South
+val Degree.eastOrWest: CompassDirection get() = if(this>=0) CompassDirection.East else CompassDirection.West
+
+fun PointCoordinates.humanReadable(): String {
+    return """${latitude.degree}° ${latitude.minutes}' ${latitude.seconds}" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${longitude.seconds}" ${longitude.eastOrWest.letter}"""
+}
 val PointCoordinates.altitude: Double
     get() = if (this.size == 3) this[2] else 0.0
 
