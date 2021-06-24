@@ -51,7 +51,7 @@ class GeoHashUtilsTest {
 
     @Test
     fun shouldGenerateFewerHashesWhenAsked() {
-        val hash = GeoHashUtils.encode(52.0,13.0).subSequence(0,5)
+        val hash = GeoHashUtils.encode(52.0, 13.0).subSequence(0, 5)
         val bbox = GeoHashUtils.decodeBbox(hash.toString())
         val p = bbox.polygon()
         val hashes = GeoHashUtils.geoHashesForPolygon(p.coordinates!!.toTypedArray(), maxLength = 5, includePartial = true)
@@ -105,7 +105,7 @@ class GeoHashUtilsTest {
           ]
         ]
       }            
-""".trimIndent()
+        """.trimIndent()
         val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
         val coordinates = p.coordinates?.asArray?.get(0) ?: throw IllegalStateException()
         val hashes = GeoHashUtils.geoHashesForLinearRing(coordinates = coordinates, includePartial = true)
@@ -300,7 +300,7 @@ class GeoHashUtilsTest {
 
             val hashes = GeoHashUtils.geoHashesForLine(
                 width = 1000.0, lat1 = lat1.toDouble(), lon1 = lon1.toDouble(), lat2 = lat2.toDouble(),
-                lon2 = lon2.toDouble(),maxLength = 5
+                lon2 = lon2.toDouble(), maxLength = 5
             )
             hashes shouldHaveAtLeastSize 10
         }
@@ -445,7 +445,7 @@ class GeoHashUtilsTest {
                     hash
                 ),
                 doubleArrayOf(longitude, latitude)
-            ) shouldBeLessThan radius.toDouble()*1.3
+            ) shouldBeLessThan radius.toDouble() * 1.3
         }
     }
 
@@ -489,7 +489,6 @@ class GeoHashUtilsTest {
         val subHashes = GeoHashUtils.subHashes(hash)
         subHashes.size shouldBe 32
     }
-
 
     private fun assertSimilar(d1: Double, d2: Double) {
         // allow for some margin of error

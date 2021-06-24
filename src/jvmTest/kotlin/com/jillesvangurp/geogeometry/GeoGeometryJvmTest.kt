@@ -21,7 +21,6 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.polygonForPoints
 import com.jillesvangurp.geo.GeoGeometry.Companion.rightTurn
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
-import com.jillesvangurp.geo.GeoGeometry.Companion.toDecimalDegree
 import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
@@ -40,7 +39,6 @@ import org.junit.Test
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.round
-import kotlin.math.roundToInt
 
 class GeoGeometryJvmTest {
     val bergstr16InvalidenBerlin = doubleArrayOf(13.393674, 52.5310059)
@@ -380,7 +378,7 @@ class GeoGeometryJvmTest {
         ) to arrayOf(london, potsDammerPlatz, moritzPlatz),
 
         arrayOf(rosenthalerPlatz, moritzPlatz, brandenBurgerGate) to
-                arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
+            arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
 
     )
 

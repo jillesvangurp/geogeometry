@@ -13,7 +13,9 @@ infix fun Double.shouldBeApproximately(other: Double) {
     this.shouldBeApproximately(other, 0.0000001)
 }
 
-val json: Json by lazy {  Json { } }
-val jsonPretty: Json by lazy {  Json {
-    prettyPrint=true
-} }
+val json: Json by lazy { Json { } }
+val jsonPretty: Json by lazy {
+    Json {
+        prettyPrint = true
+    }
+}

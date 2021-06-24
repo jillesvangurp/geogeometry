@@ -115,22 +115,26 @@ fun vincenty(p1: PointCoordinates, p2: PointCoordinates): Vincenty {
     } while (abs(lambda - lambdaPrevious) > 1e-12 && --iterationLimit > 0)
     check(iterationLimit != 0.0) { "Formula failed to converge" }
     val uSq: Double =
-        cosSqAlpha * (RADIUS_AT_EQUATOR * RADIUS_AT_EQUATOR - EARTH_RADIUS // Using b to keep close to academic formula.
+        cosSqAlpha * (
+            RADIUS_AT_EQUATOR * RADIUS_AT_EQUATOR - EARTH_RADIUS // Using b to keep close to academic formula.
                 * EARTH_RADIUS // Using b to keep close to academic formula.
-                ) / (EARTH_RADIUS // Using b to keep close to academic formula.
+            ) / (
+            EARTH_RADIUS // Using b to keep close to academic formula.
                 * EARTH_RADIUS // Using b to keep close to academic formula.
-                )
+            )
     val A: Double = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
     val B: Double = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
-    val deltaSigma: Double = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
-            B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    val deltaSigma: Double = B * sinSigma * (
+        cos2SigmaM + B / 4 * (
+            cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
+                B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)
+            )
+        )
     val distance: Double = EARTH_RADIUS * A * (sigma - deltaSigma) // Using b to keep close to academic formula.
 
     var initialBearing = atan2(cosU2 * sinLambda, cosU1 * sinU2 - sinU1 * cosU2 * cosLambda)
-    initialBearing = (initialBearing + 2 * PI) % (2 * PI) //turning value to trigonometric direction
+    initialBearing = (initialBearing + 2 * PI) % (2 * PI) // turning value to trigonometric direction
     var finalBearing = atan2(cosU1 * sinLambda, -sinU1 * cosU2 + cosU1 * sinU2 * cosLambda)
-    finalBearing = (finalBearing + 2 * PI) % (2 * PI) //turning value to trigonometric direction
+    finalBearing = (finalBearing + 2 * PI) % (2 * PI) // turning value to trigonometric direction
     return Vincenty(distance, fromRadians(initialBearing), fromRadians(finalBearing))
 }
-
-

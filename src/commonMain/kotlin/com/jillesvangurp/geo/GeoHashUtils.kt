@@ -307,7 +307,7 @@ class GeoHashUtils {
          * -------------------------------------
          * u33dbfcn u33dbfcq | u33dbfcw u33dbfcy
          * u33dbfcp u33dbfcr | u33dbfcx u33dbfcz
-        </pre> *
+         </pre> *
          *
          * the first 4 share the north east 1/8th the first 8 share the north east 1/4th the first 16 share the north 1/2
          * and so on.
@@ -323,7 +323,7 @@ class GeoHashUtils {
          * 17 19 25 27
          * 20 22 28 30
          * 21 23 29 31
-        </pre> *
+         </pre> *
          *
          * Some useful properties: Anything ending with
          *
@@ -335,12 +335,11 @@ class GeoHashUtils {
          * 8-g = NE
          * h-r = SW
          * s-z = SE
-        </pre> *
+         </pre> *
          *
          * @param geoHash geo hash
          * @return String array with the geo hashes.
          */
-
 
         fun subHashes(geoHash: String): Array<String> {
             val list = mutableListOf<String>()
@@ -440,7 +439,6 @@ class GeoHashUtils {
             return list.toTypedArray()
         }
 
-
         fun geoHashesForPolygon(
             coordinates: PolygonCoordinates,
             maxLength: Int? = null,
@@ -526,7 +524,7 @@ class GeoHashUtils {
             val hashLength = min(
                 maxLength ?: 12,
                 suitableHashLength(diagonal, southLat, westLon) + 1
-            )  // (+1 means small boxes on the border)
+            ) // (+1 means small boxes on the border)
 
             var partiallyContained: MutableSet<String> = HashSet()
             // now lets generate all geohashes for the containing bounding box
@@ -587,10 +585,10 @@ class GeoHashUtils {
                     }
                 }
             }
-            return if(maxLength!= null && detail>maxLength) {
+            return if (maxLength != null && detail> maxLength) {
                 // replace tiny hashes with bigger ones
-                val filtered= mutableSetOf<String>()
-                fullyContained.forEach { if(it.length<=hashLength) filtered.add(it) else filtered.add(it.subSequence(0,maxLength).toString()) }
+                val filtered = mutableSetOf<String>()
+                fullyContained.forEach { if (it.length <= hashLength) filtered.add(it) else filtered.add(it.subSequence(0, maxLength).toString()) }
                 filtered
             } else {
                 fullyContained

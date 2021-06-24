@@ -70,8 +70,7 @@ fun BoundingBox.isValid(): Boolean {
 
 fun PointCoordinates.ensureHasAltitude() =
     if (this.size == 3) this else doubleArrayOf(this.longitude, this.latitude, 0.0)
-//fun MultiPointCoordinates.ensureHasAltitude() =
-
+// fun MultiPointCoordinates.ensureHasAltitude() =
 
 val PointCoordinates.latitude: Double
     get() = this[1]
@@ -79,15 +78,15 @@ val PointCoordinates.latitude: Double
 val PointCoordinates.longitude: Double
     get() = this[0]
 
-enum class CompassDirection(val letter: Char) {East('E'),West('W'),South('S'),North('N')}
+enum class CompassDirection(val letter: Char) { East('E'), West('W'), South('S'), North('N') }
 
 typealias Degree = Double
 
-val Degree.degree: Int get() =  floor(abs(this)).roundToInt()
-val Degree.minutes: Int get() =  floor(((abs(this) - degree.toDouble())) *60).roundToInt()
-val Degree.seconds: Double get() =  roundToDecimals((abs(this) - degree - minutes/60.0) *60.0*60,2)
-val Degree.northOrSouth: CompassDirection get() = if(this>=0) CompassDirection.North else CompassDirection.South
-val Degree.eastOrWest: CompassDirection get() = if(this>=0) CompassDirection.East else CompassDirection.West
+val Degree.degree: Int get() = floor(abs(this)).roundToInt()
+val Degree.minutes: Int get() = floor(((abs(this) - degree.toDouble())) * 60).roundToInt()
+val Degree.seconds: Double get() = roundToDecimals((abs(this) - degree - minutes / 60.0) * 60.0 * 60, 2)
+val Degree.northOrSouth: CompassDirection get() = if (this >= 0) CompassDirection.North else CompassDirection.South
+val Degree.eastOrWest: CompassDirection get() = if (this >= 0) CompassDirection.East else CompassDirection.West
 
 fun PointCoordinates.humanReadable(): String {
     return """${latitude.degree}° ${latitude.minutes}' ${latitude.seconds}" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${longitude.seconds}" ${longitude.eastOrWest.letter}"""
@@ -107,10 +106,10 @@ val BoundingBox.westLongitude: Double
 val BoundingBox.eastLongitude: Double
     get() = this[2]
 
-val BoundingBox.northEast get() = doubleArrayOf(this.eastLongitude,this.northLatitude)
-val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude,this.northLatitude)
-val BoundingBox.southEast get() = doubleArrayOf(this.eastLongitude,this.southLatitude)
-val BoundingBox.southWest get() = doubleArrayOf(this.westLongitude,this.southLatitude)
+val BoundingBox.northEast get() = doubleArrayOf(this.eastLongitude, this.northLatitude)
+val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude, this.northLatitude)
+val BoundingBox.southEast get() = doubleArrayOf(this.eastLongitude, this.southLatitude)
+val BoundingBox.southWest get() = doubleArrayOf(this.westLongitude, this.southLatitude)
 
 fun BoundingBox.polygon(): Geometry.Polygon {
     val coordinates = arrayOf(
@@ -139,9 +138,7 @@ private fun deepEquals(left: DoubleArray?, right: DoubleArray?): Boolean {
     // so hack around it with right?.let { false } ?: true, which is ugly
     return left?.let {
         it.contentEquals(right)
-
     } ?: right?.let { false } ?: true
-
 }
 
 infix fun Geometry.Point.line(other: Geometry.Point) = arrayOf(this.coordinates, other.coordinates)
@@ -184,7 +181,6 @@ sealed class Geometry {
 
             fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
 
-
             fun of(lon: Double, lat: Double) = Point(doubleArrayOf(lon, lat))
         }
     }
@@ -212,7 +208,6 @@ sealed class Geometry {
 
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
-
 
     @Serializable
     @SerialName("LineString")
@@ -278,7 +273,7 @@ sealed class Geometry {
         constructor(
             coordinates: PolygonCoordinates? = null,
             bbox: BoundingBox? = null
-        ): this(coordinates = coordinates?.toList(), bbox = bbox)
+        ) : this(coordinates = coordinates?.toList(), bbox = bbox)
 
         fun copy(coordinates: PolygonCoordinates?) = copy(coordinates = coordinates?.toList())
 
@@ -311,7 +306,7 @@ sealed class Geometry {
         constructor(
             coordinates: MultiPolygonCoordinates? = null,
             bbox: BoundingBox? = null
-        ): this(coordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
+        ) : this(coordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
 
         fun copy(arrayCoordinates: MultiPolygonCoordinates?) = copy(coordinates = arrayCoordinates?.map { it.toList() }?.toList(), bbox = bbox)
 
@@ -415,7 +410,6 @@ sealed class Geometry {
             }
             encoder.encodeJsonElement(jsonElement)
         }
-
     }
 }
 
@@ -454,7 +448,6 @@ data class Feature(
     }
 
     override fun toString(): String = Json.encodeToString(serializer(), this)
-
 }
 
 @Serializable

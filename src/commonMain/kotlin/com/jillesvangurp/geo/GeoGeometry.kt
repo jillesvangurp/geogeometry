@@ -345,7 +345,6 @@ class GeoGeometry {
             return (d * factor).roundToLong() / factor
         }
 
-
         fun linesCross(
             l1p1: PointCoordinates,
             l1p2: PointCoordinates,
@@ -441,9 +440,9 @@ class GeoGeometry {
                         val yi = a1 + gradient1 * xi
 
                         (x1 - xi) * (xi - x2) >= 0 &&
-                                (u1 - xi) * (xi - u2) >= 0 &&
-                                (y1 - yi) * (yi - y2) >= 0 &&
-                                (v1 - yi) * (yi - v2) >= 0
+                            (u1 - xi) * (xi - u2) >= 0 &&
+                            (y1 - yi) * (yi - y2) >= 0 &&
+                            (v1 - yi) * (yi - v2) >= 0
                     }
                 }
             }
@@ -1360,13 +1359,15 @@ class GeoGeometry {
             if (this.isValid()) {
                 return this
             } else {
-                val newPolygonCoordinates = listOf(outer().let {
-                    if (it.isCounterClockWise()) {
-                        it
-                    } else {
-                        it.changeOrder()
+                val newPolygonCoordinates = listOf(
+                    outer().let {
+                        if (it.isCounterClockWise()) {
+                            it
+                        } else {
+                            it.changeOrder()
+                        }
                     }
-                })
+                )
                 val inner = holes.map { it ->
                     it.let { hole ->
                         if (hole.isClockWise()) {

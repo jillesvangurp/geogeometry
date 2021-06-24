@@ -6,7 +6,6 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geojson.*
-import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -22,11 +21,11 @@ class GeoGeometryTest {
     val rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
     val oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
 
-    val bigRing = arrayOf(potsDammerPlatz,brandenBurgerGate,naturkundeMuseum,senefelderPlatz,moritzPlatz,potsDammerPlatz)
-    val smallRing = arrayOf(rosenthalerPlatz,oranienburgerTor,bergstr16Berlin,rosenthalerPlatz)
+    val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
+    val smallRing = arrayOf(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin, rosenthalerPlatz)
 
-    val sydneyOpera = doubleArrayOf(151.213108,-33.8567844)
-    val rioFootballStadium = doubleArrayOf(-43.2216922,-22.910643)
+    val sydneyOpera = doubleArrayOf(151.213108, -33.8567844)
+    val rioFootballStadium = doubleArrayOf(-43.2216922, -22.910643)
 
     @Test
     fun shouldConvertToDecimalDegree() {
