@@ -2,19 +2,17 @@
 
 package com.jillesvangurp.geojson
 
+import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoHashUtils
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Required
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
+import kotlin.math.*
 import kotlin.reflect.KClass
 
 /**
@@ -30,6 +28,10 @@ typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
 private typealias PolygonCoordinatesList = List<LinearRingCoordinates>
 private typealias MultiPolygonCoordinatesList = List<PolygonCoordinatesList>
 
+/**
+ * Lowest axes followed by highest axes
+ * BoundingBox = [westLongitude,southLatitude,eastLongitude,westLatitude]
+ */
 typealias BoundingBox = DoubleArray
 
 fun PointCoordinates.stringify() = "[${this.longitude},${this.latitude}]"
@@ -68,7 +70,6 @@ fun PointCoordinates.ensureHasAltitude() =
     if (this.size == 3) this else doubleArrayOf(this.longitude, this.latitude, 0.0)
 //fun MultiPointCoordinates.ensureHasAltitude() =
 
-
 val PointCoordinates.latitude: Double
     get() = this[1]
 
@@ -77,6 +78,7 @@ val PointCoordinates.longitude: Double
 
 val PointCoordinates.altitude: Double
     get() = if (this.size == 3) this[2] else 0.0
+
 
 val BoundingBox.southLatitude: Double
     get() = this[1]
@@ -89,6 +91,11 @@ val BoundingBox.westLongitude: Double
 
 val BoundingBox.eastLongitude: Double
     get() = this[2]
+
+val BoundingBox.topLeft: PointCoordinates get() = doubleArrayOf(westLongitude,northLatitude)
+val BoundingBox.bottomLeft: PointCoordinates get() = doubleArrayOf(westLongitude,southLatitude)
+val BoundingBox.topRight: PointCoordinates get() = doubleArrayOf(eastLongitude,northLatitude)
+val BoundingBox.bottomRight: PointCoordinates get() = doubleArrayOf(eastLongitude,southLatitude)
 
 val BoundingBox.northEast get() = doubleArrayOf(this.eastLongitude,this.northLatitude)
 val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude,this.northLatitude)
@@ -106,6 +113,27 @@ fun BoundingBox.polygon(): Geometry.Polygon {
         )
     )
     return Geometry.Polygon(coordinates)
+}
+
+/**
+ * Map zoom level appropriate for a bounding box in a viewport with the specified amount of pixels.
+ *
+ * https://stackoverflow.com/a/6055653/1041442
+ */
+fun BoundingBox.zoomLevel(height:Int=512, width: Int=512, minZoom: Double=22.0): Double {
+
+    fun zoom(mapPx: Int, worldPx: Int, fraction: Double) = floor(ln(mapPx / worldPx / fraction) / ln(2.0))
+
+    val latFraction = (GeoGeometry.toRadians(northEast.latitude) - GeoGeometry.toRadians(southWest.latitude)) / PI;
+
+    val lngDiff = northEast.longitude - southWest.longitude;
+    val lngFraction = if (lngDiff < 0) { (lngDiff + 360) / 360 } else { (lngDiff / 360) }
+
+    val globePixelSize = 256 // Google's world dimensions in pixels at zoom level 0 for the globe
+    val latZoom = zoom(height, globePixelSize, latFraction);
+    val lngZoom = zoom(width, globePixelSize, lngFraction);
+
+    return minOf(latZoom, lngZoom, minZoom)
 }
 
 fun Geometry.asFeature(properties: JsonObject? = null, bbox: BoundingBox? = null) =
