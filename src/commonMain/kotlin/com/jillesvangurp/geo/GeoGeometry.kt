@@ -538,15 +538,34 @@ class GeoGeometry {
             validate(latitude, longitude, false)
 
             val topRight = translate(latitude, longitude, latitudalMeters / 2, longitudalMeters / 2)
-            val bottomRight = translate(latitude, longitude, -latitudalMeters / 2, longitudalMeters / 2)
             val bottomLeft = translate(latitude, longitude, -latitudalMeters / 2, -longitudalMeters / 2)
 
-            val southLat = topRight[1]
-            val northLat = bottomRight[1]
-            val westLon = topRight[0]
-            val eastLon = bottomLeft[0]
-
+            val southLat = bottomLeft[1]
+            val northLat = topRight[1]
+            val westLon = bottomLeft[0]
+            val eastLon = topRight[0]
             return doubleArrayOf(westLon, southLat, eastLon, northLat)
+        }
+
+        fun calculateTileBboxesForBoundingBox(bbox: BoundingBox, pixelWidth: Int = 750): List<BoundingBox> {
+            val zoomLevel = bbox.zoomLevel()
+            val factor = 2.0.pow(zoomLevel)
+
+            val longitudalGridAngle=360.0/factor
+            val latitudalGridAngle = 180.0/factor
+            var mostWest = bbox.bottomLeft.longitude - bbox.bottomLeft.longitude % longitudalGridAngle
+
+            var lat = bbox.southLatitude - bbox.southLatitude % latitudalGridAngle
+            var cells = mutableListOf<BoundingBox>()
+            while(lat < bbox.northLatitude) {
+                var lon = mostWest
+                while(lon < bbox.eastLongitude) {
+                    cells.add(doubleArrayOf(lon,lat,lon+longitudalGridAngle,lat+latitudalGridAngle))
+                    lon+=longitudalGridAngle
+                }
+                lat+=latitudalGridAngle
+            }
+            return cells
         }
 
         fun toRadians(degrees: Double): Double {
