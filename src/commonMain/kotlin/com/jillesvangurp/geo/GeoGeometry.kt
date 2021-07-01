@@ -547,8 +547,8 @@ class GeoGeometry {
             return doubleArrayOf(westLon, southLat, eastLon, northLat)
         }
 
-        fun calculateTileBboxesForBoundingBox(bbox: BoundingBox, pixelWidth: Int = 750): List<BoundingBox> {
-            val zoomLevel = bbox.zoomLevel()
+        fun calculateTileBboxesForBoundingBox(bbox: BoundingBox,height:Int=512, width: Int=512, minZoom: Double=22.0): List<BoundingBox> {
+            val zoomLevel = bbox.zoomLevel(height,width,minZoom)
             val factor = 2.0.pow(zoomLevel)
 
             val longitudalGridAngle=360.0/factor
