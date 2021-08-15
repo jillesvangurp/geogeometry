@@ -1,158 +1,127 @@
 package com.jillesvangurp.geo
 
+import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
 import kotlin.math.*
 
+
 /**
- * ConcaveHull.java - 14/10/16
- * Ported to Kotlin - 2021-08-15
+ * Adapted from MIT licensed https://github.com/Merowech/java-concave-hull
+ * by @author Udo Schlegel - Udo.3.Schlegel(at)uni-konstanz.de
  *
- * @author Jilles van Gurp - jvg@tryformation.com
- * @author Udo Schlegel - Udo.3.Schlegel(at)uni-konstanz.de
- * @version 1.0
+ * Code has been converted to Kotlin and refactored a little.
  *
- * This is an implementation of the algorithm described by Adriano Moreira and Maribel Yasmina Santos:
- * CONCAVE HULL: A K-NEAREST NEIGHBOURS APPROACH FOR THE COMPUTATION OF THE REGION OCCUPIED BY A SET OF POINTS.
- * GRAPP 2007 - International Conference on Computer Graphics Theory and Applications; pp 61-68.
- *
- * https://repositorium.sdum.uminho.pt/bitstream/1822/6429/1/ConcaveHull_ACM_MYS.pdf
- *
- * With help from https://github.com/detlevn/QGIS-ConcaveHull-Plugin/blob/master/concavehull.py
+ * Note. It currently  has issues with self intersecting. So, I don't recommend using
+ * this in its current form.
  */
 
-data class Point(val x: Double, val y: Double)
-
-private fun euclideanDistance(a: Point, b: Point): Double {
-    return sqrt((a.x -b.x).pow(2.0) + (a.y-b.y).pow(2.0))
+private fun euclideanDistance(
+    a: PointCoordinates,
+    b: PointCoordinates
+): Double {
+    // FIXME get rid of sqrt here?
+    return (a.longitude - b.longitude).pow(2.0) + (a.latitude - b.latitude).pow(2.0)
 }
 
-private fun kNearestNeighbors(l: List<Point>, q: Point, k: Int): List<Point> {
-    val nearestList = mutableListOf<Pair<Double, Point>>()
+private fun kNearestNeighbors(
+    l: List<PointCoordinates>,
+    q: PointCoordinates,
+    k: Int
+): List<PointCoordinates> {
+    val nearestList = mutableListOf<Pair<Double, PointCoordinates>>()
     for (o in l) {
         nearestList.add(Pair(euclideanDistance(q, o), o))
     }
     nearestList.sortBy { it.first }
 
-    val result = mutableListOf<Point>()
+    val result = mutableListOf<PointCoordinates>()
     for (i in 0 until min(k, nearestList.size)) {
         result.add(nearestList[i].second)
     }
     return result
 }
 
-private fun findMinYPoint(l: List<Point>): Point {
-    return l.minByOrNull { it.y } ?: error("list should not be empty")
-}
+private fun findMinYPoint(l: List<PointCoordinates>): PointCoordinates = l.minByOrNull { it.latitude } ?: error("list should not be empty")
 
-private fun calculateAngle(o1: Point, o2: Point): Double {
-    return atan2(o2.y - o1.y, o2.x - o1.x)
-}
+private fun calculateAngle(o1: PointCoordinates, o2: PointCoordinates)= atan2(o2.latitude - o1.latitude, o2.longitude - o1.longitude)
 
 private fun angleDifference(a1: Double, a2: Double): Double {
     // calculate angle difference in clockwise directions as radians
-    return if (a1 > 0 && a2 >= 0 && a1 > a2) {
-        abs(a1 - a2)
-    } else if (a1 >= 0 && a2 > 0 && a1 < a2) {
-        2 *PI + a1 - a2
-    } else if (a1 < 0 && a2 <= 0 && a1 < a2) {
-        2 * PI + a1 + abs(a2)
-    } else if (a1 <= 0 && a2 < 0 && a1 > a2) {
-        abs(a1 - a2)
-    } else if (a1 <= 0 && 0 < a2) {
-        2 * PI + a1 - a2
-    } else if (a1 >= 0 && 0 >= a2) {
-        a1 + abs(a2)
-    } else {
-        0.0
+    return when {
+        a1 > 0 && a2 >= 0 && a1 > a2 -> {
+            abs(a1 - a2)
+        }
+        a1 >= 0 && a2 > 0 && a1 < a2 -> {
+            2 * PI + a1 - a2
+        }
+        a1 < 0 && a2 <= 0 && a1 < a2 -> {
+            2 * PI + a1 + abs(a2)
+        }
+        a1 <= 0 && a2 < 0 && a1 > a2 -> {
+            abs(a1 - a2)
+        }
+        a1 <= 0 && 0 < a2 -> {
+            2 * PI + a1 - a2
+        }
+        a1 >= 0 && 0 >= a2 -> {
+            a1 + abs(a2)
+        }
+        else -> {
+            0.0
+        }
     }
 }
 
-private fun sortByAngle(l: List<Point>, q: Point, a: Double): List<Point> {
+private fun sortByAngle(
+    l: List<PointCoordinates>,
+    q: PointCoordinates,
+    a: Double
+): List<PointCoordinates> {
     // Sort by angle descending
     return l.sortedBy {
-        angleDifference(a, calculateAngle(q,it))
+        angleDifference(a, calculateAngle(q, it))
     }
 }
 
-private fun intersect(l1p1: Point, l1p2: Point, l2p1: Point, l2p2: Point): Boolean {
-    // calculate part equations for line-line intersection
-    val a1 = l1p2.y - l1p1.y
-    val b1 = l1p1.x - l1p2.x
-    val c1 = a1 * l1p1.x + b1 * l1p1.y
-    val a2 = l2p2.y - l2p1.y
-    val b2 = l2p1.x - l2p2.x
-    val c2 = a2 * l2p1.x + b2 * l2p1.y
-    // calculate the divisor
-    val tmp = a1 * b2 - a2 * b1
-
-    // calculate intersection point x coordinate
-    val pX = (c1 * b2 - c2 * b1) / tmp
-
-    // check if intersection x coordinate lies in line line segment
-    if (pX > l1p1.x && pX > l1p2.x || pX > l2p1.x && pX > l2p2.x
-        || pX < l1p1.x && pX < l1p2.x || pX < l2p1.x && pX < l2p2.x
-    ) {
-        return false
-    }
-
-    // calculate intersection point y coordinate
-    val pY = (a1 * c2 - a2 * c1) / tmp
-
-    // check if intersection y coordinate lies in line line segment
-    return !(pY > l1p1.y && pY > l1p2.y || pY > l2p1.y && pY > l2p2.y
-            || pY < l1p1.y && pY < l1p2.y || pY < l2p1.y && pY < l2p2.y)
-}
-
-private fun pointInPolygon(p: Point, pp: List<Point>): Boolean {
-    var result = false
-    var i = 0
-    var j: Int = pp.size - 1
-    while (i < pp.size) {
-        if (pp[i].y > p.y != pp[j].y > p.y &&
-            p.x < (pp[j].y - pp[i].x) * (p.y - pp[i].y) / (pp[j].y - pp[i].y) + pp[i].x
-        ) {
-            result = !result
-        }
-        j = i++
-    }
-    return result
-}
-
-fun calculateConcaveHull(pointArrayList: List<Point>, k: Int): List<Point> {
+/**
+ * Note, algorithm has issues with self intersection
+ */
+fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordinates> {
 
     // the resulting concave hull
-    val concaveHull= mutableListOf<Point>()
+    val concaveHull = mutableListOf<PointCoordinates>()
 
-    // optional remove duplicates
-    val set = pointArrayList.toSet()
-    val pointArraySet = set.toMutableList()
+    // remove duplicates
+    val mutablePoints = ps.distinct().toMutableList()
 
     // k has to be greater than 3 to execute the algorithm
     var kk: Int = max(k, 3)
 
     // return Points if already Concave Hull
-    if (pointArraySet.size < 3) {
-        return pointArraySet
+    if (mutablePoints.size < 3) {
+        return mutablePoints
     }
 
     // make sure that k neighbors can be found
-    kk = min(kk, pointArraySet.size - 1)
+    kk = min(kk, mutablePoints.size - 1)
 
     // find first point and remove from point list
-    val firstPoint = findMinYPoint(pointArraySet)
+    val firstPoint = findMinYPoint(mutablePoints)
     concaveHull.add(firstPoint)
     var currentPoint = firstPoint
-    pointArraySet.remove(firstPoint)
+    mutablePoints.remove(firstPoint)
     var previousAngle = 0.0
     var step = 2
-    while ((currentPoint !== firstPoint || step == 2) && pointArraySet.size > 0) {
+    while ((currentPoint !== firstPoint || step == 2) && mutablePoints.size > 0) {
 
         // after 3 steps add first point to dataset, otherwise hull cannot be closed
         if (step == 5) {
-            pointArraySet.add(firstPoint)
+            mutablePoints.add(firstPoint)
         }
 
         // get k nearest neighbors of current point
-        val kNearestPoints = kNearestNeighbors(pointArraySet, currentPoint, kk)
+        val kNearestPoints = kNearestNeighbors(mutablePoints, currentPoint, kk)
 
         // sort points by angle clockwise
         val clockwisePoints = sortByAngle(kNearestPoints, currentPoint, previousAngle)
@@ -163,7 +132,7 @@ fun calculateConcaveHull(pointArrayList: List<Point>, k: Int): List<Point> {
         while (its && i < clockwisePoints.size - 1) {
             i++
             var lastPoint = 0
-            if (clockwisePoints.get(i) === firstPoint) {
+            if (clockwisePoints[i] === firstPoint) {
                 lastPoint = 1
             }
 
@@ -171,46 +140,60 @@ fun calculateConcaveHull(pointArrayList: List<Point>, k: Int): List<Point> {
             var j = 2
             its = false
             while (!its && j < concaveHull.size - lastPoint) {
-                its = intersect(
-                    concaveHull.get(step - 2),
-                    clockwisePoints.get(i),
-                    concaveHull.get(step - 2 - j),
-                    concaveHull.get(step - 1 - j)
-                )
+                its = GeoGeometry.linesCross(concaveHull[step - 2],
+                    clockwisePoints[i],
+                    concaveHull[step - 2 - j],
+                    concaveHull[step - 1 - j])
                 j++
             }
         }
 
         // if there is no candidate increase k - try again
         if (its) {
-            return calculateConcaveHull(pointArrayList, k + 1)
+            return calculateConcaveHull(ps, k + 1)
         }
 
         // add candidate to concave hull and remove from dataset
-        currentPoint = clockwisePoints.get(i)
+        currentPoint = clockwisePoints[i]
+
         concaveHull.add(currentPoint)
-        pointArraySet.remove(currentPoint)
+        mutablePoints.remove(currentPoint)
+
 
         // calculate last angle of the concave hull line
-        previousAngle = calculateAngle(concaveHull.get(step - 1), concaveHull.get(step - 2))
+        previousAngle = calculateAngle(concaveHull[step - 1], concaveHull[step - 2])
         step++
     }
 
     // Check if all points are contained in the concave hull
     var insideCheck = true
-    var i: Int = pointArraySet.size - 1
+    var i: Int = mutablePoints.size - 1
     while (insideCheck && i > 0) {
-        insideCheck = pointInPolygon(pointArraySet.get(i), concaveHull)
+//        insideCheck = pointInPolygon(mutablePoints[i], concaveHull)
+        insideCheck = GeoGeometry.polygonContains(mutablePoints[i],concaveHull.toTypedArray())
         i--
     }
 
     // if not all points inside -  try again
     return if (!insideCheck) {
-        calculateConcaveHull(pointArrayList, k + 1)
+        calculateConcaveHull(ps, k + 1)
     } else {
         concaveHull
     }
 }
 
-
-
+private fun pointInPolygon(p: PointCoordinates, pp: List<PointCoordinates>): Boolean {
+    var result = false
+    var i = 0
+    var j: Int = pp.size - 1
+    while (i < pp.size) {
+        if (pp[i].latitude > p.latitude != pp[j].latitude > p.latitude &&
+            p.longitude < (pp[j].longitude - pp[i].longitude) * (p.latitude - pp[i].latitude) /
+            (pp[j].latitude - pp[i].latitude) + pp[i].longitude
+        ) {
+            result = !result
+        }
+        j = i++
+    }
+    return result
+}
