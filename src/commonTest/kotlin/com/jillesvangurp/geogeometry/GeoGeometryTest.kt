@@ -7,7 +7,6 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geojson.Geometry
 import com.jillesvangurp.geojson.asArray
 import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
-import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject

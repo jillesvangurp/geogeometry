@@ -3,7 +3,6 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geogeometry.bergstr16Berlin
 import io.kotest.matchers.shouldBe
-import kotlin.math.pow
 import kotlin.test.Test
 
 internal class GeojsonKtTest {
