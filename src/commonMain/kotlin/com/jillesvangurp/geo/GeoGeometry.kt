@@ -440,9 +440,9 @@ class GeoGeometry {
                         val yi = a1 + gradient1 * xi
 
                         (x1 - xi) * (xi - x2) >= 0 &&
-                            (u1 - xi) * (xi - u2) >= 0 &&
-                            (y1 - yi) * (yi - y2) >= 0 &&
-                            (v1 - yi) * (yi - v2) >= 0
+                                (u1 - xi) * (xi - u2) >= 0 &&
+                                (y1 - yi) * (yi - y2) >= 0 &&
+                                (v1 - yi) * (yi - v2) >= 0
                     }
                 }
             }
@@ -543,7 +543,7 @@ class GeoGeometry {
         }
 
         fun fromRadians(degrees: Double): Double {
-            return degrees * 1 / DEGREES_TO_RADIANS
+            return degrees * RADIANS_TO_DEGREES
         }
 
         /**
@@ -835,6 +835,22 @@ class GeoGeometry {
             return arrayOf(points)
         }
 
+        fun rotateAround(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
+            // we have to work coordinates in meters because otherwise we get a weird elipse :-)
+            // start by calculating the compass direction of the point from the anchor
+            val heading = headingFromTwoPoints(anchor,point)
+            // calculate the distance in meters
+            val distance = distance(anchor,point)
+
+            // basic high school math: given an angle in radians and a distance, calculate x and y ...
+            val angle = toRadians((heading + degrees) % 360)
+            val x = cos(angle)*distance
+            val y = sin(angle)*distance
+
+            // use the x and y to translate the anchor and get the point on the circle
+            return GeoGeometry.translate(anchor.latitude,anchor.longitude,y,x)
+        }
+
         /**
          * @param left a 2d array representing a polygon
          * @param right a 2d array representing a polygon
@@ -1051,8 +1067,7 @@ class GeoGeometry {
         }
 
         /**
-         * Returns the heading from one LatLng to another LatLng. Headings are
-         * expressed in degrees clockwise from North within the range [-180,180).
+         * Returns the heading from one LatLng to another LatLng as a compass direction.
          *
          * @see https://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
          *
@@ -1064,11 +1079,11 @@ class GeoGeometry {
             val toLat = toRadians(to.latitude)
             val toLng = toRadians(to.longitude)
             val dLng = toLng - fromLng
-            val heading = atan2(
+            val headingInRadians = atan2(
                 sin(dLng) * cos(toLat),
                 cos(fromLat) * sin(toLat) - sin(fromLat) * cos(toLat) * cos(dLng)
             )
-            return wrap(RADIANS_TO_DEGREES * heading, -180.0, 180.0)
+            return fromRadians(headingInRadians)
         }
 
         /**

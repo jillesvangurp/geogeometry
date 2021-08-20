@@ -6,9 +6,11 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geojson.*
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.math.absoluteValue
 import kotlin.test.Test
 
 class GeoGeometryTest {
@@ -93,6 +95,30 @@ class GeoGeometryTest {
         val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
         val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
         jsonPretty.encodeToString(JsonElement.serializer(), serializedPolygonObject) shouldBe jsonPretty.encodeToString(JsonElement.serializer(), polygonObject)
+    }
+
+    @Test
+    fun shouldRotate() {
+        val anchor = bergstr16Berlin
+        val point = oranienburgerTor
+        val d = GeoGeometry.distance(anchor, point)
+        val points = (0..240).step(10).map {
+            GeoGeometry.rotateAround(anchor, point, it.toDouble())
+        }
+            .also {
+            // all points should be the same distance
+            it.forEach { (GeoGeometry.distance(bergstr16Berlin,it)-d).absoluteValue shouldBeLessThan 0.1 }
+            it.size shouldBe 25
+            it.distinct().size shouldBe 25
+            it.contains(bergstr16Berlin) shouldBe false
+        }
+
+        val features = (points+point + anchor).map {
+            Geometry.Point(coordinates = it)
+        }.map {
+            it.asFeature()
+        }
+        println(FeatureCollection(features))
     }
 
     val testPolygon = """
