@@ -21,7 +21,6 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.polygonForPoints
 import com.jillesvangurp.geo.GeoGeometry.Companion.rightTurn
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
-import com.jillesvangurp.geo.GeoGeometry.Companion.toDecimalDegree
 import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
@@ -330,31 +329,6 @@ class GeoGeometryJvmTest {
         GeoGeometry.linesCross(l2p1, l2p2, l1p1, l1p2) shouldBe false
     }
 
-    data class TestDegree(
-        val direction: String,
-        val degrees: Double,
-        val minutes: Double,
-        val seconds: Double,
-        val expected: Double
-    )
-
-    val degrees = listOf(
-        TestDegree("W", 111.0, 38.0, 45.40, -111.64594444444445),
-        TestDegree("E", 111.0, 38.0, 45.40, 111.64594444444445)
-    )
-
-    @Test
-    fun shouldConvertToDecimalDegree() {
-        degrees.forEach { (direction, degrees, minutes, seconds, expected) ->
-
-            val decimalDegree = toDecimalDegree(direction, degrees, minutes, seconds)
-            MatcherAssert.assertThat(
-                decimalDegree,
-                CoreMatchers.`is`(expected)
-            )
-        }
-    }
-
     @Test
     fun shouldFilterPoints() {
         val latitude = 52.0
@@ -403,7 +377,7 @@ class GeoGeometryJvmTest {
         ) to arrayOf(london, potsDammerPlatz, moritzPlatz),
 
         arrayOf(rosenthalerPlatz, moritzPlatz, brandenBurgerGate) to
-                arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
+            arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
 
     )
 

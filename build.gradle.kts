@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform") version "1.5.10"
     kotlin("plugin.serialization") version "1.5.10"
     id("com.github.ben-manes.versions") version "0.38.0" // gradle dependencyUpdates -Drevision=release
-    id("org.jmailen.kotlinter") version "3.4.0"
+    id("org.jmailen.kotlinter") version "3.4.5"
     `maven-publish`
 }
 

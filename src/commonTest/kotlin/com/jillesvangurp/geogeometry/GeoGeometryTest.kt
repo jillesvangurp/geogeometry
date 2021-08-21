@@ -1,19 +1,58 @@
 package com.jillesvangurp.geogeometry
 
+import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoGeometry.Companion.changeOrder
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
-import com.jillesvangurp.geojson.Geometry
-import com.jillesvangurp.geojson.asArray
-import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
+import com.jillesvangurp.geojson.*
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.math.absoluteValue
 import kotlin.test.Test
 
+//    val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
+//    val smallRing = arrayOf(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin, rosenthalerPlatz)
+
+val sydneyOpera = doubleArrayOf(151.213108, -33.8567844)
+val rioFootballStadium = doubleArrayOf(-43.2216922, -22.910643)
 
 class GeoGeometryTest {
+    @Test
+    fun shouldConvertToDecimalDegree() {
+        data class TestDegree(
+            val direction: String,
+            val degrees: Int,
+            val minutes: Int,
+            val seconds: Double,
+            val decimalDegree: Double
+        )
+
+        val degrees = listOf(
+            TestDegree("W", 111, 38, 45.40, -111.64594444444445),
+            TestDegree("E", 111, 38, 45.40, 111.64594444444445)
+        )
+        degrees.forEach { (direction, degrees, minutes, seconds, decimalDegrees) ->
+
+            decimalDegrees.eastOrWest.letter.toString() shouldBe direction
+            decimalDegrees.degree shouldBe degrees
+            decimalDegrees.minutes shouldBe minutes
+            decimalDegrees.seconds shouldBe seconds
+
+            val decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds)
+            decimalDegree shouldBe decimalDegrees
+        }
+    }
+
+    @Test
+    fun shouldProduceHumanReadableDegree() {
+        bergstr16Berlin.humanReadable() shouldBe """52° 31' 47.39" N, 13° 23' 39.03" E"""
+        rioFootballStadium.humanReadable() shouldBe """22° 54' 38.31" S, 43° 13' 18.09" W"""
+        sydneyOpera.humanReadable() shouldBe """33° 51' 24.42" S, 151° 12' 47.19" E"""
+    }
+
     @Test
     fun shouldBeValidPolygon() {
         bigRing.hasSameStartAndEnd() shouldBe true
@@ -47,6 +86,30 @@ class GeoGeometryTest {
         val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
         val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
         jsonPretty.encodeToString(JsonElement.serializer(), serializedPolygonObject) shouldBe jsonPretty.encodeToString(JsonElement.serializer(), polygonObject)
+    }
+
+    @Test
+    fun shouldRotate() {
+        val anchor = bergstr16Berlin
+        val point = oranienburgerTor
+        val d = GeoGeometry.distance(anchor, point)
+        val points = (0..240).step(10).map {
+            GeoGeometry.rotateAround(anchor, point, it.toDouble())
+        }
+            .also {
+            // all points should be the same distance
+            it.forEach { (GeoGeometry.distance(bergstr16Berlin,it)-d).absoluteValue shouldBeLessThan 0.1 }
+            it.size shouldBe 25
+            it.distinct().size shouldBe 25
+            it.contains(bergstr16Berlin) shouldBe false
+        }
+
+        val features = (points+point + anchor).map {
+            Geometry.Point(coordinates = it)
+        }.map {
+            it.asFeature()
+        }
+        println(FeatureCollection(features))
     }
 
     val testPolygon = """

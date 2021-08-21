@@ -44,7 +44,7 @@ class GeoJsonJvmTest {
         berlin.copy(coordinates = null) shouldNotBe berlin
         val reversed = berlin.coordinates?.asArray?.clone()
         reversed?.reverse()
-        berlin.copy(arrayCoordinates = reversed ) shouldNotBe berlin
+        berlin.copy(arrayCoordinates = reversed) shouldNotBe berlin
 
         Geometry.Point(null) shouldBe Geometry.Point(null)
         Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldNotBe Geometry.Point(null)
