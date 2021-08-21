@@ -100,15 +100,6 @@ kotlin {
     }
 }
 
-
-publishing {
-    repositories {
-        maven {
-            url = uri("file://$projectDir/localRepo")
-        }
-    }
-}
-
 kotlinter {
     ignoreFailures = true
 }
