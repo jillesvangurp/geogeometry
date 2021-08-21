@@ -2,16 +2,15 @@
 
 # Introduction
 
-GeoGeometry started out as a simple side project while I was building a startup in 2012. The key feature I needed at time was a list of geo hashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, georeferencing coordinates from various location providers, etc.
+GeoGeometry started out as a simple side project while I was building a startup in 2012. The key feature I needed at time was a list of geohashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, geo-referencing coordinates from various location providers, etc.
 
-I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users. At this point, the library is a multiplatform Kotlin project. 
+I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users. At this point, the library is a multi-platform Kotlin project. 
 
-# Get it
+# Get It
 
-This is a kotlin multiplatform distribution with packages for `-jvm` and `-js` (currently). Currently, 
-multiplatform does not work with `jitpack.io` which I use on other projects. Older versions are still 
-available on [jitpack](https://jitpack.io/#jillesvangurp/geogeometry/v3.1.1). If you are interested,
-there's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
+This is a Kotlin multi-platform distribution with packages for `-jvm` and `-js` (currently). Currently, 
+multi-platform does not work with `jitpack.io` which I use on other projects. Older versions are still 
+available on [jitpack](https://jitpack.io/#jillesvangurp/geogeometry/v3.1.1). There's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
 
 As a workaround, I currently distribute jars via my website. To add the repository, add something 
 like this to your `build.gradle.kts` file:
@@ -26,11 +25,12 @@ repositories {
 and then add the dependency :
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.2.0")
+implementation("com.github.jillesvangurp:geogeometry:3.2.11")
 ```
+
 You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).
 
-## About Geohashes
+## About Geo Hashes
 
 A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
 
@@ -50,8 +50,9 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
   - get the center for a polygon
   - get bounding box for a polygon
   - convert a **circle to a polygon**
-  - create a **polygon from a point cloud**
+  - create a **polygon from a point cloud**. An algorithm for a convex hull is included and another experimental one for a concave hull.
   - **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
+  - **rotate** a point around another point
 
 - GeoHashUtils class with methods that allow you to: 
   - **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
@@ -79,7 +80,7 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
 
 It's a gradle project. So, checking it out and doing a `gradle build` should do the trick.
 
-Note. this is a kotlin multiplatform build and currently it produces a javascript build as well as a jvm jar.  Adding IOS native and other platforms should be straightforward as well. The project has no run time dependencies beyond the standard kotlin library.
+Note. this is a kotlin multi-platform build, and currently it produces a JavaScript build as well as a jvm jar.  Adding IOS native and other platforms should be straightforward as well. The project has no run time dependencies beyond the standard kotlin library.
 
 # License
 
