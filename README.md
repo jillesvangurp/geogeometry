@@ -1,4 +1,4 @@
-![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg)
+![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg) [![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
 # Introduction
 
@@ -8,27 +8,9 @@ I initially used Java for this and over time added several implementations of co
 
 # Get it
 
-This is a kotlin multiplatform distribution with packages for `-jvm` and `-js` (currently). Currently, 
-multiplatform does not work with `jitpack.io` which I use on other projects. Older versions are still 
-available on [jitpack](https://jitpack.io/#jillesvangurp/geogeometry/v3.1.1). If you are interested,
-there's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
+[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
-As a workaround, I currently distribute jars via my website. To add the repository, add something 
-like this to your `build.gradle.kts` file:
-
-```kotlin
-repositories {
-  mavenCentral()
-  maven { url = uri("https://www.jillesvangurp.com/maven") }
-}
-```
-
-and then add the dependency :
-
-```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.2.0")
-```
-You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).
+The jar files are hosted on jitpack. Check their instructions for adding this to your maven/gradle build.
 
 ## About Geohashes
 
