@@ -23,9 +23,10 @@ class ConcaveHullTest {
 
         val p = Geometry.Polygon(coordinates = arrayOf(calculateConcaveHull(polygon.coordinates!![0].toList().shuffled(), 7).toTypedArray()))
 
-        println(Json {
-            prettyPrint = true
-        }.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature()))))
-
+        println(
+            Json {
+                prettyPrint = true
+            }.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature())))
+        )
     }
 }

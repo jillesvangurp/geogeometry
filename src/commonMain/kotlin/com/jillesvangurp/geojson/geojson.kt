@@ -13,10 +13,10 @@ import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
+import kotlin.math.*
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt
-import kotlin.math.*
 import kotlin.reflect.KClass
 
 /**
@@ -96,7 +96,6 @@ fun PointCoordinates.humanReadable(): String {
 val PointCoordinates.altitude: Double
     get() = if (this.size == 3) this[2] else 0.0
 
-
 val BoundingBox.southLatitude: Double
     get() = this[1]
 
@@ -109,15 +108,15 @@ val BoundingBox.westLongitude: Double
 val BoundingBox.eastLongitude: Double
     get() = this[2]
 
-val BoundingBox.topLeft: PointCoordinates get() = doubleArrayOf(westLongitude,northLatitude)
-val BoundingBox.bottomLeft: PointCoordinates get() = doubleArrayOf(westLongitude,southLatitude)
-val BoundingBox.topRight: PointCoordinates get() = doubleArrayOf(eastLongitude,northLatitude)
-val BoundingBox.bottomRight: PointCoordinates get() = doubleArrayOf(eastLongitude,southLatitude)
+val BoundingBox.topLeft: PointCoordinates get() = doubleArrayOf(westLongitude, northLatitude)
+val BoundingBox.bottomLeft: PointCoordinates get() = doubleArrayOf(westLongitude, southLatitude)
+val BoundingBox.topRight: PointCoordinates get() = doubleArrayOf(eastLongitude, northLatitude)
+val BoundingBox.bottomRight: PointCoordinates get() = doubleArrayOf(eastLongitude, southLatitude)
 
-val BoundingBox.northEast get() = doubleArrayOf(this.eastLongitude,this.northLatitude)
-val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude,this.northLatitude)
-val BoundingBox.southEast get() = doubleArrayOf(this.eastLongitude,this.southLatitude)
-val BoundingBox.southWest get() = doubleArrayOf(this.westLongitude,this.southLatitude)
+val BoundingBox.northEast get() = doubleArrayOf(this.eastLongitude, this.northLatitude)
+val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude, this.northLatitude)
+val BoundingBox.southEast get() = doubleArrayOf(this.eastLongitude, this.southLatitude)
+val BoundingBox.southWest get() = doubleArrayOf(this.westLongitude, this.southLatitude)
 
 fun BoundingBox.polygon(): Geometry.Polygon {
     val coordinates = arrayOf(
@@ -137,18 +136,18 @@ fun BoundingBox.polygon(): Geometry.Polygon {
  *
  * https://stackoverflow.com/a/6055653/1041442
  */
-fun BoundingBox.zoomLevel(height:Int=512, width: Int=512, minZoom: Double=22.0): Double {
+fun BoundingBox.zoomLevel(height: Int = 512, width: Int = 512, minZoom: Double = 22.0): Double {
 
     fun zoom(mapPx: Int, worldPx: Int, fraction: Double) = floor(ln(mapPx / worldPx / fraction) / ln(2.0))
 
-    val latFraction = (GeoGeometry.toRadians(northEast.latitude) - GeoGeometry.toRadians(southWest.latitude)) / PI;
+    val latFraction = (GeoGeometry.toRadians(northEast.latitude) - GeoGeometry.toRadians(southWest.latitude)) / PI
 
-    val lngDiff = northEast.longitude - southWest.longitude;
+    val lngDiff = northEast.longitude - southWest.longitude
     val lngFraction = if (lngDiff < 0) { (lngDiff + 360) / 360 } else { (lngDiff / 360) }
 
     val globePixelSize = 256 // Google's world dimensions in pixels at zoom level 0 for the globe
-    val latZoom = zoom(height, globePixelSize, latFraction);
-    val lngZoom = zoom(width, globePixelSize, lngFraction);
+    val latZoom = zoom(height, globePixelSize, latFraction)
+    val lngZoom = zoom(width, globePixelSize, lngFraction)
 
     return minOf(latZoom, lngZoom, minZoom)
 }

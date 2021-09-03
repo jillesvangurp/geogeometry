@@ -440,9 +440,9 @@ class GeoGeometry {
                         val yi = a1 + gradient1 * xi
 
                         (x1 - xi) * (xi - x2) >= 0 &&
-                                (u1 - xi) * (xi - u2) >= 0 &&
-                                (y1 - yi) * (yi - y2) >= 0 &&
-                                (v1 - yi) * (yi - v2) >= 0
+                            (u1 - xi) * (xi - u2) >= 0 &&
+                            (y1 - yi) * (yi - y2) >= 0 &&
+                            (v1 - yi) * (yi - v2) >= 0
                     }
                 }
             }
@@ -536,23 +536,23 @@ class GeoGeometry {
             return doubleArrayOf(westLon, southLat, eastLon, northLat)
         }
 
-        fun calculateTileBboxesForBoundingBox(bbox: BoundingBox,height:Int=512, width: Int=512, minZoom: Double=22.0): List<BoundingBox> {
-            val zoomLevel = bbox.zoomLevel(height,width,minZoom)
+        fun calculateTileBboxesForBoundingBox(bbox: BoundingBox, height: Int = 512, width: Int = 512, minZoom: Double = 22.0): List<BoundingBox> {
+            val zoomLevel = bbox.zoomLevel(height, width, minZoom)
             val factor = 2.0.pow(zoomLevel)
 
-            val longitudalGridAngle=360.0/factor
-            val latitudalGridAngle = 180.0/factor
+            val longitudalGridAngle = 360.0 / factor
+            val latitudalGridAngle = 180.0 / factor
             var mostWest = bbox.bottomLeft.longitude - bbox.bottomLeft.longitude % longitudalGridAngle
 
             var lat = bbox.southLatitude - bbox.southLatitude % latitudalGridAngle
             var cells = mutableListOf<BoundingBox>()
-            while(lat < bbox.northLatitude) {
+            while (lat < bbox.northLatitude) {
                 var lon = mostWest
-                while(lon < bbox.eastLongitude) {
-                    cells.add(doubleArrayOf(lon,lat,lon+longitudalGridAngle,lat+latitudalGridAngle))
-                    lon+=longitudalGridAngle
+                while (lon < bbox.eastLongitude) {
+                    cells.add(doubleArrayOf(lon, lat, lon + longitudalGridAngle, lat + latitudalGridAngle))
+                    lon += longitudalGridAngle
                 }
-                lat+=latitudalGridAngle
+                lat += latitudalGridAngle
             }
             return cells
         }
@@ -857,17 +857,17 @@ class GeoGeometry {
         fun rotateAround(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
             // we have to work coordinates in meters because otherwise we get a weird elipse :-)
             // start by calculating the compass direction of the point from the anchor
-            val heading = headingFromTwoPoints(anchor,point)
+            val heading = headingFromTwoPoints(anchor, point)
             // calculate the distance in meters
-            val distance = distance(anchor,point)
+            val distance = distance(anchor, point)
 
             // basic high school math: given an angle in radians and a distance, calculate x and y ...
             val angle = toRadians((heading + degrees) % 360)
-            val x = cos(angle)*distance
-            val y = sin(angle)*distance
+            val x = cos(angle) * distance
+            val y = sin(angle) * distance
 
             // use the x and y to translate the anchor and get the point on the circle
-            return GeoGeometry.translate(anchor.latitude,anchor.longitude,y,x)
+            return GeoGeometry.translate(anchor.latitude, anchor.longitude, y, x)
         }
 
         /**

@@ -39,6 +39,5 @@ internal class GeojsonKtTest {
         )
         val cells = GeoGeometry.calculateTileBboxesForBoundingBox(bbox)
         println(FeatureCollection(cells.map { it.polygon() }.map { it.asFeature() } + listOf(bbox.polygon().asFeature())))
-
     }
 }

@@ -97,14 +97,14 @@ class GeoGeometryTest {
             GeoGeometry.rotateAround(anchor, point, it.toDouble())
         }
             .also {
-            // all points should be the same distance
-            it.forEach { (GeoGeometry.distance(bergstr16Berlin,it)-d).absoluteValue shouldBeLessThan 0.1 }
-            it.size shouldBe 25
-            it.distinct().size shouldBe 25
-            it.contains(bergstr16Berlin) shouldBe false
-        }
+                // all points should be the same distance
+                it.forEach { (GeoGeometry.distance(bergstr16Berlin, it) - d).absoluteValue shouldBeLessThan 0.1 }
+                it.size shouldBe 25
+                it.distinct().size shouldBe 25
+                it.contains(bergstr16Berlin) shouldBe false
+            }
 
-        val features = (points+point + anchor).map {
+        val features = (points + point + anchor).map {
             Geometry.Point(coordinates = it)
         }.map {
             it.asFeature()

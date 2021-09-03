@@ -9,8 +9,8 @@ val naturkundeMuseum = doubleArrayOf(13.381921, 52.531188)
 val rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
 val oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
 
-val bigRing = arrayOf(potsDammerPlatz,brandenBurgerGate,naturkundeMuseum,senefelderPlatz,moritzPlatz,potsDammerPlatz)
-val smallRing = arrayOf(rosenthalerPlatz,oranienburgerTor,bergstr16Berlin,rosenthalerPlatz)
+val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
+val smallRing = arrayOf(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin, rosenthalerPlatz)
 
 val concavePoly = """
 {

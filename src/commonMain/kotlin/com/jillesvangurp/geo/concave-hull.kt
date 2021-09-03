@@ -5,7 +5,6 @@ import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import kotlin.math.*
 
-
 /**
  * Adapted from MIT licensed https://github.com/Merowech/java-concave-hull
  * by @author Udo Schlegel - Udo.3.Schlegel(at)uni-konstanz.de
@@ -44,7 +43,7 @@ private fun kNearestNeighbors(
 
 private fun findMinYPoint(l: List<PointCoordinates>): PointCoordinates = l.minByOrNull { it.latitude } ?: error("list should not be empty")
 
-private fun calculateAngle(o1: PointCoordinates, o2: PointCoordinates)= atan2(o2.latitude - o1.latitude, o2.longitude - o1.longitude)
+private fun calculateAngle(o1: PointCoordinates, o2: PointCoordinates) = atan2(o2.latitude - o1.latitude, o2.longitude - o1.longitude)
 
 private fun angleDifference(a1: Double, a2: Double): Double {
     // calculate angle difference in clockwise directions as radians
@@ -140,10 +139,12 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordina
             var j = 2
             its = false
             while (!its && j < concaveHull.size - lastPoint) {
-                its = GeoGeometry.linesCross(concaveHull[step - 2],
+                its = GeoGeometry.linesCross(
+                    concaveHull[step - 2],
                     clockwisePoints[i],
                     concaveHull[step - 2 - j],
-                    concaveHull[step - 1 - j])
+                    concaveHull[step - 1 - j]
+                )
                 j++
             }
         }
@@ -159,7 +160,6 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordina
         concaveHull.add(currentPoint)
         mutablePoints.remove(currentPoint)
 
-
         // calculate last angle of the concave hull line
         previousAngle = calculateAngle(concaveHull[step - 1], concaveHull[step - 2])
         step++
@@ -170,7 +170,7 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordina
     var i: Int = mutablePoints.size - 1
     while (insideCheck && i > 0) {
 //        insideCheck = pointInPolygon(mutablePoints[i], concaveHull)
-        insideCheck = GeoGeometry.polygonContains(mutablePoints[i],concaveHull.toTypedArray())
+        insideCheck = GeoGeometry.polygonContains(mutablePoints[i], concaveHull.toTypedArray())
         i--
     }
 
