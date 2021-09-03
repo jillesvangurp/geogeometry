@@ -1,23 +1,14 @@
 plugins {
-    kotlin("multiplatform") version "1.5.10"
-    kotlin("plugin.serialization") version "1.5.10"
-    id("com.github.ben-manes.versions") version "0.38.0" // gradle dependencyUpdates -Drevision=release
-    id("org.jmailen.kotlinter") version "3.4.5"
+    kotlin("multiplatform")
+    kotlin("plugin.serialization")
+    id("com.github.ben-manes.versions") // gradle dependencyUpdates -Drevision=release
+    id("org.jmailen.kotlinter")
     `maven-publish`
 }
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven("https://kotlin.bintray.com/kotlinx") {
-        name = "bintray-kotlinx"
-    }
 }
-
-val kotlinVersion = "1.3.72"
-val slf4jVersion = "1.7.26"
-val junitVersion = "5.6.2"
-val serializationVersion = "1.2.1"
 
 kotlin {
     jvm {
@@ -50,7 +41,7 @@ kotlin {
         val commonMain by getting {
                 dependencies {
                     implementation(kotlin("stdlib-common"))
-                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
                 }
             }
 
@@ -59,36 +50,36 @@ kotlin {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
                     // yay kotest does multiplatform
-                    implementation("io.kotest:kotest-assertions-core:4.4.3")
+                    implementation("io.kotest:kotest-assertions-core:_")
                 }
             }
 
         val jvmMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
         val jvmTest by getting {
             dependencies {
-                runtimeOnly("org.junit.jupiter:junit-jupiter:$junitVersion")
+                runtimeOnly("org.junit.jupiter:junit-jupiter:_")
                 implementation(kotlin("test-junit"))
 
-                implementation("org.hamcrest:hamcrest-all:1.3")
+                implementation("org.hamcrest:hamcrest-all:_")
 
                 // kotlintest runner needs this to enable logging
-                implementation("org.slf4j:slf4j-api:$slf4jVersion")
-                implementation("org.slf4j:jcl-over-slf4j:$slf4jVersion")
-                implementation("org.slf4j:log4j-over-slf4j:$slf4jVersion")
-                implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
-                implementation("ch.qos.logback:logback-classic:1.2.3")
+                implementation("org.slf4j:slf4j-api:_")
+                implementation("org.slf4j:jcl-over-slf4j:_")
+                implementation("org.slf4j:log4j-over-slf4j:_")
+                implementation("org.slf4j:jul-to-slf4j:_")
+                implementation("ch.qos.logback:logback-classic:_")
             }
         }
 
         val jsMain by getting {
                 dependencies {
                     implementation(kotlin("stdlib-js"))
-                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
                 }
         }
 
