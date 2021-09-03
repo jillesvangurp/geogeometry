@@ -1,4 +1,4 @@
-![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg)
+[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)![Java CI with Gradle](https://github.com/jillesvangurp/geogeometry/workflows/Java%20CI%20with%20Gradle/badge.svg)
 
 # Introduction
 
@@ -8,9 +8,11 @@ I initially used Java for this and over time added several implementations of co
 
 # Get It
 
+[![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
+
 This is a Kotlin multi-platform distribution with packages for `-jvm` and `-js` (currently). Currently, 
-multi-platform does not work with `jitpack.io` which I use on other projects. Older versions are still 
-available on [jitpack](https://jitpack.io/#jillesvangurp/geogeometry/v3.1.1). There's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
+multi-platform and multi-module does not work with `jitpack.io`. You can get this library via them but if that doesn't work,
+you can also try to pull from my website as described below. There's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
 
 As a workaround, I currently distribute jars via my website. To add the repository, add something 
 like this to your `build.gradle.kts` file:
@@ -25,7 +27,7 @@ repositories {
 and then add the dependency :
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.2.11")
+implementation("com.github.jillesvangurp:geogeometry:3.2.12")
 ```
 
 You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).
