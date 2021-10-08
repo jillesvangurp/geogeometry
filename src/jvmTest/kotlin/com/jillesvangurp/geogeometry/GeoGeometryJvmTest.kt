@@ -869,15 +869,5 @@ class GeoGeometryJvmTest {
         MatcherAssert.assertThat("should contain the point", polygonContains(point, polygon))
     }
 
-    @Test
-    fun headingFromTwoPoints() {
-        GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(13.0, 52.0),
-            doubleArrayOf(14.0, 53.0)
-        ) shouldBeApproximately 30.93571619
-        GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(14.0, 53.0),
-            doubleArrayOf(13.0, 52.0)
-        ) shouldBeApproximately -148.270892801
-    }
+
 }

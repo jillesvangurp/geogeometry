@@ -11,6 +11,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlin.math.absoluteValue
+import kotlin.math.roundToLong
 import kotlin.test.Test
 
 //    val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
@@ -85,7 +86,10 @@ class GeoGeometryTest {
         val polygonObject = json.decodeFromString(JsonObject.serializer(), testPolygon)
         val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
         val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
-        jsonPretty.encodeToString(JsonElement.serializer(), serializedPolygonObject) shouldBe jsonPretty.encodeToString(JsonElement.serializer(), polygonObject)
+        jsonPretty.encodeToString(JsonElement.serializer(), serializedPolygonObject) shouldBe jsonPretty.encodeToString(
+            JsonElement.serializer(),
+            polygonObject
+        )
     }
 
     @Test
@@ -112,7 +116,40 @@ class GeoGeometryTest {
         println(FeatureCollection(features))
     }
 
-    val testPolygon = """
+    @Test
+    fun headingFromTwoPoints() {
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(13.0, 52.0),
+            doubleArrayOf(14.0, 53.0)
+        ).roundToLong() shouldBe 31
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(14.0, 53.0),
+            doubleArrayOf(13.0, 52.0)
+        ).roundToLong() shouldBe 212
+    }
+
+    @Test
+    fun headingFromTwoPointsShouldBeBetweenZeroAnd360() {
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(13.0, 52.0),
+            doubleArrayOf(13.0, 52.0001)
+        ).roundToLong() shouldBe 0
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(12.999, 52.0),
+            doubleArrayOf(13.0, 52.0)
+        ).roundToLong() shouldBe 90
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(13.0, 52.0001),
+            doubleArrayOf(13.0, 52.0)
+        ).roundToLong() shouldBe 180
+        GeoGeometry.headingFromTwoPoints(
+            doubleArrayOf(13.0, 52.0),
+            doubleArrayOf(12.999, 52.0)
+        ).roundToLong() shouldBe 270
+    }
+}
+
+val testPolygon = """
         {
         "coordinates": [
           [
@@ -158,7 +195,7 @@ class GeoGeometryTest {
       }
     """.trimIndent()
 
-    val badGeo = """
+val badGeo = """
 {
               "coordinates": [
                 [
@@ -1278,4 +1315,3 @@ class GeoGeometryTest {
               "type": "Polygon"
             }        
     """.trimIndent()
-}

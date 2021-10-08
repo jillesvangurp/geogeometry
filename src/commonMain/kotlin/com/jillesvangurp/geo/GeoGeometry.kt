@@ -1088,23 +1088,30 @@ class GeoGeometry {
         /**
          * Returns the heading from one LatLng to another LatLng as a compass direction.
          *
-         * @see https://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
+         * @see https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another
          *
          * @return The heading in degrees clockwise from north.
          */
-        fun headingFromTwoPoints(from: PointCoordinates, to: PointCoordinates): Double {
-            val fromLat = toRadians(from.latitude)
-            val fromLng = toRadians(from.longitude)
-            val toLat = toRadians(to.latitude)
-            val toLng = toRadians(to.longitude)
-            val dLng = toLng - fromLng
-            val headingInRadians = atan2(
-                sin(dLng) * cos(toLat),
-                cos(fromLat) * sin(toLat) - sin(fromLat) * cos(toLat) * cos(dLng)
-            )
-            return fromRadians(headingInRadians)
-        }
+        fun headingFromTwoPoints(from: PointCoordinates, to: PointCoordinates): Double = headingFromTwoPoints(from.latitude,from.longitude,to.latitude,to.longitude)
 
+        /**
+         * Returns the heading from one LatLng to another LatLng as a compass direction.
+         *
+         * @see https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another
+         *
+         * @return The heading in degrees clockwise from north.
+         */
+        fun headingFromTwoPoints(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+            val latitude1: Double = toRadians(lat1)
+            val latitude2: Double = toRadians(lat2)
+            val longDiff: Double = toRadians(lon2 - lon1)
+            val y: Double = sin(longDiff) * cos(latitude2)
+            val x: Double =
+                cos(latitude1) * sin(latitude2) - sin(latitude1) * cos(
+                    latitude2
+                ) * cos(longDiff)
+            return (fromRadians(atan2(y, x)) + 360) % 360
+        }
         /**
          * @param point point
          * @return a json representation of the point
