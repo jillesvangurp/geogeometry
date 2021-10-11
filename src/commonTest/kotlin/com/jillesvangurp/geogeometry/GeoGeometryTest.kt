@@ -117,6 +117,14 @@ class GeoGeometryTest {
     }
 
     @Test
+    fun rotateByZeroDegreesShouldBeSamePoint() {
+        val anchor = bergstr16Berlin
+        val point = oranienburgerTor
+        GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 0.0)) shouldBeLessThan 100.0
+        (GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 180.0)) - 2*GeoGeometry.distance(anchor,point)).absoluteValue shouldBeLessThan 100.0
+    }
+
+    @Test
     fun headingFromTwoPoints() {
         GeoGeometry.headingFromTwoPoints(
             doubleArrayOf(13.0, 52.0),
