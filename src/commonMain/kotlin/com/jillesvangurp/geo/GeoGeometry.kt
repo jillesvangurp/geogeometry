@@ -863,8 +863,8 @@ class GeoGeometry {
 
             // basic high school math: given an angle in radians and a distance, calculate x and y ...
             val angle = toRadians((heading + degrees) % 360)
-            val x = cos(angle) * distance
-            val y = sin(angle) * distance
+            val x = sin(angle) * distance
+            val y = cos(angle) * distance
 
             // use the x and y to translate the anchor and get the point on the circle
             return GeoGeometry.translate(anchor.latitude, anchor.longitude, y, x)
