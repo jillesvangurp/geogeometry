@@ -70,10 +70,6 @@ fun BoundingBox.isValid(): Boolean {
     return this.westLongitude <= this.eastLongitude && this.southLatitude <= this.northLatitude
 }
 
-fun PointCoordinates.ensureHasAltitude() =
-    if (this.size == 3) this else doubleArrayOf(this.longitude, this.latitude, 0.0)
-// fun MultiPointCoordinates.ensureHasAltitude() =
-
 val PointCoordinates.latitude: Double
     get() = this[1]
 
@@ -93,8 +89,8 @@ val Degree.eastOrWest: CompassDirection get() = if (this >= 0) CompassDirection.
 fun PointCoordinates.humanReadable(): String {
     return """${latitude.degree}° ${latitude.minutes}' ${latitude.seconds}" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${longitude.seconds}" ${longitude.eastOrWest.letter}"""
 }
-val PointCoordinates.altitude: Double
-    get() = if (this.size == 3) this[2] else 0.0
+val PointCoordinates.altitude: Double?
+    get() = if (this.size == 3) this[2] else null
 
 val BoundingBox.southLatitude: Double
     get() = this[1]
