@@ -5,11 +5,13 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.changeOrder
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
+import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geojson.*
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 import kotlin.test.Test
@@ -40,10 +42,10 @@ class GeoGeometryTest {
             decimalDegrees.eastOrWest.letter.toString() shouldBe direction
             decimalDegrees.degree shouldBe degrees
             decimalDegrees.minutes shouldBe minutes
-            decimalDegrees.seconds shouldBe seconds
+            roundToDecimals(decimalDegrees.seconds,2) shouldBe seconds
 
             val decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds)
-            decimalDegree shouldBe decimalDegrees
+            abs(decimalDegree-decimalDegrees) shouldBeLessThan 0.00001
         }
     }
 

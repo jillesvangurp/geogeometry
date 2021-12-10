@@ -82,12 +82,12 @@ typealias Degree = Double
 
 val Degree.degree: Int get() = floor(abs(this)).roundToInt()
 val Degree.minutes: Int get() = floor(((abs(this) - degree.toDouble())) * 60).roundToInt()
-val Degree.seconds: Double get() = roundToDecimals((abs(this) - degree - minutes / 60.0) * 60.0 * 60, 2)
+val Degree.seconds: Double get() = (abs(this) - degree - minutes / 60.0) * 60.0 * 60
 val Degree.northOrSouth: CompassDirection get() = if (this >= 0) CompassDirection.North else CompassDirection.South
 val Degree.eastOrWest: CompassDirection get() = if (this >= 0) CompassDirection.East else CompassDirection.West
 
 fun PointCoordinates.humanReadable(): String {
-    return """${latitude.degree}° ${latitude.minutes}' ${latitude.seconds}" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${longitude.seconds}" ${longitude.eastOrWest.letter}"""
+    return """${latitude.degree}° ${latitude.minutes}' ${roundToDecimals(latitude.seconds,2)}" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${roundToDecimals(longitude.seconds,2)}" ${longitude.eastOrWest.letter}"""
 }
 val PointCoordinates.altitude: Double?
     get() = if (this.size == 3) this[2] else null

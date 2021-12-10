@@ -474,7 +474,7 @@ class GeoGeometry {
         fun translateLongitude(latitude: Double, longitude: Double, meters: Double): PointCoordinates {
             validate(latitude, longitude, false)
             return doubleArrayOf(
-                roundToDecimals(longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude), 6),
+                longitude + meters / lengthOfLongitudeDegreeAtLatitude(latitude),
                 latitude
             )
         }
@@ -490,7 +490,7 @@ class GeoGeometry {
          * @return the translated coordinate.
          */
         fun translateLatitude(latitude: Double, longitude: Double, meters: Double): PointCoordinates {
-            return doubleArrayOf(longitude, roundToDecimals(latitude + meters / DEGREE_LATITUDE_METERS, 6))
+            return doubleArrayOf(longitude, latitude + meters / DEGREE_LATITUDE_METERS)
         }
 
         /**
