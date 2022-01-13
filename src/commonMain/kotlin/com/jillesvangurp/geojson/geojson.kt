@@ -1,4 +1,5 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "unused")
+@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.jillesvangurp.geojson
 
@@ -380,9 +381,9 @@ sealed class Geometry {
         override fun toString(): String = Json.encodeToString(serializer(), this)
     }
 
+    @OptIn(InternalSerializationApi::class)
     @Serializer(forClass = Geometry::class)
     companion object : KSerializer<Geometry> {
-        @OptIn(InternalSerializationApi::class)
         override fun deserialize(decoder: Decoder): Geometry {
             return decoder.decodeSerializableValue(SealedClassSerializer(
                 serialName = "com.jillesvangurp.geojson.Geometry",
@@ -392,14 +393,13 @@ sealed class Geometry {
             ))
         }
 
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("geometry") {
-            element<String>("type")
-        }
+//        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("geometry") {
+//            element<String>("type")
+//        }
 
-        @OptIn(InternalSerializationApi::class)
         override fun serialize(encoder: Encoder, value: Geometry) {
 //            encoder.encodeSerializableValue(SealedClassSerializer(
-//                serialName = "geometry",
+//                serialName = "com.jillesvangurp.geojson.Geometry",
 //                baseClass = Geometry::class,
 //                subclasses = arrayOf(Point::class, MultiPoint::class, LineString::class, MultiLineString::class,Polygon::class,MultiPolygon::class, GeometryCollection::class),
 //                subclassSerializers = arrayOf(Point.serializer(), MultiPoint.serializer(), LineString.serializer(), MultiLineString.serializer(),Polygon.serializer(),MultiPolygon.serializer(), GeometryCollection.serializer())

@@ -51,6 +51,8 @@ kotlin {
                     implementation(kotlin("test-annotations-common"))
                     // yay kotest does multiplatform
                     implementation("io.kotest:kotest-assertions-core:_")
+                    api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
+
                 }
             }
 

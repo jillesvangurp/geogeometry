@@ -3,6 +3,7 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geogeometry.bergstr16Berlin
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -31,6 +32,9 @@ internal class GeojsonKtTest {
         zl1 - zl2 shouldBe 4
     }
 
+    @OptIn(ExperimentalUnsignedTypes::class)
+    fun ByteArray.toHex(): String = asUByteArray().joinToString("") { it.toString(radix = 16).padStart(2, '0') }
+
     @Test
     fun shouldTile() {
 
@@ -45,6 +49,26 @@ internal class GeojsonKtTest {
         val json =collection.toString()
         val parsed = Json.decodeFromString(FeatureCollection.serializer(), json)
         parsed shouldBe collection
-        println(parsed)
+//
+//        println(parsed)
+//        val cbor = Cbor.encodeToByteArray(FeatureCollection.serializer(),collection)
+//        println(cbor.decodeToString())
+//        println(cbor.toHex())
+//        val decoded = Cbor.decodeFromByteArray(FeatureCollection.serializer(),cbor)
+//        println(decoded)
+    }
+
+    // cbor does not currently work
+//    @Test
+    fun cbor() {
+        val p = Geometry.Point(coordinates = doubleArrayOf(1.0,1.0))
+        val cb = Cbor {
+            this.encodeDefaults=true
+        }
+        val cbor = cb.encodeToByteArray(Geometry.serializer(),p)
+        println(cbor.decodeToString())
+        println(cbor.toHex())
+        val decoded = cb.decodeFromByteArray(Geometry.serializer(),cbor)
+        println(decoded)
     }
 }
