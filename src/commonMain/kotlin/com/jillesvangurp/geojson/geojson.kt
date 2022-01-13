@@ -385,7 +385,7 @@ sealed class Geometry {
         @OptIn(InternalSerializationApi::class)
         override fun deserialize(decoder: Decoder): Geometry {
             return decoder.decodeSerializableValue(SealedClassSerializer(
-                serialName = "geometry",
+                serialName = "com.jillesvangurp.geojson.Geometry",
                 baseClass = Geometry::class,
                 subclasses = arrayOf(Point::class, MultiPoint::class, LineString::class, MultiLineString::class,Polygon::class,MultiPolygon::class, GeometryCollection::class),
                 subclassSerializers = arrayOf(Point.serializer(), MultiPoint.serializer(), LineString.serializer(), MultiLineString.serializer(),Polygon.serializer(),MultiPolygon.serializer(), GeometryCollection.serializer())
