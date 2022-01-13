@@ -419,20 +419,32 @@ sealed class Geometry {
         }
 
         override fun serialize(encoder: Encoder, value: Geometry) {
-            encoder as JsonEncoder
-            val jsonElement = when (value) {
-                is Point -> encoder.json.encodeToJsonElement(Point.serializer(), value)
-                is MultiPoint -> encoder.json.encodeToJsonElement(MultiPoint.serializer(), value)
-                is LineString -> encoder.json.encodeToJsonElement(LineString.serializer(), value)
-                is MultiLineString -> encoder.json.encodeToJsonElement(
+            when (value) {
+                is Point -> encoder.encodeSerializableValue(Point.serializer(), value)
+                is MultiPoint -> encoder.encodeSerializableValue(MultiPoint.serializer(), value)
+                is LineString -> encoder.encodeSerializableValue(LineString.serializer(), value)
+                is MultiLineString -> encoder.encodeSerializableValue(
                     MultiLineString.serializer(),
                     value
                 )
-                is Polygon -> encoder.json.encodeToJsonElement(Polygon.serializer(), value)
-                is MultiPolygon -> encoder.json.encodeToJsonElement(MultiPolygon.serializer(), value)
-                is GeometryCollection -> encoder.json.encodeToJsonElement(GeometryCollection.serializer(), value)
+                is Polygon -> encoder.encodeSerializableValue(Polygon.serializer(), value)
+                is MultiPolygon -> encoder.encodeSerializableValue(MultiPolygon.serializer(), value)
+                is GeometryCollection -> encoder.encodeSerializableValue(GeometryCollection.serializer(), value)
             }
-            encoder.encodeJsonElement(jsonElement)
+//            encoder as JsonEncoder
+//            val jsonElement = when (value) {
+//                is Point -> encoder.json.encodeToJsonElement(Point.serializer(), value)
+//                is MultiPoint -> encoder.json.encodeToJsonElement(MultiPoint.serializer(), value)
+//                is LineString -> encoder.json.encodeToJsonElement(LineString.serializer(), value)
+//                is MultiLineString -> encoder.json.encodeToJsonElement(
+//                    MultiLineString.serializer(),
+//                    value
+//                )
+//                is Polygon -> encoder.json.encodeToJsonElement(Polygon.serializer(), value)
+//                is MultiPolygon -> encoder.json.encodeToJsonElement(MultiPolygon.serializer(), value)
+//                is GeometryCollection -> encoder.json.encodeToJsonElement(GeometryCollection.serializer(), value)
+//            }
+//            encoder.encodeJsonElement(jsonElement)
         }
     }
 }
