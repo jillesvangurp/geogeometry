@@ -3,6 +3,8 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geogeometry.bergstr16Berlin
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 internal class GeojsonKtTest {
@@ -38,6 +40,11 @@ internal class GeojsonKtTest {
             100.0 * 16
         )
         val cells = GeoGeometry.calculateTileBboxesForBoundingBox(bbox)
-        println(FeatureCollection(cells.map { it.polygon() }.map { it.asFeature() } + listOf(bbox.polygon().asFeature())))
+        val collection =
+            FeatureCollection(cells.map { it.polygon() }.map { it.asFeature() } + listOf(bbox.polygon().asFeature()))
+        val json =collection.toString()
+        val parsed = Json.decodeFromString(FeatureCollection.serializer(), json)
+        parsed shouldBe collection
+        println(parsed)
     }
 }

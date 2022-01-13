@@ -382,43 +382,31 @@ sealed class Geometry {
 
     @Serializer(forClass = Geometry::class)
     companion object : KSerializer<Geometry> {
+        @OptIn(InternalSerializationApi::class)
         override fun deserialize(decoder: Decoder): Geometry {
-            decoder as JsonDecoder
-            val jsonObject = decoder.decodeJsonElement().jsonObject
-            return when (decoder.json.decodeFromJsonElement(GeometryType.serializer(), jsonObject["type"]!!)) {
-                GeometryType.Point -> decoder.json.decodeFromJsonElement(Point.serializer(), jsonObject)
-                GeometryType.MultiPoint -> decoder.json.decodeFromJsonElement(
-                    MultiPoint.serializer(),
-                    jsonObject
-                )
-                GeometryType.LineString -> decoder.json.decodeFromJsonElement(
-                    LineString.serializer(),
-                    jsonObject
-                )
-                GeometryType.MultiLineString -> decoder.json.decodeFromJsonElement(
-                    MultiLineString.serializer(),
-                    jsonObject
-                )
-                GeometryType.Polygon -> decoder.json.decodeFromJsonElement(
-                    Polygon.serializer(),
-                    jsonObject
-                )
-                GeometryType.MultiPolygon -> decoder.json.decodeFromJsonElement(
-                    MultiPolygon.serializer(),
-                    jsonObject
-                )
-                GeometryType.GeometryCollection -> decoder.json.decodeFromJsonElement(
-                    GeometryCollection.serializer(),
-                    jsonObject
-                )
-            }
+            return decoder.decodeSerializableValue(SealedClassSerializer(
+                serialName = "geometry",
+                baseClass = Geometry::class,
+                subclasses = arrayOf(Point::class, MultiPoint::class, LineString::class, MultiLineString::class,Polygon::class,MultiPolygon::class, GeometryCollection::class),
+                subclassSerializers = arrayOf(Point.serializer(), MultiPoint.serializer(), LineString.serializer(), MultiLineString.serializer(),Polygon.serializer(),MultiPolygon.serializer(), GeometryCollection.serializer())
+            ))
         }
 
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("geometry") {
             element<String>("type")
         }
 
+        @OptIn(InternalSerializationApi::class)
         override fun serialize(encoder: Encoder, value: Geometry) {
+//            encoder.encodeSerializableValue(SealedClassSerializer(
+//                serialName = "geometry",
+//                baseClass = Geometry::class,
+//                subclasses = arrayOf(Point::class, MultiPoint::class, LineString::class, MultiLineString::class,Polygon::class,MultiPolygon::class, GeometryCollection::class),
+//                subclassSerializers = arrayOf(Point.serializer(), MultiPoint.serializer(), LineString.serializer(), MultiLineString.serializer(),Polygon.serializer(),MultiPolygon.serializer(), GeometryCollection.serializer())
+//            ), value)
+
+            // type is used as discriminator by the serializer and even though the values are compatible it creates a conflict
+            // so hack around it.
             when (value) {
                 is Point -> encoder.encodeSerializableValue(Point.serializer(), value)
                 is MultiPoint -> encoder.encodeSerializableValue(MultiPoint.serializer(), value)
@@ -431,20 +419,6 @@ sealed class Geometry {
                 is MultiPolygon -> encoder.encodeSerializableValue(MultiPolygon.serializer(), value)
                 is GeometryCollection -> encoder.encodeSerializableValue(GeometryCollection.serializer(), value)
             }
-//            encoder as JsonEncoder
-//            val jsonElement = when (value) {
-//                is Point -> encoder.json.encodeToJsonElement(Point.serializer(), value)
-//                is MultiPoint -> encoder.json.encodeToJsonElement(MultiPoint.serializer(), value)
-//                is LineString -> encoder.json.encodeToJsonElement(LineString.serializer(), value)
-//                is MultiLineString -> encoder.json.encodeToJsonElement(
-//                    MultiLineString.serializer(),
-//                    value
-//                )
-//                is Polygon -> encoder.json.encodeToJsonElement(Polygon.serializer(), value)
-//                is MultiPolygon -> encoder.json.encodeToJsonElement(MultiPolygon.serializer(), value)
-//                is GeometryCollection -> encoder.json.encodeToJsonElement(GeometryCollection.serializer(), value)
-//            }
-//            encoder.encodeJsonElement(jsonElement)
         }
     }
 }
