@@ -7,7 +7,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.test.Test
 
 internal class GeojsonKtTest {
@@ -73,20 +72,6 @@ internal class GeojsonKtTest {
         println(bytes.decodeToString())
         println(bytes.toHex())
         val decoded = cb.decodeFromByteArray(Geometry.serializer(), bytes)
-        println(decoded)
-        decoded shouldBe p
-    }
-    @OptIn(ExperimentalSerializationApi::class)
-    @Test
-    fun protobuf() {
-        val p = Geometry.Point(coordinates = doubleArrayOf(1.0,1.0))
-        val protobuf = ProtoBuf {
-            encodeDefaults = false
-        }
-        val bytes = protobuf.encodeToByteArray(Geometry.serializer(),p)
-        println(bytes.decodeToString())
-        println(bytes.toHex())
-        val decoded = protobuf.decodeFromByteArray(Geometry.serializer(),bytes)
         println(decoded)
         decoded shouldBe p
     }
