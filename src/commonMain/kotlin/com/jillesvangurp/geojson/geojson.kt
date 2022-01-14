@@ -8,17 +8,11 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoHashUtils
 import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import kotlin.math.*
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt
-import kotlin.reflect.KClass
 
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
@@ -171,7 +165,7 @@ operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection
     Geometry.GeometryCollection(this.geometries + other.geometries)
 
 @Serializable
-@JsonClassDiscriminator("type")
+//@JsonClassDiscriminator("type") //TODO: add this in once upgrading kotlinx-serialization to 1.3.x
 sealed class Geometry {
     @Serializable
     @SerialName("Point")
