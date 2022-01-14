@@ -52,7 +52,7 @@ kotlin {
                     // yay kotest does multiplatform
                     implementation("io.kotest:kotest-assertions-core:_")
                     api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
-
+                    api("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:_")
                 }
             }
 

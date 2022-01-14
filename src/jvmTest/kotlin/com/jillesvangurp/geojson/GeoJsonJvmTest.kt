@@ -22,7 +22,8 @@ class GeoJsonJvmTest {
         val hashesCollection = FeatureCollection.fromGeoHashes(hashes)
         val json = json.encodeToString(
             FeatureCollection.serializer(),
-            hashesCollection + FeatureCollection(listOf(berlin.asFeature()))
+            //hashesCollection +
+            FeatureCollection(listOf(berlin.asFeature()))
         )
         // make sure we serialize these fields; they are required.
         json shouldInclude """"type":"Feature""""

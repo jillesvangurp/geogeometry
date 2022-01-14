@@ -19,14 +19,12 @@ class ConcaveHullTest {
 
     @Test
     fun shouldCalculateAppropriatePolygon() {
-        val polygon = Json.decodeFromString(Geometry.Polygon.serializer(), concavePoly)
+        val polygon = Json.decodeFromString(Geometry.serializer(), concavePoly) as Geometry.Polygon
 
         val p = Geometry.Polygon(coordinates = arrayOf(calculateConcaveHull(polygon.coordinates!![0].toList().shuffled(), 7).toTypedArray()))
 
         println(
-            Json {
-                prettyPrint = true
-            }.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature())))
+            jsonPretty.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature())))
         )
     }
 }

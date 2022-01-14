@@ -2,10 +2,12 @@ package com.jillesvangurp.geojson
 
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geogeometry.bergstr16Berlin
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.test.Test
 
 internal class GeojsonKtTest {
@@ -46,9 +48,11 @@ internal class GeojsonKtTest {
         val cells = GeoGeometry.calculateTileBboxesForBoundingBox(bbox)
         val collection =
             FeatureCollection(cells.map { it.polygon() }.map { it.asFeature() } + listOf(bbox.polygon().asFeature()))
-        val json =collection.toString()
+        val json = collection.toString()
         val parsed = Json.decodeFromString(FeatureCollection.serializer(), json)
+        parsed.features shouldContainInOrder collection.features
         parsed shouldBe collection
+
 //
 //        println(parsed)
 //        val cbor = Cbor.encodeToByteArray(FeatureCollection.serializer(),collection)
@@ -58,17 +62,32 @@ internal class GeojsonKtTest {
 //        println(decoded)
     }
 
-    // cbor does not currently work
-//    @Test
+    @OptIn(ExperimentalSerializationApi::class)
+    @Test
     fun cbor() {
         val p = Geometry.Point(coordinates = doubleArrayOf(1.0,1.0))
         val cb = Cbor {
-            this.encodeDefaults=true
+            encodeDefaults = true
         }
-        val cbor = cb.encodeToByteArray(Geometry.serializer(),p)
-        println(cbor.decodeToString())
-        println(cbor.toHex())
-        val decoded = cb.decodeFromByteArray(Geometry.serializer(),cbor)
+        val bytes = cb.encodeToByteArray(Geometry.serializer(),p)
+        println(bytes.decodeToString())
+        println(bytes.toHex())
+        val decoded = cb.decodeFromByteArray(Geometry.serializer(), bytes)
         println(decoded)
+        decoded shouldBe p
+    }
+    @OptIn(ExperimentalSerializationApi::class)
+    @Test
+    fun protobuf() {
+        val p = Geometry.Point(coordinates = doubleArrayOf(1.0,1.0))
+        val protobuf = ProtoBuf {
+            encodeDefaults = false
+        }
+        val bytes = protobuf.encodeToByteArray(Geometry.serializer(),p)
+        println(bytes.decodeToString())
+        println(bytes.toHex())
+        val decoded = protobuf.decodeFromByteArray(Geometry.serializer(),bytes)
+        println(decoded)
+        decoded shouldBe p
     }
 }
