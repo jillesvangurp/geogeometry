@@ -11,6 +11,7 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
@@ -30,7 +31,7 @@ class GeoGeometryTest {
             val degrees: Int,
             val minutes: Int,
             val seconds: Double,
-            val decimalDegree: Double
+            val decimalDegree: Double,
         )
 
         val degrees = listOf(
@@ -42,10 +43,10 @@ class GeoGeometryTest {
             decimalDegrees.eastOrWest.letter.toString() shouldBe direction
             decimalDegrees.degree shouldBe degrees
             decimalDegrees.minutes shouldBe minutes
-            roundToDecimals(decimalDegrees.seconds,2) shouldBe seconds
+            roundToDecimals(decimalDegrees.seconds, 2) shouldBe seconds
 
             val decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds)
-            abs(decimalDegree-decimalDegrees) shouldBeLessThan 0.00001
+            abs(decimalDegree - decimalDegrees) shouldBeLessThan 0.00001
         }
     }
 
@@ -88,10 +89,8 @@ class GeoGeometryTest {
         val polygonObject = json.decodeFromString(JsonObject.serializer(), testPolygon)
         val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
         val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
-        jsonPretty.encodeToString(JsonElement.serializer(), serializedPolygonObject) shouldBe jsonPretty.encodeToString(
-            JsonElement.serializer(),
-            polygonObject
-        )
+
+        polygonObject shouldBe serializedPolygonObject
     }
 
     @Test
@@ -123,7 +122,8 @@ class GeoGeometryTest {
         val anchor = bergstr16Berlin
         val point = oranienburgerTor
         GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 0.0)) shouldBeLessThan 1.0
-        (GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 180.0)) - 2*GeoGeometry.distance(anchor,point)).absoluteValue shouldBeLessThan 1.0
+        (GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 180.0)) - 2 * GeoGeometry.distance(anchor,
+            point)).absoluteValue shouldBeLessThan 1.0
     }
 
     @Test
