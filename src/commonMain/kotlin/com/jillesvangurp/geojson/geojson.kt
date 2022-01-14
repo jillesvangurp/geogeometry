@@ -167,6 +167,19 @@ operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection
 @Serializable
 //@JsonClassDiscriminator("type") //TODO: add this in once upgrading kotlinx-serialization to 1.3.x
 sealed class Geometry {
+
+//    @Transient
+    val type: GeometryType by lazy {
+        when (this) {
+            is Point -> GeometryType.Point
+            is MultiPoint -> GeometryType.MultiPoint
+            is LineString -> GeometryType.LineString
+            is MultiLineString -> GeometryType.MultiLineString
+            is Polygon -> GeometryType.Polygon
+            is MultiPolygon -> GeometryType.MultiPolygon
+            is GeometryCollection -> GeometryType.GeometryCollection
+        }
+    }
     @Serializable
     @SerialName("Point")
     data class Point(
@@ -439,13 +452,17 @@ data class FeatureCollection(
 val PolygonCoordinatesList.asArray: PolygonCoordinates get() = toTypedArray()
 val MultiPolygonCoordinatesList.asArray: MultiPolygonCoordinates get() = map { it.toTypedArray() }.toTypedArray()
 
-val Geometry.type: String
-    get() = when(this) {
-        is Geometry.Point -> "Point"
-        is Geometry.MultiPoint -> "MultiPoint"
-        is Geometry.LineString -> "LineString"
-        is Geometry.MultiLineString -> "MultiLineString"
-        is Geometry.Polygon -> "Polygon"
-        is Geometry.MultiPolygon -> "MultiPolygon"
-        is Geometry.GeometryCollection -> "GeometryCollection"
-    }
+/**
+ * Enum with all the types of geometries in https://tools.ietf.org/html/rfc7946#section-3.1.1
+ *
+ * Note, the names are camel case in the spec and the enum name matches that.
+ */
+enum class GeometryType {
+    Point,
+    MultiPoint,
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    GeometryCollection;
+}

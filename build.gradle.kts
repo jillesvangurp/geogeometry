@@ -51,6 +51,7 @@ kotlin {
                     implementation(kotlin("test-annotations-common"))
                     // yay kotest does multiplatform
                     implementation("io.kotest:kotest-assertions-core:_")
+
                     api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
                 }
             }
@@ -67,6 +68,10 @@ kotlin {
                 implementation(kotlin("test-junit"))
 
                 implementation("org.hamcrest:hamcrest-all:_")
+
+                implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:_")
+                implementation("com.fasterxml.jackson.core:jackson-annotations:_")
+                implementation("com.fasterxml.jackson.module:jackson-module-kotlin:_")
 
                 // kotlintest runner needs this to enable logging
                 implementation("org.slf4j:slf4j-api:_")

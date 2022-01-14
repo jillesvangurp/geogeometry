@@ -1,10 +1,14 @@
 package com.jillesvangurp.geojson
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geogeometry.json
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldInclude
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.junit.Test
 
 class GeoJsonJvmTest {
@@ -52,5 +56,18 @@ class GeoJsonJvmTest {
         Geometry.Point(null) shouldNotBe Geometry.Point(doubleArrayOf(0.1, 0.1))
         Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldNotBe Geometry.Point(doubleArrayOf(0.9, 0.9))
         Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldBe Geometry.Point(doubleArrayOf(0.1, 0.1))
+    }
+
+    @Test
+    fun `should serialize type with jackson`() {
+        val p = Geometry.Point(coordinates = doubleArrayOf(1.0,1.0))
+
+        val mapper = ObjectMapper().findAndRegisterModules()
+
+        val jacksonSerialized = mapper.writeValueAsString(p)
+
+        val decoded = Json.decodeFromString(Geometry.serializer(), jacksonSerialized)
+        decoded shouldBe p
+        decoded.type shouldBe GeometryType.Point
     }
 }
