@@ -9,9 +9,7 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geojson.*
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
@@ -24,6 +22,7 @@ val sydneyOpera = doubleArrayOf(151.213108, -33.8567844)
 val rioFootballStadium = doubleArrayOf(-43.2216922, -22.910643)
 
 class GeoGeometryTest {
+
     @Test
     fun shouldConvertToDecimalDegree() {
         data class TestDegree(
