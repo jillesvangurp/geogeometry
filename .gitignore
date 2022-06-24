@@ -11,3 +11,4 @@ build
 out
 .kotlintest
 localRepo
+kotlin-js-store/
