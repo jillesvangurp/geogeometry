@@ -512,7 +512,7 @@ class GeoGeometry {
         ): DoubleArray {
             validate(latitude, longitude, false)
             val longitudal = translateLongitude(latitude, longitude, longitudalMeters)
-            return translateLatitude(longitudal[1], longitudal[0], latitudalMeters)
+            return translateLatitude(longitudal.latitude, longitudal.longitude, latitudalMeters)
         }
 
         /**
