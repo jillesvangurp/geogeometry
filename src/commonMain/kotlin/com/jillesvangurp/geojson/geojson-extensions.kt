@@ -12,9 +12,8 @@ fun PolygonCoordinates.centroid() = this[0].centroid()
 fun MultiPolygonCoordinates.centroid() = this.map { it.centroid() }.toTypedArray().centroid()
 
 fun Geometry.centroid(): PointCoordinates = centroidOrNull()
-    ?: throw IllegalStateException("missing centroid implementation for ${this::class.qualifiedName}")
 
-fun Geometry.centroidOrNull(): PointCoordinates? = when (this) {
+fun Geometry.centroidOrNull(): PointCoordinates = when (this) {
     is Geometry.Point -> this.coordinates ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.LineString -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.MultiLineString -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
@@ -22,7 +21,7 @@ fun Geometry.centroidOrNull(): PointCoordinates? = when (this) {
     is Geometry.MultiPolygon -> this.coordinates?.asArray?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.MultiPoint -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.GeometryCollection -> {
-        this.geometries.mapNotNull { it.centroidOrNull() }.toTypedArray().centroid()
+        this.geometries.map { it.centroidOrNull() }.toTypedArray().centroid()
     }
 }
 
@@ -37,7 +36,7 @@ fun Geometry.translate(newCentroid: Geometry.Point): Geometry {
     // make sure we handle negative distances correctly
     val latFactor = if(compassDirection>180) -1.0 else 1.0
     val lonFactor = if(compassDirection>90 && compassDirection<270) -1.0 else 1.0
-    val latDistance = latFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(oldCentroid.longitude, newCentroid.coordinates!!.latitude))
+    val latDistance = latFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(oldCentroid.longitude, newCentroid.coordinates.latitude))
     val lonDistance = lonFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(newCentroid.coordinates.longitude, oldCentroid.latitude))
     return translate(latDistance, lonDistance)
 }
