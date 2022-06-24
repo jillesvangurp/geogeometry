@@ -1,8 +1,6 @@
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
-    id("com.github.ben-manes.versions") // gradle dependencyUpdates -Drevision=release
-    id("org.jmailen.kotlinter")
     `maven-publish`
 }
 
@@ -104,8 +102,4 @@ publishing {
             url = uri("file://$projectDir/localRepo")
         }
     }
-}
-
-kotlinter {
-    ignoreFailures = true
 }

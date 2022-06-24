@@ -32,7 +32,6 @@ class GeoJsonJvmTest {
         // make sure we serialize these fields; they are required.
         json shouldInclude """"type":"Feature""""
         json shouldInclude """"type":"FeatureCollection""""
-        json shouldInclude """"properties":null"""
         // you can copy paste this to geojson.io
         println(
             json
