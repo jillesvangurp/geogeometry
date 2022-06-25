@@ -17,8 +17,8 @@ fun Geometry.centroidOrNull(): PointCoordinates = when (this) {
     is Geometry.Point -> this.coordinates ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.LineString -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.MultiLineString -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.Polygon -> this.coordinates?.asArray?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.MultiPolygon -> this.coordinates?.asArray?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
+    is Geometry.Polygon -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
+    is Geometry.MultiPolygon -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.MultiPoint -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
     is Geometry.GeometryCollection -> {
         this.geometries.map { it.centroidOrNull() }.toTypedArray().centroid()
@@ -50,10 +50,10 @@ fun Geometry.translate(
     is Geometry.MultiPoint -> this.copy(coordinates = coordinates!!.translate(latDistance, lonDistance))
     is Geometry.LineString -> this.copy(coordinates = coordinates!!.translate(latDistance, lonDistance))
     is Geometry.MultiLineString -> this.copy(coordinates = coordinates!!.translate(latDistance, lonDistance))
-    is Geometry.Polygon -> this.copy(coordinates = coordinates!!.toTypedArray().translate(latDistance, lonDistance))
+    is Geometry.Polygon -> this.copy(coordinates = coordinates!!.translate(latDistance, lonDistance))
     is Geometry.MultiPolygon -> {
-        val toTypedArray = coordinates!!.map { it.toTypedArray() }.toTypedArray()
-        val translated = toTypedArray.translate(latDistance, lonDistance).toList().map { it.toList() }
+        val toTypedArray = coordinates!!.map { it }.toTypedArray()
+        val translated = toTypedArray.translate(latDistance, lonDistance)
         this.copy(coordinates = translated)
     }
     is Geometry.GeometryCollection -> {
@@ -61,4 +61,17 @@ fun Geometry.translate(
             it.translate(latDistance, lonDistance)
         }.toTypedArray())
     }
+}
+
+fun PointCoordinates.distanceTo(pointCoordinates: PointCoordinates) = GeoGeometry.distance(this,pointCoordinates)
+fun PointCoordinates.headingTo(pointCoordinates: PointCoordinates) = GeoGeometry.headingFromTwoPoints(this,pointCoordinates)
+
+fun Geometry.area() = when(this) {
+    is Geometry.Polygon -> {
+        GeoGeometry.area(this.coordinates!!)
+    }
+    is Geometry.MultiPolygon -> this.coordinates?.sumOf {
+        GeoGeometry.area(it)
+    } ?:0.0
+    else -> 0.0
 }

@@ -79,8 +79,8 @@ class GeoGeometryTest {
     @Test
     fun shouldBeValid() {
         val polygon = json.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
-        polygon.coordinates?.asArray?.isValid() shouldBe false
-        (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.asArray?.isValid() shouldBe true
+        polygon.coordinates?.isValid() shouldBe false
+        (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.isValid() shouldBe true
     }
 
     @Test

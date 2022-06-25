@@ -153,16 +153,14 @@ class GeoGeometry {
          */
         fun filterNoiseFromPointCloud(points: MultiPointCoordinates, percentage: Float): MultiPointCoordinates {
 
-            points.sortWith(
-                Comparator { p1, p2 ->
-                    when {
-                        p1[0] == p2[0] -> p1[1].compareTo(p2[1])
-                        p1[0] > p2[0] -> 1
-                        p1[0] == p2[0] -> 0
-                        else -> -1
-                    }
+            points.sortWith { p1, p2 ->
+                when {
+                    p1[0] == p2[0] -> p1[1].compareTo(p2[1])
+                    p1[0] > p2[0] -> 1
+                    p1[0] == p2[0] -> 0
+                    else -> -1
                 }
-            )
+            }
 
             val discard = (points.size * percentage / 2).toInt()
 
@@ -542,10 +540,10 @@ class GeoGeometry {
 
             val longitudalGridAngle = 360.0 / factor
             val latitudalGridAngle = 180.0 / factor
-            var mostWest = bbox.bottomLeft.longitude - bbox.bottomLeft.longitude % longitudalGridAngle
+            val mostWest = bbox.bottomLeft.longitude - bbox.bottomLeft.longitude % longitudalGridAngle
 
             var lat = bbox.southLatitude - bbox.southLatitude % latitudalGridAngle
-            var cells = mutableListOf<BoundingBox>()
+            val cells = mutableListOf<BoundingBox>()
             while (lat < bbox.northLatitude) {
                 var lon = mostWest
                 while (lon < bbox.eastLongitude) {
@@ -867,7 +865,7 @@ class GeoGeometry {
             val y = cos(angle) * distance
 
             // use the x and y to translate the anchor and get the point on the circle
-            return GeoGeometry.translate(anchor.latitude, anchor.longitude, y, x)
+            return translate(anchor.latitude, anchor.longitude, y, x)
         }
 
         /**
@@ -970,14 +968,12 @@ class GeoGeometry {
             }
 
             val sorted = points.copyOf()
-            sorted.sortWith(
-                Comparator { p1, p2 ->
-                    when {
-                        p1[0] == p2[0] -> p1[1].compareTo(p2[1])
-                        else -> p1[0].compareTo(p2[0])
-                    }
+            sorted.sortWith { p1, p2 ->
+                when {
+                    p1[0] == p2[0] -> p1[1].compareTo(p2[1])
+                    else -> p1[0].compareTo(p2[0])
                 }
-            )
+            }
 
             val n = sorted.size
 
@@ -1088,7 +1084,7 @@ class GeoGeometry {
         /**
          * Returns the heading from one LatLng to another LatLng as a compass direction.
          *
-         * @see https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another
+         * [stackoverflow(]https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another)
          *
          * @return The heading in degrees clockwise from north.
          */
@@ -1097,7 +1093,7 @@ class GeoGeometry {
         /**
          * Returns the heading from one LatLng to another LatLng as a compass direction.
          *
-         * @see https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another
+         * [stackoverflow](https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another)
          *
          * @return The heading in degrees clockwise from north.
          */

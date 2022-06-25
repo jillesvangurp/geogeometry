@@ -1,5 +1,4 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "unused")
-@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.jillesvangurp.geojson
 
@@ -7,12 +6,14 @@ import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoHashUtils
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Required
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.json.JsonObject
 import kotlin.math.*
-import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.roundToInt
 
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
@@ -24,8 +25,6 @@ typealias LinearRingCoordinates = Array<PointCoordinates>
 typealias MultiLineStringCoordinates = Array<LineStringCoordinates> // Outer polygon + holes
 typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + holes
 typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
-private typealias PolygonCoordinatesList = List<LinearRingCoordinates>
-private typealias MultiPolygonCoordinatesList = List<PolygonCoordinatesList>
 
 /**
  * Lowest axes followed by highest axes
@@ -46,8 +45,8 @@ fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
 fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
 
 fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
-    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.asArray?.ensureFollowsRightHandSideRule())
-    is Geometry.MultiPolygon -> this.copy(arrayCoordinates = this.coordinates?.asArray?.ensureFollowsRightHandSideRule())
+    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
+    is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
     else -> this
 }
 
@@ -164,11 +163,11 @@ infix fun Geometry.Point.line(other: Geometry.Point) = arrayOf(this.coordinates,
 operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection) =
     Geometry.GeometryCollection(this.geometries + other.geometries)
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-//@JsonClassDiscriminator("type") //TODO: add this in once upgrading kotlinx-serialization to 1.3.x
+@JsonClassDiscriminator("type") //TODO: add this in once upgrading kotlinx-serialization to 1.3.x
 sealed class Geometry {
 
-//    @Transient
     val type: GeometryType by lazy {
         when (this) {
             is Point -> GeometryType.Point
@@ -284,15 +283,9 @@ sealed class Geometry {
     data class Polygon(
         // work around for a bug in kotlinx serialization with multi dimensional arrays
         @SerialName("coordinates")
-        val coordinates: PolygonCoordinatesList? = null,
+        val coordinates: PolygonCoordinates? = null,
         val bbox: BoundingBox? = null
     ) : Geometry() {
-        constructor(
-            coordinates: PolygonCoordinates? = null,
-            bbox: BoundingBox? = null
-        ) : this(coordinates = coordinates?.toList(), bbox = bbox)
-
-        fun copy(coordinates: PolygonCoordinates?) = copy(coordinates = coordinates?.toList())
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -300,7 +293,7 @@ sealed class Geometry {
                 other == null || this::class != other::class -> false
                 else -> {
                     other as Polygon
-                    deepEquals(coordinates?.asArray, other.coordinates?.asArray) && deepEquals(bbox, other.bbox)
+                    deepEquals(coordinates, other.coordinates) && deepEquals(bbox, other.bbox)
                 }
             }
         }
@@ -314,15 +307,9 @@ sealed class Geometry {
     @SerialName("MultiPolygon")
     data class MultiPolygon(
         // work around for a bug in kotlinx serialization with multi dimensional arrays
-        val coordinates: MultiPolygonCoordinatesList? = null,
+        val coordinates: MultiPolygonCoordinates? = null,
         val bbox: BoundingBox? = null
     ) : Geometry() {
-        constructor(
-            coordinates: MultiPolygonCoordinates? = null,
-            bbox: BoundingBox? = null
-        ) : this(coordinates = coordinates?.map { it.toList() }?.toList(), bbox = bbox)
-
-        fun copy(arrayCoordinates: MultiPolygonCoordinates?) = copy(coordinates = arrayCoordinates?.map { it.toList() }?.toList(), bbox = bbox)
 
         override fun equals(other: Any?): Boolean {
             return when {
@@ -330,7 +317,7 @@ sealed class Geometry {
                 other == null || this::class != other::class -> false
                 else -> {
                     other as MultiPolygon
-                    deepEquals(coordinates?.asArray, other.coordinates?.asArray) && deepEquals(bbox, other.bbox)
+                    deepEquals(coordinates, other.coordinates) && deepEquals(bbox, other.bbox)
                 }
             }
         }
@@ -447,10 +434,6 @@ data class FeatureCollection(
         fun of(vararg features: Feature) = FeatureCollection(features.toList())
     }
 }
-
-// needed to workaround some serialization bugs with kotlinx serialization
-val PolygonCoordinatesList.asArray: PolygonCoordinates get() = toTypedArray()
-val MultiPolygonCoordinatesList.asArray: MultiPolygonCoordinates get() = map { it.toTypedArray() }.toTypedArray()
 
 /**
  * Enum with all the types of geometries in https://tools.ietf.org/html/rfc7946#section-3.1.1

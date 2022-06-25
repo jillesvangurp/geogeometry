@@ -567,7 +567,7 @@ class GeoHashUtils {
             // doesn't serve much purpose.
             // we need to sometimes go beyond maxLength if we found no fully contained hashes.
             // WARNING this can get ugly in terms of numbers of hashes
-            while (detail < maxLength ?: hashLength || fullyContained.size == 0) {
+            while (detail < (maxLength ?: hashLength) || fullyContained.size == 0) {
                 partiallyContained =
                     splitAndFilter(coordinates, fullyContained, partiallyContained)
                 detail++
@@ -578,7 +578,7 @@ class GeoHashUtils {
             }
             if (includePartial) {
                 partiallyContained.forEach { hash ->
-                    decodeBbox(hash).polygon().coordinates?.asArray?.get(0)?.let { ring ->
+                    decodeBbox(hash).polygon().coordinates?.get(0)?.let { ring ->
                         if (ring.firstOrNull { polygonContains(it, arrayOf(coordinates)) } != null) {
                             fullyContained.add(hash)
                         }
@@ -618,7 +618,7 @@ class GeoHashUtils {
                             // all four corners are inside the polygon
                             checkCompleteArea.add(h)
                         }
-                        overlap(hashBbox.polygon().coordinates!!.toTypedArray(), arrayOf(coordinates)) -> {
+                        overlap(hashBbox.polygon().coordinates!!, arrayOf(coordinates)) -> {
                             stillPartial.add(h)
                         }
                     }

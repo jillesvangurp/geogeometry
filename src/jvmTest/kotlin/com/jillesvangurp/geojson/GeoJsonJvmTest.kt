@@ -19,11 +19,11 @@ class GeoJsonJvmTest {
         val berlin = json.decodeFromString(Geometry.serializer(), berlinJson) as Geometry.MultiPolygon
 
         val hashes = GeoHashUtils.geoHashesForMultiPolygon(
-            coordinates = berlin.coordinates?.asArray ?: throw IllegalArgumentException("coordinates missing"),
+            coordinates = berlin.coordinates ?: throw IllegalArgumentException("coordinates missing"),
             includePartial = true,
             maxLength = 6
         )
-        val hashesCollection = FeatureCollection.fromGeoHashes(hashes)
+        FeatureCollection.fromGeoHashes(hashes)
         val json = json.encodeToString(
             FeatureCollection.serializer(),
             //hashesCollection +
@@ -46,9 +46,9 @@ class GeoJsonJvmTest {
         berlin.shouldBe(berlin.copy())
         berlin shouldNotBe berlin.copy(coordinates = null)
         berlin.copy(coordinates = null) shouldNotBe berlin
-        val reversed = berlin.coordinates?.asArray?.clone()
+        val reversed = berlin.coordinates?.clone()
         reversed?.reverse()
-        berlin.copy(arrayCoordinates = reversed) shouldNotBe berlin
+        berlin.copy(coordinates = reversed) shouldNotBe berlin
 
         Geometry.Point(null) shouldBe Geometry.Point(null)
         Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldNotBe Geometry.Point(null)

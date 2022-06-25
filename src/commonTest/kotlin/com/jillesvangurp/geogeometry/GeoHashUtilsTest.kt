@@ -54,7 +54,7 @@ class GeoHashUtilsTest {
         val hash = GeoHashUtils.encode(52.0, 13.0).subSequence(0, 5)
         val bbox = GeoHashUtils.decodeBbox(hash.toString())
         val p = bbox.polygon()
-        val hashes = GeoHashUtils.geoHashesForPolygon(p.coordinates!!.toTypedArray(), maxLength = 5, includePartial = true)
+        val hashes = GeoHashUtils.geoHashesForPolygon(p.coordinates!!, maxLength = 5, includePartial = true)
 //        println(hashes.joinToString(","))
         hashes.size shouldBeLessThan 5
     }
@@ -107,14 +107,14 @@ class GeoHashUtilsTest {
       }            
         """.trimIndent()
         val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
-        val coordinates = p.coordinates?.asArray?.get(0) ?: throw IllegalStateException()
+        val coordinates = p.coordinates?.get(0) ?: throw IllegalStateException()
         val hashes = GeoHashUtils.geoHashesForLinearRing(coordinates = coordinates, includePartial = true)
 
         println(hashes.size)
         println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
 
         val totalHashedArea = hashes.map { GeoHashUtils.decodeBbox(it) }.sumOf { GeoGeometry.area(it) }
-        val bboxArea = GeoGeometry.area(GeoGeometry.boundingBox(p.coordinates?.asArray as PolygonCoordinates))
+        val bboxArea = GeoGeometry.area(GeoGeometry.boundingBox(p.coordinates as PolygonCoordinates))
         // it's a concave polygon so the area of the hashes should be smaller than that of the
         // bounding box containing the polygon
         totalHashedArea shouldBeLessThan bboxArea * 0.7
