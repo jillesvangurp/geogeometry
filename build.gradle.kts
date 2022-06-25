@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -108,4 +110,3 @@ publishing {
         }
     }
 }
-// -opt-in=kotlin.RequiresOptIn
