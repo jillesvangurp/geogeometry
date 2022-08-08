@@ -494,7 +494,7 @@ class GeoHashUtils {
         ): Set<String> {
             for (point in coordinates) {
                 // basically the algorithm can go into an endless loop. Best to avoid the poles.
-                if (point.longitude < -89.5 || point.longitude > 89.5) {
+                if (point.latitude < -89.5 || point.latitude > 89.5) {
                     throw IllegalArgumentException(
                         "please stay away from the north pole or the south pole; there are some known issues there. Besides, nothing there but snow and ice."
                     )
