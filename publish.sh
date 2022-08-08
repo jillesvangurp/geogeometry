@@ -11,16 +11,15 @@ echo $1 | grep -E -q '^[0-9]+\.[0-9]+(\.[0-9]+)$' || die "Semantic Version argum
 
 export TAG=$1
 
-echo "tagging"
+gradle  -Pgroup=com.github.jillesvangurp -Pversion=$TAG publish
 
+rsync -azp  localRepo/* jillesvangurpcom@ftp.jillesvangurp.com:/srv/home/jillesvangurpcom/domains/jillesvangurp.com/htdocs/www/maven
+# formation gcs repo
+gsutil -m rsync -r localRepo gs://mvn-public-tryformation/releases
+
+echo "tagging"
 git tag $TAG
 
 echo "publishing $TAG"
-
-gradle  -Pgroup=com.github.jillesvangurp -Pversion=$TAG publish
-rsync -azp  localrepo/* jillesvangurpcom@ftp.jillesvangurp.com:/srv/home/jillesvangurpcom/domains/jillesvangurp.com/htdocs/www/maven
-# formation gcs repo
-gsutil -m rsync -r localRepo gs://mvn-tryformation/releases
-
 
 git push --tags
