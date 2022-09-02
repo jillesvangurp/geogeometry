@@ -33,9 +33,10 @@ fun MultiPolygonCoordinates.translate(latDistance: Double, lonDistance: Double):
 fun Geometry.translate(newCentroid: Geometry.Point): Geometry {
     val oldCentroid = centroid()
     val compassDirection = GeoGeometry.headingFromTwoPoints(oldCentroid, newCentroid.coordinates!!)
+    println(compassDirection)
     // make sure we handle negative distances correctly
-    val latFactor = if(compassDirection>180) -1.0 else 1.0
-    val lonFactor = if(compassDirection>90 && compassDirection<270) -1.0 else 1.0
+    val latFactor = if(compassDirection>90 && compassDirection<270) -1.0 else 1.0
+    val lonFactor = if(compassDirection>180) -1.0 else 1.0
     val latDistance = latFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(oldCentroid.longitude, newCentroid.coordinates.latitude))
     val lonDistance = lonFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(newCentroid.coordinates.longitude, oldCentroid.latitude))
     return translate(latDistance, lonDistance)

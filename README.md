@@ -14,20 +14,19 @@ This is a Kotlin multi-platform distribution with packages for `-jvm` and `-js` 
 multi-platform and multi-module does not work with `jitpack.io`. You can get this library via them but if that doesn't work,
 you can also try to pull from my website as described below. There's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
 
-As a workaround, I currently distribute jars via my website. To add the repository, add something 
-like this to your `build.gradle.kts` file:
+As a workaround, I currently distribute jars via [our own maven repo](https://maven.tryformation.com/releases):
 
 ```kotlin
 repositories {
   mavenCentral()
-  maven { url = uri("https://www.jillesvangurp.com/maven") }
+  maven { url = uri("https://maven.tryformation.com/releases") }
 }
 ```
 
 and then add the dependency :
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.2.12")
+implementation("com.github.jillesvangurp:geogeometry:3.2.22")
 ```
 
 You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).

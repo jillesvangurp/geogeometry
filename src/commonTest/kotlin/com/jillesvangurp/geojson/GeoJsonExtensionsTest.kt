@@ -22,7 +22,23 @@ class GeoJsonExtensionsTest {
         moved.coordinates?.get(0)!!.forEach {
             // radius of the circle should be similar, it will change a little
             val radius = GeoGeometry.distance(moved.centroid(), it)
-            radius shouldBeGreaterThan  19.0
+            radius shouldBeGreaterThan 19.0
             radius shouldBeLessThan 21.0
         }
-    }}
+    }
+
+    @Test
+    fun shouldMoveInRightDirection() {
+
+        val circle = GeoGeometry.circle2polygon(20, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
+            .polygonGeometry()
+        listOf(
+            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, 0.0, 50.0),
+            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, 50.0, 0.0),
+            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, -50.0, 0.0),
+            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, 0.0, -50.0),
+        ).forEach { point ->
+            GeoGeometry.distance(circle.translate(Geometry.Point(point)).centroid(), point) shouldBeLessThan 1.0
+        }
+    }
+}
