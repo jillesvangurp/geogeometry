@@ -846,7 +846,7 @@ class GeoHashUtils {
                 length = hash.length
                 val bbox = decodeBbox(hash)
                 width =
-                    GeoGeometry.distance(bbox.westLongitude, bbox.northLatitude, bbox.eastLongitude, bbox.northLatitude)
+                    GeoGeometry.distance(bbox.northLatitude, bbox.westLongitude, bbox.northLatitude, bbox.eastLongitude)
                 hash = hash.substring(0, hash.length - 1)
             }
 
