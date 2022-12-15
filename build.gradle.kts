@@ -25,7 +25,7 @@ kotlin {
             }
         }
     }
-    js(BOTH) {
+    js(IR) {
         nodejs {
             testTask {
                 useMocha {
