@@ -3,6 +3,8 @@ package com.jillesvangurp.geogeometry
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geojson.*
+import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.withClue
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -324,12 +326,16 @@ class GeoHashUtilsTest {
             arrayOf(100000.0, 85.0, 15.0),
             arrayOf(100000.0, 50.0, 15.0),
             arrayOf(100000.0, 0.0, 15.0)
-        ).forEach { (m, latitude, longitude) ->
-            val length = GeoHashUtils.suitableHashLength(m, latitude, longitude)
-            val hash = GeoHashUtils.encode(latitude, longitude, length)
-            val bbox = GeoHashUtils.decodeBbox(hash)
-            val distance = GeoGeometry.distance(bbox[0], bbox[1], bbox[0], bbox[3])
-            distance shouldBeLessThan m
+        ).forEach { (granularity, longitude, latitude) ->
+            assertSoftly {
+                withClue("granularity $granularity lat: $latitude lon: $longitude" ) {
+                    val length = GeoHashUtils.suitableHashLength(granularity, latitude, longitude)
+                    val hash = GeoHashUtils.encode(latitude = latitude, longitude = longitude, length = length)
+                    val bbox = GeoHashUtils.decodeBbox(hash)
+                    val distance = GeoGeometry.distance(bbox[0], bbox[1], bbox[0], bbox[3])
+                    distance shouldBeLessThan granularity
+                }
+            }
         }
     }
 
