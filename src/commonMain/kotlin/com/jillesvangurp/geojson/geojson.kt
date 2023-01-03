@@ -142,7 +142,7 @@ fun BoundingBox.zoomLevel(height: Int = 512, width: Int = 512, minZoom: Double =
     return minOf(latZoom, lngZoom, minZoom)
 }
 
-fun Geometry.asFeature(properties: JsonObject? = null, bbox: BoundingBox? = null) =
+fun Geometry.asFeature(properties: JsonObject? = JsonObject(mapOf()), bbox: BoundingBox? = null) =
     Feature(this, properties, bbox)
 
 private fun deepEquals(left: Array<*>?, right: Array<*>?): Boolean {
