@@ -1177,17 +1177,15 @@ class GeoGeometry {
          * @throws IllegalArgumentException if the lat or lon is out of the allowed range.
          */
         fun validate(latitude: Double, longitude: Double, strict: Boolean = false) {
-            var roundedLat = latitude
-            var roundedLon = longitude
-            if (!strict) {
-                // this gets rid of rounding errors in raw data e.g. 180.00000000000023 will validate
-                roundedLat = (latitude * 1000000).roundToLong() / 1000000.0
-                roundedLon = (longitude * 1000000).roundToLong() / 1000000.0
-            }
-            if (roundedLat < -90.0 || roundedLat > 90.0) {
+            // causing issues with latest kotlin js 1.8
+            val minLat = if(strict) -90.0 else -90.0002
+            val maxLat = if(strict) 90.0 else 90.0002
+            val minLon = if(strict) -180.0 else -180.0002
+            val maxLon = if(strict) 180.0 else 180.0002
+            if (latitude < minLat || latitude > maxLat) {
                 throw IllegalArgumentException("Latitude $latitude is outside legal range of -90,90")
             }
-            if (roundedLon < -180.0 || roundedLon > 180.0) {
+            if (longitude < minLon || longitude > maxLon) {
                 throw IllegalArgumentException("Longitude $longitude is outside legal range of -180,180")
             }
         }

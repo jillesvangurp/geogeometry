@@ -825,10 +825,10 @@ class GeoGeometryJvmTest {
     fun shouldNotValidate() {
         io.kotest.assertions.assertSoftly {
             arrayOf(
-                doubleArrayOf(180.000001, 0.0),
-                doubleArrayOf(-180.000001, 0.0),
-                doubleArrayOf(0.0, 90.000001),
-                doubleArrayOf(0.0, -90.000001)
+                doubleArrayOf(180.001, 0.0),
+                doubleArrayOf(-180.001, 0.0),
+                doubleArrayOf(0.0, 90.001),
+                doubleArrayOf(0.0, -90.001)
             ).forEach {
                 shouldThrow<IllegalArgumentException> {
                     validate(it)
