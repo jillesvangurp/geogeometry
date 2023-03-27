@@ -324,7 +324,7 @@ class GeoGeometry {
                 i++
             }
 
-            return hits and 1 != 0
+            return hits % 2 == 1
         }
 
         /**
