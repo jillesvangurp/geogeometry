@@ -13,9 +13,9 @@ export TAG=$1
 
 gradle  -Pgroup=com.github.jillesvangurp -Pversion=$TAG publish
 
-rsync -azp  localRepo/* jillesvangurpcom@ftp.jillesvangurp.com:/srv/home/jillesvangurpcom/domains/jillesvangurp.com/htdocs/www/maven
-# formation gcs repo
-gsutil -m rsync -r localRepo gs://mvn-public-tryformation/releases
+#rsync -azp  localRepo/* jillesvangurpcom@ftp.jillesvangurp.com:/srv/home/jillesvangurpcom/domains/jillesvangurp.com/htdocs/www/maven
+## formation gcs repo
+#gsutil -m rsync -r localRepo gs://mvn-public-tryformation/releases
 
 echo "tagging"
 git tag $TAG

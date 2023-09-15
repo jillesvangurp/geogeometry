@@ -37,22 +37,22 @@ kotlin {
     sourceSets {
 
         val commonMain by getting {
-                dependencies {
-                    implementation(kotlin("stdlib-common"))
-                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
-                }
+            dependencies {
+                implementation(kotlin("stdlib-common"))
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
+        }
 
         val commonTest by getting {
-                dependencies {
-                    implementation(kotlin("test-common"))
-                    implementation(kotlin("test-annotations-common"))
-                    // yay kotest does multiplatform
-                    implementation("io.kotest:kotest-assertions-core:_")
+            dependencies {
+                implementation(kotlin("test-common"))
+                implementation(kotlin("test-annotations-common"))
+                // yay kotest does multiplatform
+                implementation("io.kotest:kotest-assertions-core:_")
 
-                    api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
-                }
+                api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
             }
+        }
 
         val jvmMain by getting {
             dependencies {
@@ -81,10 +81,10 @@ kotlin {
         }
 
         val jsMain by getting {
-                dependencies {
-                    implementation(kotlin("stdlib-js"))
-                    api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
-                }
+            dependencies {
+                implementation(kotlin("stdlib-js"))
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+            }
         }
 
         val jsTest by getting {
@@ -104,7 +104,10 @@ kotlin {
 publishing {
     repositories {
         maven {
-            url = uri("file://$projectDir/localRepo")
+            // GOOGLE_APPLICATION_CREDENTIALS env var must be set for this to work
+            // public repository is at https://maven.tryformation.com/releases
+            url = uri("gcs://mvn-public-tryformation/releases")
+            name = "FormationPublic"
         }
     }
 }
