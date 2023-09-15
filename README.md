@@ -54,6 +54,7 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
   - create a **polygon from a point cloud**. An algorithm for a convex hull is included and another experimental one for a concave hull.
   - **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
   - **rotate** a point around another point
+  - extension functions to convert to and from NATO UTM coordinates 
 
 - GeoHashUtils class with methods that allow you to: 
   - **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
