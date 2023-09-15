@@ -25,16 +25,31 @@ data class UTM(
     }
 }
 
-fun String.parseUTM(): UTM {
-    val parts = split("\\s+".toRegex())
-    val zone = parts[0].toInt()
-    val letter = parts[1].uppercase()[0]
-    val easting = parts[2].toDouble()
-    val northing = parts[3].toDouble()
-    return UTM(zone = zone, letter = letter, easting = easting, northing = northing)
+val utmRegex = "(([0-9]{1,2})\\s*([a-zA-Z])\\s+(\\d*\\.?\\d+)\\s+(\\d*\\.?\\d+))".toRegex()
+
+fun String.parseUTM(): UTM? {
+    return utmRegex.matchEntire(this)?.let {
+        UTM(
+            zone = it.groups[2]!!.value.toInt(),
+            letter = it.groups[3]!!.value.uppercase()[0],
+            easting = it.groups[4]!!.value.toDouble(),
+            northing = it.groups[5]!!.value.toDouble()
+        )
+    }
 }
 
-val String.utmAsWgs84 get() = parseUTM().toWgs84()
+fun String.findUTMCoordinates(): List<UTM> {
+    return utmRegex.findAll(this).map {
+        UTM(
+            zone = it.groups[2]!!.value.toInt(),
+            letter = it.groups[3]!!.value.uppercase()[0],
+            easting = it.groups[4]!!.value.toDouble(),
+            northing = it.groups[5]!!.value.toDouble()
+        )
+    }.toList()
+}
+
+val String.utmAsWgs84 get() = parseUTM()?.toWgs84()
 
 fun PointCoordinates.toUTM(): UTM {
     val zone = floor(longitude / 6 + 31).toInt()
