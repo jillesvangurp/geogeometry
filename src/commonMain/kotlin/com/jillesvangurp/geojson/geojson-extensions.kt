@@ -131,6 +131,10 @@ fun  Array<Array<Array<Array<PointCoordinates>>>>.scaleX(percent: Double): Array
     }.toTypedArray()
 }
 
+fun Feature.scaleX(percent: Double) = copy(geometry=geometry?.scaleX(percent))
+fun FeatureCollection.scaleX(percent: Double) = copy(features = features.map { it.scaleX(percent) })
+
+
 fun <T: Geometry> T.scaleY(percent: Double): T {
     @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
     return when(this) {
@@ -185,6 +189,9 @@ fun  Array<Array<Array<Array<PointCoordinates>>>>.scaleY(percent: Double): Array
     }.toTypedArray()
 }
 
+fun Feature.scaleY(percent: Double) = copy(geometry=geometry?.scaleY(percent))
+fun FeatureCollection.scaleY(percent: Double) = copy(features = features.map { it.scaleY(percent) })
+
 fun <T: Geometry> T.rotate(degrees: Double): T {
     @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
     return when(this) {
@@ -223,3 +230,6 @@ fun  Array<Array<Array<Array<PointCoordinates>>>>.rotate(degrees: Double): Array
         ps.rotate(degrees)
     }.toTypedArray()
 }
+
+fun Feature.rotate(degrees: Double) = copy(geometry=geometry?.rotate(degrees))
+fun FeatureCollection.rotate(degrees: Double) = copy(features = features.map { it.rotate(degrees) })
