@@ -3,8 +3,10 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 
 fun LineStringCoordinates.centroid(): DoubleArray {
-    val lon = this.sumOf { it.longitude } / size
-    val lat = this.sumOf { it.latitude } / size
+    val longitudes = this.map { it.longitude }
+    val latitudes = this.map { it.latitude }
+    val lon = longitudes.min()+((longitudes.max() - longitudes.min()) /2.0)
+    val lat = latitudes.min()+((latitudes.max() - latitudes.min()) /2.0)
     return doubleArrayOf(lon, lat)
 }
 
