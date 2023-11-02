@@ -79,82 +79,147 @@ fun Geometry.area() = when(this) {
     else -> 0.0
 }
 
-
-
-fun Geometry.Polygon?.scaleX(
-    percent: Double
-) = if (this != null) {
-    val cs = this.coordinates ?: error("polygon has no coordinates")
-        val centroid = this.centroid()
-    val rotated = cs.map {
-        it.map { p ->
-//            val distanceX = centroid.distanceTo(doubleArrayOf(p.longitude, centroid.latitude))
-            val distanceX = p.distanceTo(doubleArrayOf(centroid.longitude, p.latitude))
-            val newDistance = distanceX * (percent/(100.0))
-            val translateX = distanceX - newDistance
-            val left = p.longitude <= centroid.longitude
-            val closer = newDistance < distanceX
-            val direction = when {
-                left && closer -> 1
-                left && !closer -> 1
-                !left && closer -> -1
-                !left && !closer -> -1
-                else -> error("logical error")
-            }.toDouble()
-
-            p.translate(0.0, translateX *direction)
-//                .also {
-//
-//                println("${p.asList()} $distanceX $newDistance $direction left: $left closer: $closer ${direction * translateX} ${it.asList()}")
-//            }
-        }.toTypedArray()
-    }.toTypedArray()
-    this.copy(coordinates = rotated)
-} else {
-    this
+fun <T: Geometry> T.scaleX(percent: Double): T {
+    @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
+    return when(this) {
+        is Geometry.Point -> this
+        is Geometry.LineString -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
+        is Geometry.MultiLineString -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
+        is Geometry.MultiPoint -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
+        is Geometry.Polygon -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
+        is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
+        is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.scaleX(percent) }.toTypedArray()) as T
+        else -> error("shouldn't happen")
+    }
 }
 
-fun Geometry.Polygon?.scaleY(
-    percent: Double
-) = if (this != null) {
-    val cs = this.coordinates ?: error("polygon has no coordinates")
-        val centroid = this.centroid()
-    val rotated = cs.map {
-        it.map { p ->
-            val distanceY = p.distanceTo(doubleArrayOf(p.longitude, centroid.latitude))
-            val newDistance = distanceY * (percent/(100.0))
-            val translateY = distanceY - newDistance
-            val above = p.latitude >= centroid.latitude
-            val closer = newDistance < distanceY
-            val direction = when {
-                above && closer -> -1
-                above && !closer -> -1
-                !above && closer -> 1
-                !above && !closer -> 1
-                else -> error("logical error")
-            }.toDouble()
+fun  Array<PointCoordinates>.scaleX(percent: Double): Array<PointCoordinates> {
+    val centroid = centroid()
+    return map { p ->
+        val distanceX = p.distanceTo(doubleArrayOf(centroid.longitude, p.latitude))
+        val newDistance = distanceX * (percent/(100.0))
+        val translateX = distanceX - newDistance
+        val left = p.longitude <= centroid.longitude
+        val closer = newDistance < distanceX
+        val direction = when {
+            left && closer -> 1
+            left && !closer -> 1
+            !left && closer -> -1
+            !left && !closer -> -1
+            else -> error("logical error")
+        }.toDouble()
 
-            p.translate(translateY *direction,0.0)
-//                .also {
-//
-//                println("${p.asList()} $distanceY $newDistance $direction above: $above closer: $closer ${direction * translateY} ${it.asList()}")
-//            }
-        }.toTypedArray()
+        p.translate(0.0, translateX *direction)
     }.toTypedArray()
-    this.copy(coordinates = rotated)
-} else {
-    this
 }
 
-fun Geometry.Polygon?.rotate(degrees: Double) = if (this != null) {
-    val cs = this.coordinates ?: error("polygon has no coordinates")
-    val centroid = this.centroid()
-    val rotated = cs.map {
-        it.map { p ->
+fun  Array<Array<PointCoordinates>>.scaleX(percent: Double): Array<Array<PointCoordinates>> {
+    return map { ps ->
+        ps.scaleX(percent)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<PointCoordinates>>>.scaleX(percent: Double): Array<Array<Array<PointCoordinates>>> {
+    return map { ps ->
+        ps.scaleX(percent)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<Array<PointCoordinates>>>>.scaleX(percent: Double): Array<Array<Array<Array<PointCoordinates>>>> {
+    return map { ps ->
+        ps.scaleX(percent)
+    }.toTypedArray()
+}
+
+fun <T: Geometry> T.scaleY(percent: Double): T {
+    @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
+    return when(this) {
+        is Geometry.Point -> this
+        is Geometry.LineString -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
+        is Geometry.MultiLineString -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
+        is Geometry.MultiPoint -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
+        is Geometry.Polygon -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
+        is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
+        is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.scaleY(percent) }.toTypedArray()) as T
+        else -> error("shouldn't happen")
+    }
+}
+
+fun  Array<PointCoordinates>.scaleY(percent: Double): Array<PointCoordinates> {
+    val centroid = centroid()
+    return map { p ->
+        val distanceY = p.distanceTo(doubleArrayOf(p.longitude, centroid.latitude))
+        val newDistance = distanceY * (percent/(100.0))
+        val translateY = distanceY - newDistance
+        val above = p.latitude >= centroid.latitude
+        val closer = newDistance < distanceY
+        val direction = when {
+            above && closer -> -1
+            above && !closer -> -1
+            !above && closer -> 1
+            !above && !closer -> 1
+            else -> error("logical error")
+        }.toDouble()
+
+        p.translate(translateY *direction,0.0).also {
+                println("${p.asList()} $distanceY $newDistance $direction above: $above closer: $closer ${direction * translateY} ${it.asList()}")
+            }
+    }.toTypedArray()
+}
+
+fun  Array<Array<PointCoordinates>>.scaleY(percent: Double): Array<Array<PointCoordinates>> {
+    return map { ps ->
+        ps.scaleY(percent)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<PointCoordinates>>>.scaleY(percent: Double): Array<Array<Array<PointCoordinates>>> {
+    return map { ps ->
+        ps.scaleY(percent)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<Array<PointCoordinates>>>>.scaleY(percent: Double): Array<Array<Array<Array<PointCoordinates>>>> {
+    return map { ps ->
+        ps.scaleY(percent)
+    }.toTypedArray()
+}
+
+fun <T: Geometry> T.rotate(degrees: Double): T {
+    @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
+    return when(this) {
+        is Geometry.Point -> this
+        is Geometry.LineString -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
+        is Geometry.MultiLineString -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
+        is Geometry.MultiPoint -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
+        is Geometry.Polygon -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
+        is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
+        is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.rotate(degrees) }.toTypedArray()) as T
+        else -> error("shouldn't happen")
+    }
+}
+
+fun  Array<PointCoordinates>.rotate(degrees: Double): Array<PointCoordinates> {
+    val centroid = centroid()
+    return map { p ->
             GeoGeometry.rotateAround(centroid, p, degrees)
-        }.toTypedArray()
     }.toTypedArray()
-    this.copy(coordinates = rotated)
-} else {
-    this
+}
+
+fun  Array<Array<PointCoordinates>>.rotate(degrees: Double): Array<Array<PointCoordinates>> {
+    return map { ps ->
+        ps.rotate(degrees)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<PointCoordinates>>>.rotate(degrees: Double): Array<Array<Array<PointCoordinates>>> {
+    return map { ps ->
+        ps.rotate(degrees)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<Array<PointCoordinates>>>>.rotate(degrees: Double): Array<Array<Array<Array<PointCoordinates>>>> {
+    return map { ps ->
+        ps.rotate(degrees)
+    }.toTypedArray()
 }
