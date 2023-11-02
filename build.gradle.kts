@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     `maven-publish`
+//    id("com.android.library") version "3.6.1"
 }
 
 repositories {
@@ -9,41 +10,39 @@ repositories {
 }
 
 kotlin {
-    jvm {
-        val main by compilations.getting {
-            kotlinOptions {
-                // Setup the Kotlin compiler options for the 'main' compilation:
-                jvmTarget = "1.8"
-            }
-        }
-        val test by compilations.getting {
-            kotlinOptions {
-                // Setup the Kotlin compiler options for the 'main' compilation:
-                jvmTarget = "1.8"
-            }
-        }
-    }
+    jvm {   }
     js(IR) {
+        browser()
         nodejs {
             testTask(Action {
                 useMocha {
                     // javascript is a lot slower than Java, we hit the default timeout of 2000
-                    timeout = "20000"
+                    timeout = "20s"
                 }
             })
         }
     }
+    linuxX64()
+    linuxArm64()
+    mingwX64()
+    macosX64()
+    macosArm64()
+//    androidTarget {
+//        publishLibraryVariants("release", "debug")
+//    }
+    iosArm64()
+    iosX64()
 
     sourceSets {
 
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
 
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
@@ -54,13 +53,13 @@ kotlin {
             }
         }
 
-        val jvmMain by getting {
+        jvmMain  {
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
-        val jvmTest by getting {
+        jvmTest {
             dependencies {
                 runtimeOnly("org.junit.jupiter:junit-jupiter:_")
                 implementation(kotlin("test-junit"))
@@ -80,14 +79,14 @@ kotlin {
             }
         }
 
-        val jsMain by getting {
+        jsMain  {
             dependencies {
                 implementation(kotlin("stdlib-js"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
 
-        val jsTest by getting {
+        jsTest  {
             dependencies {
                 implementation(kotlin("test-js"))
             }
