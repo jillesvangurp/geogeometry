@@ -78,3 +78,83 @@ fun Geometry.area() = when(this) {
     } ?:0.0
     else -> 0.0
 }
+
+
+
+fun Geometry.Polygon?.scaleX(
+    percent: Double
+) = if (this != null) {
+    val cs = this.coordinates ?: error("polygon has no coordinates")
+        val centroid = this.centroid()
+    val rotated = cs.map {
+        it.map { p ->
+//            val distanceX = centroid.distanceTo(doubleArrayOf(p.longitude, centroid.latitude))
+            val distanceX = p.distanceTo(doubleArrayOf(centroid.longitude, p.latitude))
+            val newDistance = distanceX * (percent/(100.0))
+            val translateX = distanceX - newDistance
+            val left = p.longitude <= centroid.longitude
+            val closer = newDistance < distanceX
+            val direction = when {
+                left && closer -> 1
+                left && !closer -> 1
+                !left && closer -> -1
+                !left && !closer -> -1
+                else -> error("logical error")
+            }.toDouble()
+
+            p.translate(0.0, translateX *direction)
+//                .also {
+//
+//                println("${p.asList()} $distanceX $newDistance $direction left: $left closer: $closer ${direction * translateX} ${it.asList()}")
+//            }
+        }.toTypedArray()
+    }.toTypedArray()
+    this.copy(coordinates = rotated)
+} else {
+    this
+}
+
+fun Geometry.Polygon?.scaleY(
+    percent: Double
+) = if (this != null) {
+    val cs = this.coordinates ?: error("polygon has no coordinates")
+        val centroid = this.centroid()
+    val rotated = cs.map {
+        it.map { p ->
+            val distanceY = p.distanceTo(doubleArrayOf(p.longitude, centroid.latitude))
+            val newDistance = distanceY * (percent/(100.0))
+            val translateY = distanceY - newDistance
+            val above = p.latitude >= centroid.latitude
+            val closer = newDistance < distanceY
+            val direction = when {
+                above && closer -> -1
+                above && !closer -> -1
+                !above && closer -> 1
+                !above && !closer -> 1
+                else -> error("logical error")
+            }.toDouble()
+
+            p.translate(translateY *direction,0.0)
+//                .also {
+//
+//                println("${p.asList()} $distanceY $newDistance $direction above: $above closer: $closer ${direction * translateY} ${it.asList()}")
+//            }
+        }.toTypedArray()
+    }.toTypedArray()
+    this.copy(coordinates = rotated)
+} else {
+    this
+}
+
+fun Geometry.Polygon?.rotate(degrees: Double) = if (this != null) {
+    val cs = this.coordinates ?: error("polygon has no coordinates")
+    val centroid = this.centroid()
+    val rotated = cs.map {
+        it.map { p ->
+            GeoGeometry.rotateAround(centroid, p, degrees)
+        }.toTypedArray()
+    }.toTypedArray()
+    this.copy(coordinates = rotated)
+} else {
+    this
+}
