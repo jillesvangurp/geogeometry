@@ -32,6 +32,8 @@ kotlin {
 //    }
     iosArm64()
     iosX64()
+    // no kotlinx serialization for wasm yet
+//    wasmJs()
 
     sourceSets {
 
