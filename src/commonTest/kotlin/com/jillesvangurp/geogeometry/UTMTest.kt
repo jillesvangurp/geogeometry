@@ -31,7 +31,7 @@ class UTMTest {
 
     @Test
     fun shouldParseUtmCoordinates() {
-        val utmCoordinates = listOf(
+        listOf(
             "33    U   3898.111111      5819",
             "33U 3898 5819",
             "33 U 389880.94 5819700.4"
