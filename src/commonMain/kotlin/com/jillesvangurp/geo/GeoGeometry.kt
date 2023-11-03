@@ -795,24 +795,24 @@ class GeoGeometry {
          * number of segments the polygon should have. The higher this
          * number, the better of an approximation the polygon is for the
          * circle.
-         * @param latitude latitude
-         * @param longitude longitude
+         * @param centerLat latitude
+         * @param centerLon longitude
          * @param radius radius of the circle
          * @return a linestring polygon
          */
-        fun circle2polygon(segments: Int, latitude: Double, longitude: Double, radius: Double): PolygonCoordinates {
-            validate(latitude, longitude, false)
+        fun circle2polygon(segments: Int, centerLat: Double, centerLon: Double, radius: Double): PolygonCoordinates {
+            validate(centerLat, centerLon, false)
 
-            if (segments < 5) {
+            if (segments < 3) {
                 throw IllegalArgumentException("you need a minimum of 5 segments")
             }
-            val points = Array(segments + 1) { DoubleArray(0) }
+            val points = mutableListOf<PointCoordinates>()
 
             val relativeLatitude = radius / EARTH_RADIUS_METERS * 180 / PI
 
             // things get funny near the north and south pole, so doing a modulo 90
             // to ensure that the relative amount of degrees doesn't get too crazy.
-            val relativeLongitude = relativeLatitude / cos(toRadians(latitude)) % 90
+            val relativeLongitude = relativeLatitude / cos(toRadians(centerLat)) % 90
 
             for (i in 0 until segments) {
                 // radians go from 0 to 2*PI; we want to divide the circle in nice
@@ -820,7 +820,7 @@ class GeoGeometry {
                 var theta = 2.0 * PI * i.toDouble() / segments
                 // trying to avoid theta being exact factors of pi because that results in some funny behavior around the
                 // north-pole
-                theta += 0.1
+                theta += 0.001
                 if (theta >= 2 * PI) {
                     theta -= 2 * PI
                 }
@@ -830,8 +830,8 @@ class GeoGeometry {
                 // is multiply that with the relative latitude and longitude
                 // note, latitude takes the role of y, not x. By convention we
                 // always note latitude, longitude instead of the other way around
-                var latOnCircle = latitude + relativeLatitude * sin(theta)
-                var lonOnCircle = longitude + relativeLongitude * cos(theta)
+                var latOnCircle = centerLat + relativeLatitude * sin(theta)
+                var lonOnCircle = centerLon + relativeLongitude * cos(theta)
                 if (lonOnCircle > 180) {
                     lonOnCircle = -180 + (lonOnCircle - 180)
                 } else if (lonOnCircle < -180) {
@@ -844,12 +844,11 @@ class GeoGeometry {
                     latOnCircle = -90 - (latOnCircle + 90)
                 }
 
-                points[i] = doubleArrayOf(lonOnCircle, latOnCircle)
+                points.add(doubleArrayOf(lonOnCircle, latOnCircle))
             }
             // should end with same point as the origin
-            val firstPoint = points[0]
-            points[points.size - 1] = doubleArrayOf(firstPoint[0], firstPoint[1])
-            return arrayOf(points)
+            points.add(points[0].let { doubleArrayOf(it.longitude,it.latitude) })
+            return arrayOf(points.toTypedArray())
         }
 
         fun rotateAround(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
