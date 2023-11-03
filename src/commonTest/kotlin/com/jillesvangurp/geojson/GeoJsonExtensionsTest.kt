@@ -31,6 +31,14 @@ class GeoJsonExtensionsTest {
     }
 
     @Test
+    fun shouldCreateTriangle() {
+        val t = GeoGeometry.circle2polygon(3, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
+            .polygonGeometry().let {
+                println(it)
+            }
+    }
+
+    @Test
     fun shouldMoveInRightDirection() {
 
         val circle = GeoGeometry.circle2polygon(20, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
@@ -91,11 +99,8 @@ class GeoJsonExtensionsTest {
             rectangle.scaleY(50.0)!!.asFeature(properties = mapOf("fill" to "purple").toJsonObject()),
             rectangle.scaleX(130.0)!!.asFeature(properties = mapOf("fill" to "green").toJsonObject()),
             rectangle.scaleY(130.0)!!.asFeature(properties = mapOf("fill" to "yellow").toJsonObject()),
-//            rectangle.scaleX(130.0),
-//            rectangle.scaleY(80.0),
-//            rectangle.scaleY(300.0),
-//            rectangle.rotate(10.0),
-//            rectangle.rotate(45.0),
+            rectangle.rotate(10.0)!!.asFeature(properties = mapOf("fill" to "brown").toJsonObject()),
+            rectangle.rotate(45.0)!!.asFeature(properties = mapOf("fill" to "grey").toJsonObject()),
 
         )).let {
             println( Json.Default.encodeToString(it))
