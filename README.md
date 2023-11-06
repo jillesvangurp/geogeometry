@@ -4,13 +4,13 @@
 
 GeoGeometry started out as a simple side project while I was building a startup in 2012. The key feature I needed at time was a list of geohashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, geo-referencing coordinates from various location providers, etc.
 
-I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. Minor API changes aside, this should be backwards compatible for most Java users. At this point, the library is a multi-platform Kotlin project. 
+I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. 
 
 # Get It
 
 [![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
-This is a Kotlin multi-platform distribution with packages for `-jvm` and `-js` (currently). Currently, 
+This is a Kotlin multi-platform distribution with packages for `-jvm` and `-js` (currently) and several other platforms. Currently, 
 multi-platform and multi-module does not work with `jitpack.io`. You can get this library via them but if that doesn't work,
 you can also try to pull from my website as described below. There's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
 
@@ -26,22 +26,16 @@ repositories {
 and then add the dependency :
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.2.22")
+implementation("com.github.jillesvangurp:geogeometry:3.3.2")
 ```
 
 You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).
 
-## About Geo Hashes
-
-A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
-
-Geohashes are super useful if you are building e.g. search engines. Though if you are, there are better data structures such as Quad Trees or BKD Trees that Elasticsearch uses in more recent versions. 
-
-Here's a [simple example of the hashes for a concave polygon of Berlin](http://geojson.io/#id=gist:jillesvangurp/0e4e13a3c9f118af9c7adecafcd2866f) rendered on a map (courtesy of geojson.io). These hashes are calculated with the algorithm in `GeoHashUtils`. You could put these hashes into a database or search engine to implement polygon search. 
-
 # Features
 
-- GeoGeometry class with methods that allow you to:
+- simple API, most functions work standalone and use simple input types
+
+- GeoGeometry class with lots of functions that allow you to:
   - **Calculate distance** between two coordinates using the **Haversine** or **Vicenty** algorithm
   - Calculate perpendicular distance of a point to a line. lineString, and polygon
   - Calculate the **area** of a polygon
@@ -54,7 +48,7 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
   - create a **polygon from a point cloud**. An algorithm for a convex hull is included and another experimental one for a concave hull.
   - **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
   - **rotate** a point around another point
-  - extension functions to convert to and from NATO UTM coordinates 
+  - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system) 
 
 - GeoHashUtils class with methods that allow you to: 
   - **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
@@ -64,12 +58,24 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
   - get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
   - **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
 
-- geojson classes to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use kotlinx.serialization for parsing and serializing this so this works across platforms as well!
+- geojson classes to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use **kotlinx.serialization** for parsing and serializing this so this works across platforms as well!
+  - sealed class hierarchy to represent the various geometries
+  - uses type aliases to distinguish the different coordinate arrays
+  - translate, scaleX, scaleY, and rotate to transform any Geojson Geometry
+  - calculate a centroid for a shape
 
 - Kotlin Multiplatform
   - Currently there are two build targets for js and jvm. I may add native targets later; this should just work but I have no easy way to test this.
   - No runtime dependencies other than the kotlin stdlib
   - Adding native targets should 'just work' but has not been tested.
+
+## About Geo Hashes
+
+A geo hash is a representation of a coordinate that interleaves the bit representations of the latitude and longitude and base32 encodes the result. This string representation has a very useful property: geo hashes of nearby coordinates will have the same prefix. As is observed in this blog post: http://blog.notdot.net/2009/11/Damn-Cool-Algorithms-Spatial-indexing-with-Quadtrees-and-Hilbert-Curves, geo hashes effectively encode the path to a leaf in a quad tree.
+
+Geohashes are super useful if you are building e.g. search engines. Though if you are, there are better data structures such as Quad Trees or BKD Trees that Elasticsearch uses in more recent versions.
+
+Here's a [simple example of the hashes for a concave polygon of Berlin](http://geojson.io/#id=gist:jillesvangurp/0e4e13a3c9f118af9c7adecafcd2866f) rendered on a map (courtesy of geojson.io). These hashes are calculated with the algorithm in `GeoHashUtils`. You could put these hashes into a database or search engine to implement polygon search.
 
 # Limitations
 
