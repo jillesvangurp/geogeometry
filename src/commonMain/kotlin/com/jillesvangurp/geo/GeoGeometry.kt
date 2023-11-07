@@ -26,6 +26,7 @@ package com.jillesvangurp.geo
 import com.jillesvangurp.geojson.*
 import kotlin.math.*
 
+
 /**
  * The methods in this class provides methods that may be used to manipulate geometric shapes. The methods follow the
  * GeoJson http://geojson.org/ convention of expressing shapes as multi dimensional arrays of points.
@@ -55,11 +56,14 @@ class GeoGeometry {
          *
          * see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
          */
+        // this value is approximated to account for the fact that the world is not a perfect sphere
         const val EARTH_RADIUS_METERS = 6371000.0
+        const val WGS84_RADIUS = 6378137
         const val EARTH_CIRCUMFERENCE_METERS = EARTH_RADIUS_METERS * PI * 2.0
         const val DEGREE_LATITUDE_METERS = EARTH_RADIUS_METERS * PI / 180.0
         const val DEGREES_TO_RADIANS = 2.0 * PI / 360.0
         const val RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
+
 
         /**
          * @param pointCoordinates point
@@ -68,7 +72,6 @@ class GeoGeometry {
          */
         fun boundingBox(pointCoordinates: PointCoordinates): BoundingBox {
             return doubleArrayOf(pointCoordinates[0], pointCoordinates[1], pointCoordinates[0], pointCoordinates[1])
-            // return doubleArrayOf(pointCoordinates[1], pointCoordinates[1], pointCoordinates[0], pointCoordinates[0])
         }
 
         /**
@@ -91,7 +94,6 @@ class GeoGeometry {
 
             val bbox = doubleArrayOf(westLon, southLat, eastLon, northLat)
             return bbox
-            // return doubleArrayOf(southLat, northLat, westLon, eastLon)
         }
 
         /**
@@ -1097,12 +1099,11 @@ class GeoGeometry {
          * @return The heading in degrees clockwise from north.
          */
         fun headingFromTwoPoints(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-            val latitude1: Double = toRadians(lat1)
-            val latitude2: Double = toRadians(lat2)
-            val longDiff: Double = toRadians(lon2 - lon1)
-            val y: Double = sin(longDiff) * cos(latitude2)
-            val x: Double =
-                cos(latitude1) * sin(latitude2) - sin(latitude1) * cos(
+            val latitude1 = toRadians(lat1)
+            val latitude2 = toRadians(lat2)
+            val longDiff = toRadians(lon2 - lon1)
+            val y = sin(longDiff) * cos(latitude2)
+            val x = cos(latitude1) * sin(latitude2) - sin(latitude1) * cos(
                     latitude2
                 ) * cos(longDiff)
             return (fromRadians(atan2(y, x)) + 360) % 360
@@ -1216,9 +1217,9 @@ class GeoGeometry {
             for (i in 1 until polygon.size) {
                 val current = polygon[i]
                 // convert to cartesian coordinates in meters, note this not very exact
-                val x1 = (previous[0] - xRef) * (6378137 * PI / 180) * cos(yRef * PI / 180)
+                val x1 = (previous[0] - xRef) * (WGS84_RADIUS * PI / 180) * cos(yRef * PI / 180)
                 val y1 = (previous[1] - yRef) * toRadians(6378137.0)
-                val x2 = (current[0] - xRef) * (6378137 * PI / 180) * cos(yRef * PI / 180)
+                val x2 = (current[0] - xRef) * (WGS84_RADIUS * PI / 180) * cos(yRef * PI / 180)
                 val y2 = (current[1] - yRef) * toRadians(6378137.0)
 
                 // calculate crossproduct

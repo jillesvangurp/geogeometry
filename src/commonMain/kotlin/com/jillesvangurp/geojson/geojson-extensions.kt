@@ -99,14 +99,8 @@ fun  Array<PointCoordinates>.scaleX(percent: Double): Array<PointCoordinates> {
         val newDistance = distanceX * (percent/(100.0))
         val translateX = distanceX - newDistance
         val left = p.longitude <= centroid.longitude
-        val closer = newDistance < distanceX
-        val direction = when {
-            left && closer -> 1
-            left && !closer -> 1
-            !left && closer -> -1
-            !left && !closer -> -1
-            else -> error("logical error")
-        }.toDouble()
+
+        val direction = if(left) 1 else -1
 
         p.translate(0.0, translateX *direction)
     }.toTypedArray()
@@ -155,14 +149,7 @@ fun  Array<PointCoordinates>.scaleY(percent: Double): Array<PointCoordinates> {
         val newDistance = distanceY * (percent/(100.0))
         val translateY = distanceY - newDistance
         val above = p.latitude >= centroid.latitude
-        val closer = newDistance < distanceY
-        val direction = when {
-            above && closer -> -1
-            above && !closer -> -1
-            !above && closer -> 1
-            !above && !closer -> 1
-            else -> error("logical error")
-        }.toDouble()
+        val direction = if(above) -1 else 1
 
         p.translate(translateY *direction,0.0)
     }.toTypedArray()
