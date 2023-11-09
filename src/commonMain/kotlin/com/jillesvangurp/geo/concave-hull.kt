@@ -15,61 +15,75 @@ import kotlin.math.*
  * this in its current form.
  */
 
-private fun euclideanDistance(
-    a: PointCoordinates,
-    b: PointCoordinates
-): Double {
-    // FIXME get rid of sqrt here?
+private fun euclideanDistance(a: PointCoordinates, b: PointCoordinates): Double {
     return (a.longitude - b.longitude).pow(2.0) + (a.latitude - b.latitude).pow(2.0)
 }
 
-private fun kNearestNeighbors(
-    l: List<PointCoordinates>,
-    q: PointCoordinates,
-    k: Int
-): List<PointCoordinates> {
-    val nearestList = mutableListOf<Pair<Double, PointCoordinates>>()
-    for (o in l) {
-        nearestList.add(Pair(euclideanDistance(q, o), o))
-    }
-    nearestList.sortBy { it.first }
+//private fun kNearestNeighbors(
+//    l: List<PointCoordinates>,
+//    q: PointCoordinates,
+//    k: Int
+//): List<PointCoordinates> {
+//    val nearestList = mutableListOf<Pair<Double, PointCoordinates>>()
+//    for (o in l) {
+//        nearestList.add(Pair(euclideanDistance(q, o), o))
+//    }
+//    nearestList.sortBy { it.first }
+//
+//    val result = mutableListOf<PointCoordinates>()
+//    for (i in 0 until min(k, nearestList.size)) {
+//        result.add(nearestList[i].second)
+//    }
+//    return result
+//}
 
-    val result = mutableListOf<PointCoordinates>()
-    for (i in 0 until min(k, nearestList.size)) {
-        result.add(nearestList[i].second)
-    }
-    return result
+private fun kNearestNeighbors(l: List<PointCoordinates>, q: PointCoordinates, k: Int): List<PointCoordinates> {
+    return l.map { o -> Pair(euclideanDistance(q, o), o) }
+        .sortedBy { it.first }
+        .take(k)
+        .map { it.second }
 }
+
 
 private fun findMinYPoint(l: List<PointCoordinates>): PointCoordinates = l.minByOrNull { it.latitude } ?: error("list should not be empty")
 
-private fun calculateAngle(o1: PointCoordinates, o2: PointCoordinates) = atan2(o2.latitude - o1.latitude, o2.longitude - o1.longitude)
+//private fun calculateAngle(o1: PointCoordinates, o2: PointCoordinates) = atan2(o2.latitude - o1.latitude, o2.longitude - o1.longitude)
+
+private fun calculateAngle(o1: PointCoordinates, o2: PointCoordinates): Double {
+    val angle = atan2(o2.latitude - o1.latitude, o2.longitude - o1.longitude)
+    return (angle + 2 * PI) % (2 * PI)
+}
+
+//private fun angleDifference(a1: Double, a2: Double): Double {
+//    // calculate angle difference in clockwise directions as radians
+//    return when {
+//        a1 > 0 && a2 >= 0 && a1 > a2 -> {
+//            abs(a1 - a2)
+//        }
+//        a1 >= 0 && a2 > 0 && a1 < a2 -> {
+//            2 * PI + a1 - a2
+//        }
+//        a1 < 0 && a2 <= 0 && a1 < a2 -> {
+//            2 * PI + a1 + abs(a2)
+//        }
+//        a1 <= 0 && a2 < 0 && a1 > a2 -> {
+//            abs(a1 - a2)
+//        }
+//        a1 <= 0 && 0 < a2 -> {
+//            2 * PI + a1 - a2
+//        }
+//        a1 >= 0 && 0 >= a2 -> {
+//            a1 + abs(a2)
+//        }
+//        else -> {
+//            0.0
+//        }
+//    }
+//}
 
 private fun angleDifference(a1: Double, a2: Double): Double {
-    // calculate angle difference in clockwise directions as radians
-    return when {
-        a1 > 0 && a2 >= 0 && a1 > a2 -> {
-            abs(a1 - a2)
-        }
-        a1 >= 0 && a2 > 0 && a1 < a2 -> {
-            2 * PI + a1 - a2
-        }
-        a1 < 0 && a2 <= 0 && a1 < a2 -> {
-            2 * PI + a1 + abs(a2)
-        }
-        a1 <= 0 && a2 < 0 && a1 > a2 -> {
-            abs(a1 - a2)
-        }
-        a1 <= 0 && 0 < a2 -> {
-            2 * PI + a1 - a2
-        }
-        a1 >= 0 && 0 >= a2 -> {
-            a1 + abs(a2)
-        }
-        else -> {
-            0.0
-        }
-    }
+    val diff = (a2 - a1 + 2 * PI) % (2 * PI)
+    return if (diff > PI) 2 * PI - diff else diff
 }
 
 private fun sortByAngle(
@@ -86,7 +100,7 @@ private fun sortByAngle(
 /**
  * Note, algorithm has issues with self intersection
  */
-fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordinates> {
+tailrec fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int, recurseCount: Int = 0, maxRecurse: Int = 10000): List<PointCoordinates> {
 
     // the resulting concave hull
     val concaveHull = mutableListOf<PointCoordinates>()
@@ -149,9 +163,9 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordina
             }
         }
 
-        // if there is no candidate increase k - try again
-        if (its) {
-            return calculateConcaveHull(ps, k + 1)
+        // if there is no candidate increase k - try again but give up at max k
+        if (its && recurseCount < maxRecurse) {
+            return calculateConcaveHull(ps, k + 1, recurseCount+1)
         }
 
         // add candidate to concave hull and remove from dataset
@@ -175,10 +189,10 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int): List<PointCoordina
     }
 
     // if not all points inside -  try again
-    return if (!insideCheck) {
-        calculateConcaveHull(ps, k + 1)
+    return if (!insideCheck && recurseCount< maxRecurse) {
+        calculateConcaveHull(ps, k + 1, recurseCount+1)
     } else {
-        concaveHull
+         concaveHull
     }
 }
 
@@ -197,3 +211,4 @@ private fun pointInPolygon(p: PointCoordinates, pp: List<PointCoordinates>): Boo
     }
     return result
 }
+
