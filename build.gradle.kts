@@ -12,7 +12,7 @@ repositories {
 kotlin {
     jvm {   }
     js(IR) {
-        browser()
+//        browser()
         nodejs {
             testTask(Action {
                 useMocha {
