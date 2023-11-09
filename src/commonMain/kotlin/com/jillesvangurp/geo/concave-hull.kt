@@ -15,9 +15,9 @@ import kotlin.math.*
  * this in its current form.
  */
 
-private fun euclideanDistance(a: PointCoordinates, b: PointCoordinates): Double {
-    return (a.longitude - b.longitude).pow(2.0) + (a.latitude - b.latitude).pow(2.0)
-}
+//private fun euclideanDistance(a: PointCoordinates, b: PointCoordinates): Double {
+//    return (a.longitude - b.longitude).pow(2.0) + (a.latitude - b.latitude).pow(2.0)
+//}
 
 //private fun kNearestNeighbors(
 //    l: List<PointCoordinates>,
@@ -38,7 +38,7 @@ private fun euclideanDistance(a: PointCoordinates, b: PointCoordinates): Double 
 //}
 
 private fun kNearestNeighbors(l: List<PointCoordinates>, q: PointCoordinates, k: Int): List<PointCoordinates> {
-    return l.map { o -> Pair(euclideanDistance(q, o), o) }
+    return l.map { o -> Pair(GeoGeometry.distance(q, o), o) }
         .sortedBy { it.first }
         .take(k)
         .map { it.second }
