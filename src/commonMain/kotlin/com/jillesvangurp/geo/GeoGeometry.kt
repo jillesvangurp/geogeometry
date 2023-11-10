@@ -345,6 +345,8 @@ class GeoGeometry {
             return (d * factor).roundToLong() / factor
         }
 
+        fun Double.roundDecimals(decimals:Int) = roundToDecimals(this,decimals)
+
         fun linesCross(
             l1p1: PointCoordinates,
             l1p2: PointCoordinates,
