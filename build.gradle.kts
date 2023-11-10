@@ -12,12 +12,11 @@ repositories {
 kotlin {
     jvm {   }
     js(IR) {
-//        browser()
         nodejs {
             testTask(Action {
                 useMocha {
                     // javascript is a lot slower than Java, we hit the default timeout of 2000
-                    timeout = "20s"
+                    timeout = "60s"
                 }
             })
         }
