@@ -3,11 +3,20 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 
 fun LineStringCoordinates.centroid(): DoubleArray {
-    val longitudes = this.map { it.longitude }
-    val latitudes = this.map { it.latitude }
-    val lon = longitudes.min()+((longitudes.max() - longitudes.min()) /2.0)
-    val lat = latitudes.min()+((latitudes.max() - latitudes.min()) /2.0)
-    return doubleArrayOf(lon, lat)
+    var minLon = 180.0
+    var maxLon = -180.0
+    var minLat = 90.0
+    var maxLat = -90.0
+    for (coordinate in this) {
+        val lon = coordinate.longitude
+        if(lon<minLon) minLon = lon
+        if(lon>maxLon) maxLon = lon
+        val lat = coordinate.latitude
+        if(lat<minLat) minLat = lat
+        if(lat>maxLat) maxLat = lat
+
+    }
+    return doubleArrayOf((minLon+maxLon)/2.0, (minLat+maxLat)/2.0)
 }
 
 fun PolygonCoordinates.centroid() = this[0].centroid()

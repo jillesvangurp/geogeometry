@@ -782,13 +782,20 @@ class GeoGeometry {
          * @return the average longitude and latitude an array.
          */
         fun polygonCenter(vararg polygonPoints: DoubleArray): DoubleArray {
-            var cumLon = 0.0
-            var cumLat = 0.0
+            var minLon = 180.0
+            var maxLon = -180.0
+            var minLat = 90.0
+            var maxLat = -90.0
             for (coordinate in polygonPoints) {
-                cumLon += coordinate[0]
-                cumLat += coordinate[1]
+                val lon = coordinate.longitude
+                if(lon<minLon) minLon = lon
+                if(lon>maxLon) maxLon = lon
+                val lat = coordinate.latitude
+                if(lat<minLat) minLat = lat
+                if(lat>maxLat) maxLat = lat
+
             }
-            return doubleArrayOf(cumLon / polygonPoints.size, cumLat / polygonPoints.size)
+            return doubleArrayOf((minLon+maxLon)/2.0, (minLat+maxLat)/2.0)
         }
 
         /**
