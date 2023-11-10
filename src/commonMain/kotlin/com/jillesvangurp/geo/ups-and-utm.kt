@@ -1,6 +1,5 @@
 package com.jillesvangurp.geo
 
-
 /*
  * Converted to Kotlin and adapted from:
  * https://github.com/tarelli/jscience/blob/master/src/org/jscience/geography/coordinates/crs/ReferenceEllipsoid.java

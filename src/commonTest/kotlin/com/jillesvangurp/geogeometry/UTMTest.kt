@@ -127,7 +127,7 @@ class UTMTest {
                         val convertedBack = toUTM.toWgs84()
                         withClue("${p.geoJson} -> ${convertedBack.geoJson} - $toUTM") {
                             convertedBack.let { out ->
-                                out.distanceTo(p) shouldBeLessThan 100.0
+                                out.distanceTo(p) shouldBeLessThan 1.0
                             }
                         }
                     }
