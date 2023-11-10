@@ -71,7 +71,7 @@ private const val UPS_FALSE_EASTING = 2000000.0
  * northing to avoid using negative numbers in the coordinates.
  * The UPS system, unlike the UTM system, always includes the false northing.
  */
-const val UPS_FALSE_NORTHING = 2000000.0
+private const val UPS_FALSE_NORTHING = 2000000.0
 
 /*
 * NOTE: The calculations in this class use power series expansions.
@@ -99,7 +99,7 @@ private val K08: Double = K07 * K0
  *
  * @author Rolf Rander
  */
-data class UTM(
+data class UtmCoordinate(
     val zone: Int = 0, val letter: Char = 0.toChar(), val easting: Double = 0.0, val northing: Double = 0.0
 ) {
     override fun toString(): String {
@@ -107,11 +107,11 @@ data class UTM(
     }
 }
 
-val utmRegex = "(([0-9]{1,2})\\s*([a-zA-Z])\\s+(\\d*\\.?\\d+)\\s+(\\d*\\.?\\d+))".toRegex()
+internal val utmRegex = "(([0-9]{1,2})\\s*([a-zA-Z])\\s+(\\d*\\.?\\d+)\\s+(\\d*\\.?\\d+))".toRegex()
 
-fun String.parseUTM(): UTM? {
+fun String.parseUTM(): UtmCoordinate? {
     return utmRegex.matchEntire(this)?.let {
-        UTM(
+        UtmCoordinate(
             zone = it.groups[2]!!.value.toInt(),
             letter = it.groups[3]!!.value.uppercase()[0],
             easting = it.groups[4]!!.value.toDouble(),
@@ -120,9 +120,9 @@ fun String.parseUTM(): UTM? {
     }
 }
 
-fun String.findUTMCoordinates(): List<UTM> {
+fun String.findUTMCoordinates(): List<UtmCoordinate> {
     return utmRegex.findAll(this).map {
-        UTM(
+        UtmCoordinate(
             zone = it.groups[2]!!.value.toInt(),
             letter = it.groups[3]!!.value.uppercase()[0],
             easting = it.groups[4]!!.value.toDouble(),
@@ -131,35 +131,21 @@ fun String.findUTMCoordinates(): List<UTM> {
     }.toList()
 }
 
-val String.utmAsWgs84 get() = parseUTM()?.toWgs84()
-
-val PointCoordinates.geoJson get() = "[$longitude,$latitude]"
-val PointCoordinates.format get() = run {
-    val ns = if (latitude < 0) 'S' else 'N'
-    val ew = if (longitude < 0) 'W' else 'E'
-    "${abs(latitude)}$ns ${abs(longitude)}$ew"
-}
-
+val String.utmAsWgs84Coordinate get() = parseUTM()?.toWgs84()
 
 /**
  * Returns true if the position indicated by the coordinates is
  * north of the northern limit of the UTM grid (84 degrees).
- *
- * @param latLong The coordinates.
- * @return True if the latitude is greater than 84 degrees.
  */
-fun isNorthPolar(latLong: PointCoordinates): Boolean {
+private fun isNorthPolar(latLong: PointCoordinates): Boolean {
     return latLong.latitude > 84.0
 }
 
 /**
  * Returns true if the position indicated by the coordinates is
  * south of the southern limit of the UTM grid (-80 degrees).
- *
- * @param latLong The coordinates.
- * @return True if the latitude is less than -80 degrees.
  */
-fun isSouthPolar(latLong: PointCoordinates): Boolean {
+private fun isSouthPolar(latLong: PointCoordinates): Boolean {
     return latLong.latitude < -80.0
 }
 
@@ -169,7 +155,7 @@ fun isSouthPolar(latLong: PointCoordinates): Boolean {
  * @param latLong The coordinates.
  * @return the latitude zone character.
  */
-fun getLatitudeZoneLetter(latLong: PointCoordinates): Char {
+private fun getLatitudeZoneLetter(latLong: PointCoordinates): Char {
     val latitude = latLong.latitude
     return when {
         latitude < -72 -> 'C'
@@ -202,7 +188,7 @@ fun getLatitudeZoneLetter(latLong: PointCoordinates): Char {
  * @param latLong  The coordinates.
  * @return the longitude zone number.
  */
-fun getLongitudeZone(latLong: PointCoordinates): Int {
+private fun getLongitudeZone(latLong: PointCoordinates): Int {
 
     // UPS longitude zones
     if (isNorthPolar(latLong) || isSouthPolar(latLong)) {
@@ -244,7 +230,7 @@ fun getLongitudeZone(latLong: PointCoordinates): Int {
  * @param latitudeZone  The UTM/UPS latitude zone character.
  * @return The central meridian for the specified zone.
  */
-fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
+private fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
     // polar zones
     if (latitudeZone < 'C' || latitudeZone > 'X') {
         return 0.0
@@ -265,8 +251,8 @@ fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
 }
 
 
-fun PointCoordinates.toUTM(): UTM {
-    if(latitude < UTM_SOUTHERN_LIMIT || latitude > UTM_NORTHERN_LIMIT) {
+fun PointCoordinates.toUTM(): UtmCoordinate {
+    if (latitude < UTM_SOUTHERN_LIMIT || latitude > UTM_NORTHERN_LIMIT) {
         error("$latitude is outside UTM supported latitude range of $UTM_SOUTHERN_LIMIT - $UTM_NORTHERN_LIMIT")
     }
 
@@ -338,7 +324,7 @@ fun PointCoordinates.toUTM(): UTM {
     val northing = falseNorthing + t1 + dL2 * t2 + dL4 * t3 + (dL6
             * t4) + dL8 * t5
     val easting = falseEasting + dL * t6 + dL3 * t7 + dL5 * t8 + dL7 * t9
-    return UTM(
+    return UtmCoordinate(
         zone = longitudeZone,
         letter = latitudeZone,
         easting = easting.roundDecimals(2),
@@ -347,7 +333,7 @@ fun PointCoordinates.toUTM(): UTM {
 }
 
 
-fun UTM.toWgs84(): PointCoordinates {
+fun UtmCoordinate.toWgs84(): PointCoordinates {
     val northing: Double = if (this.letter < 'N') {
         // southern hemisphere
         this.northing - UTM_FALSE_NORTHING
@@ -465,114 +451,51 @@ fun UTM.toWgs84(): PointCoordinates {
  * such as the WGS84 ellipsiod, and these have now largely supplanted
  * the others.
  *
+ * @author Jilles van Gurp (adapted the code to kotlin)
  * @author Paul D. Anderson
  * @version 3.0, February 18, 2006
  */
-class ReferenceEllipsoid(private val a: Double, inverseFlattening: Double) {
-    private val b: Double
+private class ReferenceEllipsoid(private val a: Double, inverseFlattening: Double) {
 
     /**
-     * Returns the flattening or ellipticity of this reference ellipsoid.
-     *
-     * @return The flattening.
+     * Flattening or ellipticity of this reference ellipsoid.
      */
-    val flattening: Double
+    val flattening: Double = 1.0 / inverseFlattening
+
+    val b = a * (1.0 - flattening)
 
     /**
-     * Returns the square of the (first) eccentricity. This number is frequently
+     * Square of the (first) eccentricity. This number is frequently
      * used in ellipsoidal calculations.
-     *
-     * @return The square of the eccentricity.
      */
-    val eccentricitySquared: Double
+    val eccentricitySquared = flattening * (2.0 - flattening)
 
-    /**
-     * Returns the (first) eccentricity of this reference ellipsoid.
-     *
-     * @return The eccentricity.
-     */
-    val eccentricity: Double
 
-    /**
-     * Returns the square of the second eccentricity of this reference ellipsoid.
-     * This number is frequently used in ellipsoidal calculations.
-     *
-     * @return The square of the second eccentricity.
-     */
-    val secondEccentricitySquared: Double
-    private var _semimajorAxis: Double? = null
-    private var _semiminorAxis: Double? = null
+    val secondEccentricitySquared = eccentricitySquared / (1.0 - eccentricitySquared)
 
-    /**
-     * Constructs an instance of a reference ellipsoid.
-     *
-     * @param semimajorAxis The semimajor or equatorial radius of this
-     * reference ellipsoid, in meters.
-     * @param inverseFlattening The reciprocal of the ellipticity or flattening
-     * of this reference ellipsoid (dimensionless).
-     */
-    init {
-        flattening = 1.0 / inverseFlattening
-        b = a * (1.0 - flattening)
-        eccentricitySquared = flattening * (2.0 - flattening)
-        eccentricity = sqrt(eccentricitySquared)
-        secondEccentricitySquared = eccentricitySquared / (1.0 - eccentricitySquared)
-    }
-
-    val semimajorAxis: Double
-        /**
-         * Returns the semimajor or equatorial radius of this reference ellipsoid.
-         *
-         * @return The semimajor radius.
-         */
-        get() {
-            if (_semimajorAxis == null) {
-                _semimajorAxis = a
-
-            }
-            return a
-        }
-
-    /**
-     * Returns the semiminor or polar radius of this reference ellipsoid.
-     *
-     * @return  The semiminor radius.
-     */
-    fun getsSemiminorAxis(): Double? {
-        if (_semiminorAxis == null) {
-            _semiminorAxis = b
-        }
-        return _semiminorAxis
-    }
+    val eccentricity = sqrt(eccentricitySquared)
+    val semimajorAxis = a
+    val semiminorAxis = a * (1.0 - (1.0/inverseFlattening))
 
     /**
      * Returns the *radius of curvature in the prime vertical*
-     * for this reference ellipsoid at the specified latitude.
-     *
-     * @param phi The local latitude (radians).
-     * @return The radius of curvature in the prime vertical (meters).
+     * for this reference ellipsoid at the specified latitude [phi] in radians.
      */
     fun verticalRadiusOfCurvatureRadians(phi: Double): Double {
-        return a / sqrt(1.0 - eccentricitySquared * sqr(sin(phi)))
+        return a / sqrt(1.0 - eccentricitySquared * sin(phi).pow(2))
     }
 
     /**
      * Returns the *radius of curvature in the meridian*
-     * for this reference ellipsoid at the specified latitude.
-     *
-     * @param phi The local latitude (in radians).
-     * @return  The radius of curvature in the meridian (in meters).
+     * for this reference ellipsoid at the specified latitude [phi] in radians.
      ** */
     fun meridionalRadiusOfCurvatureRadians(phi: Double): Double {
-        return (verticalRadiusOfCurvatureRadians(phi) / (1.0 + secondEccentricitySquared * sqr(cos(phi))))
+        return (verticalRadiusOfCurvatureRadians(phi) / (1.0 + secondEccentricitySquared * cos(phi).pow(2)))
     }
 
     /**
      * Returns the meridional arc, the true meridional distance on the
-     * ellipsoid from the equator to the specified latitude, in meters.
-     *
-     * @param phi   The local latitude (in radians).
-     * @return  The meridional arc (in meters).
+     * ellipsoid from the equator to the specified latitude [phi] in radians, in meters.
      */
     fun meridionalArcRadians(phi: Double): Double {
         val sin2Phi = sin(2.0 * phi)
@@ -601,24 +524,5 @@ class ReferenceEllipsoid(private val a: Double, inverseFlattening: Double) {
          * The World Geodetic System 1984 reference ellipsoid.
          */
         val WGS84 = ReferenceEllipsoid(6378137.0, 298.257223563)
-
-        /**
-         * Geodetic Reference System 1980 ellipsoid.
-         */
-        val GRS80 = ReferenceEllipsoid(6378137.0, 298.257222101)
-
-        /**
-         * The World Geodetic System 1972 reference ellipsoid.
-         */
-        val WGS72 = ReferenceEllipsoid(6378135.0, 298.26)
-
-        /**
-         * The International 1924 reference ellipsoid, one of the earliest
-         * "global" ellipsoids.
-         */
-        val INTERNATIONAL1924 = ReferenceEllipsoid(6378388.0, 297.0)
-        private fun sqr(x: Double): Double {
-            return x * x
-        }
     }
 }
