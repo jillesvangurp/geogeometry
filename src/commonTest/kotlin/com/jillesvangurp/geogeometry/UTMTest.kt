@@ -122,7 +122,7 @@ class UTMTest {
             repeat(100000) {
                 Random.supportedUtmCoordinate().let { p ->
                     val toUTM = p.toUtmCoordinate()
-                    letters.add(toUTM.letter)
+                    letters.add(toUTM.latitudeZoneLetter)
                     runCatching {
                         val convertedBack = toUTM.utmToPointCoordinates()
                         withClue("${p.stringify()} -> ${convertedBack.stringify()} - $toUTM") {
@@ -154,7 +154,7 @@ class UTMTest {
             repeat(100000) {
                 Random.supportedUpsCoordinate().let { p ->
                     val toUTM = p.toUpsCoordinate()
-                    letters.add(toUTM.letter)
+                    letters.add(toUTM.latitudeZoneLetter)
                     runCatching {
                         val convertedBack = toUTM.upsToPointCoordinates()
                         withClue("${p.stringify()} -> ${convertedBack.stringify()} - $toUTM") {

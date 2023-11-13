@@ -91,32 +91,35 @@ private val K08: Double = K07 * K0
 
 
 /**
- * Class representing UTM-coordinates. Based on code from stack overflow and adapted from a gist by yazdipour
+ * Class representing UTM or UPS coordinates.
  *
- * @see [https://gist.github.com/yazdipour/6231fcc7d1da8588601da2395dc3cb78]
- * @see [Stack Overflow](https://stackoverflow.com/questions/176137/java-convert-lat-lon-to-utm)
+ * Which coordinate system is applicable can be determined from the latitude letter. Use the [isUps]
+ * and [isUtm] functions for this. There are separate conversion functions for both coordinate system.
+ *
+ * Or you can use [toUtmOrUps] and [toPointCoordinates] and it will choose between the coordinate systems for you.
  *
  * @see [Wikipedia-entry on UTM](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)
+ * @see [Wikipedia-entry on UPS](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system)
  *
- * @author Rolf Rander
  */
 data class UtmCoordinate(
-    val zone: Int, val letter: Char, val easting: Double, val northing: Double
+    val longitudeZone: Int, val latitudeZoneLetter: Char, val easting: Double, val northing: Double
 ) {
     override fun toString(): String {
-        return "$zone $letter $easting $northing"
+        return "$longitudeZone $latitudeZoneLetter $easting $northing"
     }
 }
 
-val UtmCoordinate.isUps get() = letter in listOf('A','B', 'Y', 'Z')
+val UtmCoordinate.isUps get() = latitudeZoneLetter in listOf('A','B', 'Y', 'Z')
+val UtmCoordinate.isUtm get() = !isUps
 
 internal val utmRegex = "(([0-9]{1,2})\\s*([a-zA-Z])\\s+(\\d*\\.?\\d+)\\s+(\\d*\\.?\\d+))".toRegex()
 
 fun String.parseUTM(): UtmCoordinate? {
     return utmRegex.matchEntire(this)?.let {
         UtmCoordinate(
-            zone = it.groups[2]!!.value.toInt(),
-            letter = it.groups[3]!!.value.uppercase()[0],
+            longitudeZone = it.groups[2]!!.value.toInt(),
+            latitudeZoneLetter = it.groups[3]!!.value.uppercase()[0],
             easting = it.groups[4]!!.value.toDouble(),
             northing = it.groups[5]!!.value.toDouble()
         )
@@ -126,8 +129,8 @@ fun String.parseUTM(): UtmCoordinate? {
 fun String.findUTMCoordinates(): List<UtmCoordinate> {
     return utmRegex.findAll(this).map {
         UtmCoordinate(
-            zone = it.groups[2]!!.value.toInt(),
-            letter = it.groups[3]!!.value.uppercase()[0],
+            longitudeZone = it.groups[2]!!.value.toInt(),
+            latitudeZoneLetter = it.groups[3]!!.value.uppercase()[0],
             easting = it.groups[4]!!.value.toDouble(),
             northing = it.groups[5]!!.value.toDouble()
         )
@@ -286,7 +289,7 @@ fun UtmCoordinate.toPointCoordinates() : PointCoordinates {
 
 fun PointCoordinates.toUtmCoordinate(): UtmCoordinate {
     if (latitude < UTM_SOUTHERN_LIMIT || latitude > UTM_NORTHERN_LIMIT) {
-        error("$latitude is outside UTM supported latitude range of $UTM_SOUTHERN_LIMIT - $UTM_NORTHERN_LIMIT")
+        error("$latitude is outside UTM supported latitude range of $UTM_SOUTHERN_LIMIT - $UTM_NORTHERN_LIMIT. You should use the UPS coordinate system")
     }
 
     val latitudeZone: Char = getLatitudeZoneLetter(this)
@@ -358,8 +361,8 @@ fun PointCoordinates.toUtmCoordinate(): UtmCoordinate {
             * t4) + dL8 * t5
     val easting = falseEasting + dL * t6 + dL3 * t7 + dL5 * t8 + dL7 * t9
     return UtmCoordinate(
-        zone = longitudeZone,
-        letter = latitudeZone,
+        longitudeZone = longitudeZone,
+        latitudeZoneLetter = latitudeZone,
         easting = easting.roundDecimals(2),
         northing = northing.roundDecimals(2)
     )
@@ -367,7 +370,7 @@ fun PointCoordinates.toUtmCoordinate(): UtmCoordinate {
 
 
 fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
-    val northing: Double = if (this.letter < 'N') {
+    val northing: Double = if (this.latitudeZoneLetter < 'N') {
         // southern hemisphere
         this.northing - UTM_FALSE_NORTHING
     } else {
@@ -419,7 +422,7 @@ fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
     val nu5 = nu3 * nu2
     val nu7 = nu5 * nu2
     val lambda0 = getCentralMeridian(
-        this.zone, this.letter
+        this.longitudeZone, this.latitudeZoneLetter
     )
     val dE: Double = this.easting - UTM_FALSE_EASTING
     val dE2 = dE * dE
@@ -456,7 +459,7 @@ fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
 
 fun PointCoordinates.toUpsCoordinate(): UtmCoordinate {
     if (latitude >= UTM_SOUTHERN_LIMIT && latitude <= UTM_NORTHERN_LIMIT) {
-        error("$latitude is outside UPS supported latitude range of [-90 - $UTM_SOUTHERN_LIMIT] or [$UTM_NORTHERN_LIMIT - 90]")
+        error("$latitude is outside UPS supported latitude range of [-90 - $UTM_SOUTHERN_LIMIT] or [$UTM_NORTHERN_LIMIT - 90]. You should use UTM")
     }
 
     val ellipsoid = ReferenceEllipsoid.WGS84
@@ -488,7 +491,7 @@ fun PointCoordinates.toUpsCoordinate(): UtmCoordinate {
 
 fun UtmCoordinate.upsToPointCoordinates(): PointCoordinates {
     val ellipsoid = ReferenceEllipsoid.WGS84
-    val northernHemisphere: Boolean = letter > 'N'
+    val northernHemisphere: Boolean = latitudeZoneLetter > 'N'
     val dN: Double = (northing - UPS_FALSE_NORTHING)
     val dE: Double = (easting - UPS_FALSE_EASTING)
     // check for zeroes (the poles)
