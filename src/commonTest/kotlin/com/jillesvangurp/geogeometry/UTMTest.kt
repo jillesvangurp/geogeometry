@@ -2,10 +2,7 @@ package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.*
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundDecimals
-import com.jillesvangurp.geojson.distanceTo
-import com.jillesvangurp.geojson.latitude
-import com.jillesvangurp.geojson.longitude
-import com.jillesvangurp.geojson.stringify
+import com.jillesvangurp.geojson.*
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.assertions.withClue
@@ -21,7 +18,7 @@ class UTMTest {
     @Test
     fun shouldConvertCoordinates() {
         val utmBbg = "33 U 389880.94 5819700.41"
-        brandenBurgerGate.toUTM().toString() shouldBe utmBbg
+        brandenBurgerGate.toUtmCoordinate().toString() shouldBe utmBbg
         val utmAsWgs84 = utmBbg.utmAsWgs84Coordinate
         println(utmAsWgs84?.stringify())
         utmAsWgs84!! shouldBeNear brandenBurgerGate
@@ -100,8 +97,8 @@ class UTMTest {
         assertSoftly {
             testCoordinates.forEach { original ->
                 withClue(original) {
-                    val utm = original.toUTM()
-                    val converted = utm.toWgs84()
+                    val utm = original.toUtmCoordinate()
+                    val converted = utm.utmToPointCoordinates()
                     val distance =
                         GeoGeometry.distance(original.latitude, original.longitude, converted[1], converted[0])
 
@@ -119,13 +116,74 @@ class UTMTest {
                 nextDouble(-80.0, 84.0).roundDecimals(4)
             )
         }
+        val letters = mutableSetOf<Char>()
 
         assertSoftly {
-            repeat(10000) {
+            repeat(100000) {
                 Random.supportedUtmCoordinate().let { p ->
-                    val toUTM = p.toUTM()
+                    val toUTM = p.toUtmCoordinate()
+                    letters.add(toUTM.letter)
                     runCatching {
-                        val convertedBack = toUTM.toWgs84()
+                        val convertedBack = toUTM.utmToPointCoordinates()
+                        withClue("${p.stringify()} -> ${convertedBack.stringify()} - $toUTM") {
+                            convertedBack.let { out ->
+                                out.distanceTo(p) shouldBeLessThan 1.0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        println(letters )
+    }
+
+    @Test
+    fun testLotsOfUpsCoordinates() {
+        fun Random.supportedUpsCoordinate(): DoubleArray {
+            return doubleArrayOf(
+                nextDouble(-180.0, 180.0).roundDecimals(4),
+                if (nextBoolean()) nextDouble(-90.0, -80.001).roundDecimals(4) else nextDouble(
+                    84.001,
+                    90.0
+                ).roundDecimals(4)
+            )
+        }
+
+        val letters = mutableSetOf<Char>()
+        assertSoftly {
+            repeat(100000) {
+                Random.supportedUpsCoordinate().let { p ->
+                    val toUTM = p.toUpsCoordinate()
+                    letters.add(toUTM.letter)
+                    runCatching {
+                        val convertedBack = toUTM.upsToPointCoordinates()
+                        withClue("${p.stringify()} -> ${convertedBack.stringify()} - $toUTM") {
+                            convertedBack.let { out ->
+                                out.distanceTo(p) shouldBeLessThan 1.0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        println(letters )
+    }
+
+    @Test
+    fun testLotsOfCoordinates() {
+        fun Random.supportedUpsCoordinate(): DoubleArray {
+            return doubleArrayOf(
+                nextDouble(-180.0, 180.0).roundDecimals(4),
+                nextDouble(-90.0, 90.0).roundDecimals(4)
+            )
+        }
+
+        assertSoftly {
+            repeat(100000) {
+                Random.supportedUpsCoordinate().let { p ->
+                    val toUTM = p.toUtmOrUps()
+                    runCatching {
+                        val convertedBack = toUTM.toPointCoordinates()
                         withClue("${p.stringify()} -> ${convertedBack.stringify()} - $toUTM") {
                             convertedBack.let { out ->
                                 out.distanceTo(p) shouldBeLessThan 1.0
@@ -150,7 +208,7 @@ class UTMTest {
             testCoordinates.forEach { point ->
                 withClue(point) {
                     shouldThrowAny {
-                        point.toUTM()
+                        point.toUtmCoordinate()
                     }
                 }
             }

@@ -2,6 +2,7 @@ package com.jillesvangurp.geo
 
 /*
  * Converted to Kotlin and adapted from:
+ * https://github.com/tarelli/jscience/blob/master/src/org/jscience/geography/coordinates/UTM.java
  * https://github.com/tarelli/jscience/blob/master/src/org/jscience/geography/coordinates/crs/ReferenceEllipsoid.java
  *
  * JScience - Java(TM) Tools and Libraries for the Advancement of Sciences.
@@ -57,13 +58,13 @@ private const val UTM_SOUTHERN_LIMIT = -80.0
 /**
  * The UPS scale factor.
  */
-private const val UPS_SCALE_FACTOR = 0.994
+const val UPS_SCALE_FACTOR = 0.994
 
 /**
  * The UPS "false easting" value. This quantity is added to the true
  * easting to avoid using negative numbers in the coordinates.
  */
-private const val UPS_FALSE_EASTING = 2000000.0
+const val UPS_FALSE_EASTING = 2000000.0
 
 
 /**
@@ -71,7 +72,7 @@ private const val UPS_FALSE_EASTING = 2000000.0
  * northing to avoid using negative numbers in the coordinates.
  * The UPS system, unlike the UTM system, always includes the false northing.
  */
-private const val UPS_FALSE_NORTHING = 2000000.0
+const val UPS_FALSE_NORTHING = 2000000.0
 
 /*
 * NOTE: The calculations in this class use power series expansions.
@@ -100,12 +101,14 @@ private val K08: Double = K07 * K0
  * @author Rolf Rander
  */
 data class UtmCoordinate(
-    val zone: Int = 0, val letter: Char = 0.toChar(), val easting: Double = 0.0, val northing: Double = 0.0
+    val zone: Int, val letter: Char, val easting: Double, val northing: Double
 ) {
     override fun toString(): String {
         return "$zone $letter $easting $northing"
     }
 }
+
+val UtmCoordinate.isUps get() = letter in listOf('A','B', 'Y', 'Z')
 
 internal val utmRegex = "(([0-9]{1,2})\\s*([a-zA-Z])\\s+(\\d*\\.?\\d+)\\s+(\\d*\\.?\\d+))".toRegex()
 
@@ -131,7 +134,7 @@ fun String.findUTMCoordinates(): List<UtmCoordinate> {
     }.toList()
 }
 
-val String.utmAsWgs84Coordinate get() = parseUTM()?.toWgs84()
+val String.utmAsWgs84Coordinate get() = parseUTM()?.utmToPointCoordinates()
 
 /**
  * Returns true if the position indicated by the coordinates is
@@ -156,28 +159,44 @@ private fun isSouthPolar(latLong: PointCoordinates): Boolean {
  * @return the latitude zone character.
  */
 private fun getLatitudeZoneLetter(latLong: PointCoordinates): Char {
-    val latitude = latLong.latitude
-    return when {
-        latitude < -72 -> 'C'
-        latitude < -64 -> 'D'
-        latitude < -56 -> 'E'
-        latitude < -48 -> 'F'
-        latitude < -40 -> 'G'
-        latitude < -32 -> 'H'
-        latitude < -24 -> 'J'
-        latitude < -16 -> 'K'
-        latitude < -8 -> 'L'
-        latitude < 0 -> 'M'
-        latitude < 8 -> 'N'
-        latitude < 16 -> 'P'
-        latitude < 24 -> 'Q'
-        latitude < 32 -> 'R'
-        latitude < 40 -> 'S'
-        latitude < 48 -> 'T'
-        latitude < 56 -> 'U'
-        latitude < 64 -> 'V'
-        latitude < 72 -> 'W'
-        else -> 'X'
+    return if (isNorthPolar(latLong)) {
+        if (latLong.longitude < 0) {
+            return 'Y';
+        } else {
+            return 'Z';
+        }
+    } else {
+        if (isSouthPolar(latLong)) {
+            if (latLong.longitude < 0) {
+                return 'A';
+            } else {
+                return 'B';
+            }
+        } else {
+            val latitude = latLong.latitude
+            when {
+                latitude < -72 -> 'C'
+                latitude < -64 -> 'D'
+                latitude < -56 -> 'E'
+                latitude < -48 -> 'F'
+                latitude < -40 -> 'G'
+                latitude < -32 -> 'H'
+                latitude < -24 -> 'J'
+                latitude < -16 -> 'K'
+                latitude < -8 -> 'L'
+                latitude < 0 -> 'M'
+                latitude < 8 -> 'N'
+                latitude < 16 -> 'P'
+                latitude < 24 -> 'Q'
+                latitude < 32 -> 'R'
+                latitude < 40 -> 'S'
+                latitude < 48 -> 'T'
+                latitude < 56 -> 'U'
+                latitude < 64 -> 'V'
+                latitude < 72 -> 'W'
+                else -> 'X'
+            }
+        }
     }
 }
 
@@ -250,8 +269,22 @@ private fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
     return toRadians(((longitudeZone - 1) * 6 - 180 + 3).toDouble())
 }
 
+/**
+ * Converts to UTM or UPS and selects the coordinate system based on the latitude.
+ */
+fun PointCoordinates.toUtmOrUps() : UtmCoordinate {
+    return if (latitude < UTM_SOUTHERN_LIMIT || latitude > UTM_NORTHERN_LIMIT) {
+        toUpsCoordinate()
+    } else {
+        toUtmCoordinate()
+    }
+}
 
-fun PointCoordinates.toUTM(): UtmCoordinate {
+fun UtmCoordinate.toPointCoordinates() : PointCoordinates {
+    return if(isUps) upsToPointCoordinates() else utmToPointCoordinates()
+}
+
+fun PointCoordinates.toUtmCoordinate(): UtmCoordinate {
     if (latitude < UTM_SOUTHERN_LIMIT || latitude > UTM_NORTHERN_LIMIT) {
         error("$latitude is outside UTM supported latitude range of $UTM_SOUTHERN_LIMIT - $UTM_NORTHERN_LIMIT")
     }
@@ -333,7 +366,7 @@ fun PointCoordinates.toUTM(): UtmCoordinate {
 }
 
 
-fun UtmCoordinate.toWgs84(): PointCoordinates {
+fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
     val northing: Double = if (this.letter < 'N') {
         // southern hemisphere
         this.northing - UTM_FALSE_NORTHING
@@ -421,6 +454,96 @@ fun UtmCoordinate.toWgs84(): PointCoordinates {
     return doubleArrayOf(fromRadians(longitude), fromRadians(latitude))
 }
 
+fun PointCoordinates.toUpsCoordinate(): UtmCoordinate {
+    if (latitude >= UTM_SOUTHERN_LIMIT && latitude <= UTM_NORTHERN_LIMIT) {
+        error("$latitude is outside UPS supported latitude range of [-90 - $UTM_SOUTHERN_LIMIT] or [$UTM_NORTHERN_LIMIT - 90]")
+    }
+
+    val ellipsoid = ReferenceEllipsoid.WGS84
+    val latitudeZone: Char = getLatitudeZoneLetter(this)
+    val longitudeZone = getLongitudeZone(this)
+    val latitude: Double = toRadians(latitude)
+    val sign = sign(latitude)
+    val phi = abs(latitude)
+    val lambda: Double = toRadians(longitude)
+    val a: Double = ellipsoid.semimajorAxis
+    val e = ellipsoid.eccentricity
+    val e2 = ellipsoid.eccentricitySquared
+    val c0 = (2.0 * a / sqrt(1.0 - e2)
+            * ((1.0 - e) / (1.0 + e)).pow(e / 2.0))
+    val eSinPhi = e * sin(phi)
+    val tz = ((1 + eSinPhi) / (1 - eSinPhi)).pow(e / 2.0) * tan(PI / 4.0 - phi / 2.0)
+    val radius = UPS_SCALE_FACTOR * c0 * tz
+    val falseNorthing = UPS_FALSE_NORTHING
+    val northing: Double
+    northing = if (sign > 0) {
+        falseNorthing - radius * cos(lambda)
+    } else {
+        falseNorthing + radius * cos(lambda)
+    }
+    val falseEasting = UPS_FALSE_EASTING
+    val easting = falseEasting + radius * sin(lambda)
+    return UtmCoordinate(longitudeZone, latitudeZone, easting, northing)
+}
+
+fun UtmCoordinate.upsToPointCoordinates(): PointCoordinates {
+    val ellipsoid = ReferenceEllipsoid.WGS84
+    val northernHemisphere: Boolean = letter > 'N'
+    val dN: Double = (northing - UPS_FALSE_NORTHING)
+    val dE: Double = (easting - UPS_FALSE_EASTING)
+    // check for zeroes (the poles)
+    if (dE == 0.0 && dN == 0.0) {
+        return if (northernHemisphere) {
+            doubleArrayOf(0.0, 90.0)
+        } else {
+            doubleArrayOf(0.0, -90.0)
+        }
+    }
+    // compute longitude
+    val longitude: Double = if (northernHemisphere) {
+        atan2(dE, -dN)
+    } else {
+        atan2(dE, dN)
+    }
+
+    // compute latitude
+    val a: Double = ellipsoid.semimajorAxis
+    val e: Double = ellipsoid.eccentricity
+    val e2: Double = ellipsoid.eccentricitySquared
+    val e4 = e2 * e2
+    val e6 = e4 * e2
+    val e8 = e6 * e2
+    val aBar = e2 / 2.0 + 5.0 * e4 / 24.0 + e6 / 12.0 + (13 * e8
+            / 360.0)
+    val bBar = 7.0 * e4 / 48.0 + 29.0 * e6 / 240.0 + (811.0 * e8
+            / 11520.0)
+    val cBar = 7.0 * e6 / 120.0 + 81.0 * e8 / 1120.0
+    val dBar = 4279 * e8 / 161280.0
+    val c0: Double = (2.0 * a / sqrt(1.0 - e2)
+            * ((1.0 - e) / (1.0 + e)).pow(e / 2.0))
+    val r: Double = if (dE == 0.0) {
+        dN
+    } else if (dN == 0.0) {
+        dE
+    } else if (dN < dE) {
+        dE / sin(longitude)
+    } else {
+        dN / cos(longitude)
+    }
+    val radius = abs(r)
+    val chi: Double = PI / 2.0 - 2.0 * atan2(radius, UPS_SCALE_FACTOR * c0)
+    val phi = chi + aBar * sin(2.0 * chi) + (bBar
+            * sin(4.0 * chi)) + cBar * sin(6.0 * chi) + (dBar
+            * sin(8.0 * chi))
+    val latitude: Double = if (northernHemisphere) {
+        phi
+    } else {
+        -phi
+    }
+    return doubleArrayOf(fromRadians(longitude), fromRadians(latitude))
+}
+
+
 /**
  *
  *  The ReferenceEllipsoid class defines a geodetic reference ellipsoid
@@ -455,7 +578,7 @@ fun UtmCoordinate.toWgs84(): PointCoordinates {
  * @author Paul D. Anderson
  * @version 3.0, February 18, 2006
  */
-private class ReferenceEllipsoid(private val a: Double, inverseFlattening: Double) {
+class ReferenceEllipsoid(private val a: Double, inverseFlattening: Double) {
 
     /**
      * Flattening or ellipticity of this reference ellipsoid.
@@ -475,7 +598,7 @@ private class ReferenceEllipsoid(private val a: Double, inverseFlattening: Doubl
 
     val eccentricity = sqrt(eccentricitySquared)
     val semimajorAxis = a
-    val semiminorAxis = a * (1.0 - (1.0/inverseFlattening))
+    val semiminorAxis = a * (1.0 - (1.0 / inverseFlattening))
 
     /**
      * Returns the *radius of curvature in the prime vertical*
