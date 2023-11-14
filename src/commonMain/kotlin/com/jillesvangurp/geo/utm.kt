@@ -213,36 +213,46 @@ private fun getLatitudeZoneLetter(latLong: PointCoordinates): Char {
 private fun getLongitudeZone(latLong: PointCoordinates): Int {
 
     // UPS longitude zones
-    if (isNorthPolar(latLong) || isSouthPolar(latLong)) {
-        return if (latLong.longitude < 0.0) {
+    val longitude = latLong.longitude
+    return if (isNorthPolar(latLong) || isSouthPolar(latLong)) {
+         if (longitude < 0.0) {
             30
         } else {
             31
         }
+    } else {
+        val latitudeZone: Char = getLatitudeZoneLetter(latLong)
+        when {
+            latitudeZone == 'X' && longitude > 0.0 && longitude < 42.0 -> {
+            // X latitude exceptions
+                when {
+                    longitude < 9.0 -> {
+                        31
+                    }
+                    longitude < 21.0 -> {
+                        33
+                    }
+                    longitude < 33.0 -> {
+                        35
+                    }
+                    else -> {
+                        37
+                    }
+                }
+            }
+            latitudeZone == 'V' && longitude > 0.0 && longitude < 12.0 -> {
+            // V latitude exceptions
+                if (longitude < 3.0) {
+                    31
+                } else {
+                    32
+                }
+            }
+            else -> {
+                ((longitude + 180) / 6).toInt() + 1
+            }
+        }
     }
-    val latitudeZone: Char = getLatitudeZoneLetter(latLong)
-    // X latitude exceptions
-    if (latitudeZone == 'X' && latLong.longitude > 0.0 && latLong.longitude < 42.0) {
-        if (latLong.longitude < 9.0) {
-            return 31
-        }
-        if (latLong.longitude < 21.0) {
-            return 33
-        }
-        return if (latLong.longitude < 33.0) {
-            35
-        } else {
-            37
-        }
-    }
-    // V latitude exceptions
-    return if (latitudeZone == 'V' && latLong.longitude > 0.0 && latLong.longitude < 12.0) {
-        if (latLong.longitude < 3.0) {
-            31
-        } else {
-            32
-        }
-    } else ((latLong.longitude + 180) / 6).toInt() + 1
 }
 
 /**
@@ -258,15 +268,20 @@ private fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
         return 0.0
     }
     // X latitude zone exceptions
-    if (latitudeZone == 'X' && longitudeZone > 31 && longitudeZone <= 37) {
-        return toRadians((longitudeZone - 1) * 6 - 180 + 4.5)
+    // Svalbard exceptions for 'X' latitude zone
+    if (latitudeZone == 'X') {
+        when (longitudeZone) {
+            31 -> return toRadians(9.0)
+            33 -> return toRadians(15.0)
+            35 -> return toRadians(27.0)
+            37 -> return toRadians(33.0)
+        }
     }
     // V latitude zone exceptions
-    if (longitudeZone == 'V'.code) {
-        if (latitudeZone.code == 31) {
-            return 1.5
-        } else if (latitudeZone.code == 32) {
-            return 7.5
+    if (latitudeZone == 'V') {
+        when (longitudeZone) {
+            31 -> return toRadians(3.0)
+            32 -> return toRadians(9.0)
         }
     }
     return toRadians(((longitudeZone - 1) * 6 - 180 + 3).toDouble())

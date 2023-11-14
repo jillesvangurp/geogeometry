@@ -31,10 +31,6 @@ val testCasses = listOf(
         name = "Svalbard Museum",
         point = doubleArrayOf(15.652313, 78.222378),
         utmString = "33X 514863.281 8683270.114",
-        // FIXME either our math is wrong or the website is wrong.
-        // may be related to svalbard exceptions: https://gis.stackexchange.com/questions/2561/what-was-the-rationale-for-the-non-standard-utm-zones-near-norway
-        include = false,
-        notes = "off by 34 km for the easting and 57 for the northing relative to https://coordinates-converter.com. At this point not clear which is right."
     ),
     TestCase(
         "Oslo, City Hall",
@@ -281,6 +277,7 @@ class UTMTest {
                         }
                     }
                 } else {
+                    // reserve for test cases that aren't working
                     println("skipping ${testCase.name} because ${testCase.notes}")
                 }
             }
