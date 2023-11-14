@@ -275,6 +275,8 @@ class UTMTest {
                                 (utmCalculated.northing - testCase.utm.northing).absoluteValue shouldBeLessThan 10.0
                             }
                         }
+
+                        println("${testCase.name} ${testCase.point.latitude},${testCase.point.longitude} -> ${utmCalculated.convertUTMToMGRS()}")
                     }
                 } else {
                     // reserve for test cases that aren't working

@@ -19,6 +19,12 @@ data class MgrsCoordinate(
     }
 }
 
+/**
+ * Half working implementation based of chat gpt. Don't use this.
+ *
+ * TODO find better implementation
+ *
+ */
 fun UtmCoordinate.convertUTMToMGRS(): MgrsCoordinate {
     val eastingLetter = getEastingLetter(longitudeZone, easting.toInt())
     val northingLetter = getNorthingLetter(northing.toInt(), latitudeZoneLetter)
@@ -42,12 +48,9 @@ private fun getEastingLetter(zoneNumber: Int, easting: Int): Char {
     return eastingLetters[index]
 }
 
-//private fun getNorthingLetter(zoneNumber: Int, northing: Int): Char {
-//    val gridNorthing = (northing / 100000)
-//    val index = (gridNorthing - 1 + (zoneNumber - 1) * 2) % northingLetters.length
-//    return northingLetters[index]
-//}
-
+/**
+ * This is wrong.
+ */
 private fun getNorthingLetter(northing: Int, latitudeZoneLetter: Char): Char {
     // Northing value should be adjusted for the false northing if in the southern hemisphere.
     val adjustedNorthing = if (latitudeZoneLetter < 'N') northing + 10000000 else northing
@@ -57,6 +60,11 @@ private fun getNorthingLetter(northing: Int, latitudeZoneLetter: Char): Char {
 }
 
 
+/**
+ * Half working implementation based of chat gpt. Don't use this.
+ *
+ * TODO find better implementation
+ */
 fun convertMGRSToUTM(
     zoneNumber: Int,
     zoneLetter: Char,
