@@ -10,8 +10,48 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.test.Test
+
+data class TestCase(
+    val name: String,
+    val point: PointCoordinates,
+    val utmString: String,
+    val notes: String = "",
+    val include: Boolean = true,
+)
+
+val TestCase.utm get() = utmString.parseUTM() ?: error("$utmString does not parse as UTM")
+
+val testCasses = listOf(
+    // I used https://coordinates-converter.com to verify all of these
+    // convenient but not clear what implementation they use or how that has been validated
+    TestCase(
+        name = "Svalbard Museum",
+        point = doubleArrayOf(15.652313, 78.222378),
+        utmString = "33X 514863.281 8683270.114",
+        // FIXME either our math is wrong or the website is wrong.
+        // may be related to svalbard exceptions: https://gis.stackexchange.com/questions/2561/what-was-the-rationale-for-the-non-standard-utm-zones-near-norway
+        include = false,
+        notes = "off by 34 km for the easting and 57 for the northing relative to https://coordinates-converter.com. At this point not clear which is right."
+    ),
+    TestCase(
+        "Oslo, City Hall",
+        doubleArrayOf(10.733866394995035, 59.912415229244004),
+        "32V 596959.207 6642926.686"
+    ),
+    TestCase(
+        name = "Brandenburgertor",
+        point = brandenBurgerGate,
+        utmString = "33U 389880.937 5819700.412"
+    ),
+    TestCase(
+        name = "North Cape",
+        doubleArrayOf(25.783432, 71.169817),
+        "35W 456177.242 7896776.959"
+    )
+)
 
 class UTMTest {
 
@@ -110,12 +150,15 @@ class UTMTest {
 
     @Test
     fun testLotsOfUtmCoordinates() {
+        // important test that verifies that we can convert our own utm coordinates back consistently
+        // it might still be wrong but at least we're being consistent :-)
         fun Random.supportedUtmCoordinate(): DoubleArray {
             return doubleArrayOf(
                 nextDouble(-180.0, 180.0).roundDecimals(4),
                 nextDouble(-80.0, 84.0).roundDecimals(4)
             )
         }
+
         val letters = mutableSetOf<Char>()
 
         assertSoftly {
@@ -134,11 +177,13 @@ class UTMTest {
                 }
             }
         }
-        println(letters )
+        println(letters)
     }
 
     @Test
     fun testLotsOfUpsCoordinates() {
+        // important test that verifies that we can convert our own utm coordinates back consistently
+        // it might still be wrong but at least we're being consistent :-)
         fun Random.supportedUpsCoordinate(): DoubleArray {
             return doubleArrayOf(
                 nextDouble(-180.0, 180.0).roundDecimals(4),
@@ -166,11 +211,12 @@ class UTMTest {
                 }
             }
         }
-        println(letters )
+        println(letters)
     }
 
     @Test
     fun testLotsOfCoordinates() {
+        // double check we are consistent across the utm and ups coordinate systems
         fun Random.supportedUpsCoordinate(): DoubleArray {
             return doubleArrayOf(
                 nextDouble(-180.0, 180.0).roundDecimals(4),
@@ -210,6 +256,32 @@ class UTMTest {
                     shouldThrowAny {
                         point.toUtmCoordinate()
                     }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun checkSvalbardAndNorwayExceptions() {
+        assertSoftly {
+            testCasses.forEach { testCase ->
+                if(testCase.include) {
+                    withClue(testCase.name) {
+                        val utmCalculated = testCase.point.toUtmOrUps()
+                        utmCalculated.longitudeZone shouldBe testCase.utm.longitudeZone
+                        utmCalculated.latitudeZoneLetter shouldBe testCase.utm.latitudeZoneLetter
+                        // allow for 10m wiggle room
+                        assertSoftly {
+                            withClue("easting") {
+                                (utmCalculated.easting - testCase.utm.easting).absoluteValue shouldBeLessThan 10.0
+                            }
+                            withClue("northing") {
+                                (utmCalculated.northing - testCase.utm.northing).absoluteValue shouldBeLessThan 10.0
+                            }
+                        }
+                    }
+                } else {
+                    println("skipping ${testCase.name} because ${testCase.notes}")
                 }
             }
         }
