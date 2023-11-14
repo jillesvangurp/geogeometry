@@ -268,7 +268,7 @@ private fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
         return 0.0
     }
     // X latitude zone exceptions
-    // Svalbard exceptions for 'X' latitude zone
+    // Svalbard exceptions for 'X' latitude zone (Svalbard)
     if (latitudeZone == 'X') {
         when (longitudeZone) {
             31 -> return toRadians(9.0)
@@ -277,7 +277,7 @@ private fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
             37 -> return toRadians(33.0)
         }
     }
-    // V latitude zone exceptions
+    // V latitude zone exceptions (Norway)
     if (latitudeZone == 'V') {
         when (longitudeZone) {
             31 -> return toRadians(3.0)
@@ -472,6 +472,17 @@ fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
     return doubleArrayOf(fromRadians(longitude), fromRadians(latitude))
 }
 
+/**
+ * Converts to UPS format.
+ *
+ * IMPORTANT This code was adapted from the same source that I got the UTM conversion from.
+ *
+ * However:
+ *
+ * - the original did not include usable tests
+ * - I've not been able to find an authoritative source of any example UPS coordinates to test with
+ * - I've found and fixed several bugs in the UTM implementation where I did have access to those
+ */
 fun PointCoordinates.toUpsCoordinate(): UtmCoordinate {
     if (latitude >= UTM_SOUTHERN_LIMIT && latitude <= UTM_NORTHERN_LIMIT) {
         error("$latitude is outside UPS supported latitude range of [-90 - $UTM_SOUTHERN_LIMIT] or [$UTM_NORTHERN_LIMIT - 90]. You should use UTM")
