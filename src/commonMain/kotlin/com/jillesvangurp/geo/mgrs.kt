@@ -9,34 +9,47 @@ import kotlin.math.roundToInt
 data class MgrsCoordinate(
     val longitudeZone: Int,
     val latitudeZoneLetter: Char,
-    val eastingLetter: Char,
-    val northingLetter: Char,
+    val colLetter: Char,
+    val rowLetter: Char,
     val easting: Int,
     val northing: Int
 ) {
     override fun toString(): String {
-        return "$longitudeZone$latitudeZoneLetter $eastingLetter$northingLetter $easting $northing"
+        return "$longitudeZone$latitudeZoneLetter $colLetter$rowLetter $easting $northing"
     }
 }
 
 fun Int.setForZone(): Int {
-    return when(this%6) {
-        0 ->  6
-        1 ->  1
-        2 ->  2
-        3 ->  3
-        4 ->  4
-        5 ->  5
+    return when (this % 6) {
+        0 -> 6
+        1 -> 1
+        2 -> 2
+        3 -> 3
+        4 -> 4
+        5 -> 5
         else -> error("should not happen")
     }
 }
 
-private const val BLOCK_SIZE=100000
+private const val BLOCK_SIZE = 100000
+
+
+private fun Int.colLetters() = when (this) {
+    1 -> "ABCDEFGH"
+    2 -> "JKLMNPQR"
+    3 -> "STUVWXYZ"
+    4 -> "ABCDEFGH"
+    5 -> "JKLMNPQR"
+    6 -> "STUVWXYZ"
+    else -> error("should not happen")
+}
+
+private fun Int.rowLetters() = if (this % 2 == 0) "FGHJKLMNPQRSTUVABCDE" else "ABCDEFGHJKLMNPQRSTUV"
 
 fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
-    var row=1
+    var row = 1
     var n = northing.roundToInt()
-    while(n >= BLOCK_SIZE) {
+    while (n >= BLOCK_SIZE) {
         n -= BLOCK_SIZE
         row++
     }
@@ -44,7 +57,7 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
 
     var col = 0
     var e = easting.roundToInt()
-    while(e>= BLOCK_SIZE) {
+    while (e >= BLOCK_SIZE) {
         e -= BLOCK_SIZE
         col++
     }
@@ -52,25 +65,13 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
 
     val set = longitudeZone.setForZone()
 
-    val l1Set = when(set) {
-        1->"ABCDEFGH"
-        2->"JKLMNPQR"
-        3->"STUVWXYZ"
-        4->"ABCDEFGH"
-        5->"JKLMNPQR"
-        6->"STUVWXYZ"
-        else -> error("should not happen")
-
-    }
-    val l2Set = if(set%2==0) "FGHJKLMNPQRSTUVABCDE" else "ABCDEFGHJKLMNPQRSTUV"
-
-    val actualCol = if(col==0) 7 else col-1
-    val actualRow = if(row==0) 19 else row-1
-    return l1Set[actualCol] to l2Set[actualRow]
+    val actualCol = if (col == 0) 7 else col - 1
+    val actualRow = if (row == 0) 19 else row - 1
+    return set.colLetters()[actualCol] to set.rowLetters()[actualRow]
 }
 
 fun UtmCoordinate.convertUTMToMGRS(): MgrsCoordinate {
-    val (l1,l2) = lookupGridLetters()
+    val (l1, l2) = lookupGridLetters()
 
     val mgrsEasting = floor(easting % BLOCK_SIZE).toInt()
     val mgrsNorthing = floor(northing % BLOCK_SIZE).toInt()
@@ -84,43 +85,55 @@ fun UtmCoordinate.convertUTMToMGRS(): MgrsCoordinate {
     )
 }
 
-/**
- * Half working implementation based of chat gpt. Don't use this.
- *
- * TODO find better implementation
- */
-//fun convertMGRSToUTM(
-//    zoneNumber: Int,
-//    zoneLetter: Char,
-//    gridSquare: String,
-//    easting: Int,
-//    northing: Int
-//): UtmCoordinate {
-//    val eastingLetter = gridSquare[0]
-//    val northingLetter = gridSquare[1]
-//
-//    val eastingOffset = getEastingOffset(eastingLetter, zoneNumber)
-//    val northingOffset = getNorthingOffset(northingLetter, zoneNumber, zoneLetter)
-//
-//    val fullEasting = eastingOffset * 100000 + easting
-//    val fullNorthing = northingOffset * 100000 + northing
-//
-//    return UtmCoordinate(zoneNumber, zoneLetter, fullEasting.toDouble(), fullNorthing.toDouble())
-//}
+fun MgrsCoordinate.toUtm(): UtmCoordinate {
+    val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", "GQY", "HRZ")
+    val zoneBase = listOf(
+        1.1,
+        2.0,
+        2.8,
+        3.7,
+        4.6,
+        5.5,
+        6.4,
+        7.3,
+        8.2,
+        9.1,
+        0.0,
+        0.8,
+        1.7,
+        2.6,
+        3.5,
+        4.4,
+        5.3,
+        6.2,
+        7.0,
+        7.9
+    ).map { it * 1000000 }
 
-//private fun getEastingOffset(eastingLetter: Char, zoneNumber: Int): Int {
-//    val eastingIndex = eastingLetters.indexOf(eastingLetter)
-//    return (eastingIndex + 1 - (zoneNumber - 1) * 8 + eastingLetters.length) % eastingLetters.length
-//}
-//
-//private fun getNorthingOffset(northingLetter: Char, zoneNumber: Int, zoneLetter: Char): Int {
-//    var northingIndex = northingLetters.indexOf(northingLetter)
-//    northingIndex = (northingIndex + 1 - (zoneNumber - 1) * 2 + northingLetters.length) % northingLetters.length
-//
-//    // Adjust for the latitude band
-//    val northingBase = "CDEFGHJKLMNPQRSTUVWX".indexOf(zoneLetter.uppercaseChar()) * 8
-//    return (northingBase + northingIndex) % northingLetters.length
-//}
+    var utmEasting = -1
+    for ((i, letters) in eastingArray.withIndex()) {
+        if (colLetter in letters) {
+            utmEasting = i * BLOCK_SIZE + easting
+            break
+        }
+    }
 
+    var utmNorthing = 0.0
+    if (rowLetter != ' ') {
+        utmNorthing = if (longitudeZone % 2 == 0) {
+            ("FGHJKLMNPQRSTUVABCDE".indexOf(rowLetter) * 100000).toDouble()
+        } else {
+            ("ABCDEFGHJKLMNPQRSTUV".indexOf(rowLetter) * 100000).toDouble()
+        }
 
+        while (utmNorthing < zoneBase["CDEFGHJKLMNPQRSTUVWX".indexOf(rowLetter)-1]) {
+            utmNorthing += 2000000
+        }
+        utmNorthing += northing
 
+    } else {
+        utmNorthing = zoneBase["CDEFGHJKLMNPQRSTUVWX".indexOf(rowLetter)] + 499600
+    }
+
+    return UtmCoordinate(longitudeZone, latitudeZoneLetter, utmEasting.toDouble(), utmNorthing)
+}
