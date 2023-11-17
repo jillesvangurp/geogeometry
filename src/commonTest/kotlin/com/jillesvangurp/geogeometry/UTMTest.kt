@@ -154,7 +154,7 @@ class UTMTest {
                 nextDouble(-80.0, 84.0).roundDecimals(4)
             )
         }
-        
+
         assertSoftly {
             repeat(100000) {
                 Random.supportedUtmCoordinate().let { p ->

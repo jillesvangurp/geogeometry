@@ -26,49 +26,58 @@ repositories {
 and then add the dependency :
 
 ```kotlin
-implementation("com.github.jillesvangurp:geogeometry:3.3.2")
+implementation("com.github.jillesvangurp:geogeometry:<VERSION>")
 ```
 
 You can find the latest version in the [releases section](https://github.com/jillesvangurp/geogeometry/releases).
 
 # Features
 
-- simple API, most functions work standalone and use simple input types
-
-- GeoGeometry class with lots of functions that allow you to:
-  - **Calculate distance** between two coordinates using the **Haversine** or **Vicenty** algorithm
-  - Calculate perpendicular distance of a point to a line. lineString, and polygon
-  - Calculate the **area** of a polygon
-  - **Simplify polygons** using the **Douglas Peucker** - algorithm. Sometimes polygons can be very detailed, which makes handling them very CPU/memory intensive. E.g. some polygons for New Zealand are more than 200MB.
-  - check bounding box containment for a point
-  - check **polygon containment** for a point
-  - get the center for a polygon
-  - get bounding box for a polygon
-  - convert a **circle to a polygon**
-  - create a **polygon from a point cloud**. An algorithm for a convex hull is included and another experimental one for a concave hull.
-  - **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
-  - **rotate** a point around another point
-  - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)  and [UPS coordinates](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system).
-  - Conversion to and from MGRS / USNG format
-
-- GeoHashUtils class with methods that allow you to: 
-  - **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
-  - find out the **boundingbox** of a geohash   
-  - check **containment** of a point in a geohash (must have the hash as a prefix of its own hash).
-  - find out **neighboring geohashes** east, west, south, or north of a geohash.
-  - get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
-  - **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
-
-- geojson classes to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use **kotlinx.serialization** for parsing and serializing this so this works across platforms as well!
-  - sealed class hierarchy to represent the various geometries
-  - uses type aliases to distinguish the different coordinate arrays
-  - translate, scaleX, scaleY, and rotate to transform any Geojson Geometry
-  - calculate a centroid for a shape
-
+- Simple API, most functions work standalone and use simple input types
 - Kotlin Multiplatform
-  - Currently there are two build targets for js and jvm. I may add native targets later; this should just work but I have no easy way to test this.
+  - Currently there are several build targets. More may be added later. I could use some help with mobile targets.
   - No runtime dependencies other than the kotlin stdlib
-  - Adding native targets should 'just work' but has not been tested.
+  - Adding more targets should 'just work' but has not been tested.
+
+## GeoGeometry class
+GeoGeometry class with lots of functions that allow you to:
+- **Calculate distance** between two coordinates using the **Haversine** or **Vicenty** algorithm
+- Calculate perpendicular distance of a point to a line. lineString, and polygon
+- Calculate the **area** of a polygon
+- **Simplify polygons** using the **Douglas Peucker** - algorithm. Sometimes polygons can be very detailed, which makes handling them very CPU/memory intensive. E.g. some polygons for New Zealand are more than 200MB.
+- check bounding box containment for a point
+- check **polygon containment** for a point
+- get the center for a polygon
+- get bounding box for a polygon
+- convert a **circle to a polygon**
+- create a **polygon from a point cloud**. An algorithm for a convex hull is included and another experimental one for a concave hull.
+- **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
+- **rotate** a point around another point
+
+## GeoHashUtils
+
+GeoHashUtils class with methods that allow you to:
+
+- **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.
+- find out the **boundingbox** of a geohash   
+- check **containment** of a point in a geohash (must have the hash as a prefix of its own hash).
+- find out **neighboring geohashes** east, west, south, or north of a geohash.
+- get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
+- **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
+
+## GeoJson support
+
+Geojson classes are provided that allow you to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use **kotlinx.serialization** for parsing and serializing this so this works across platforms as well!
+  
+- sealed class hierarchy to represent the various geometries
+- uses type aliases to distinguish the different coordinate arrays
+- translate, scaleX, scaleY, and rotate to transform any Geojson Geometry
+- calculate a centroid for a shape
+
+## Coordinate conversions
+  - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)  and [UPS coordinates](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system).
+  - Conversion to and from [MGRS](https://en.wikipedia.org/wiki/Military_Grid_Reference_System) / [USNG](https://en.wikipedia.org/wiki/United_States_National_Grid) format
+
 
 ## About Geo Hashes
 
