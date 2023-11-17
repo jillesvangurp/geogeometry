@@ -3,9 +3,21 @@ package com.jillesvangurp.geo
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
-//private val eastingLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ" // Excludes I and O
-//private val northingLetters = "ABCDEFGHJKLMNPQRSTUV"    // Excludes I and O
+/**
+ * This mgrs code is the result of me doing a bit of dead code archeology on various
+ * Java code repositories that appear abandoned.
+ *
+ * All of them had issues, and Java is just hard to read. Objectively, this looks a lot cleaner.
+ *
+ */
 
+enum class MgrsPrecision(val divisor: Int) {
+    TEN_KM(10000),
+    ONE_KM(1000),
+    HUNDRED_M(100),
+    TEN_M(10),
+    ONE_M(1)
+}
 data class MgrsCoordinate(
     val longitudeZone: Int,
     val latitudeZoneLetter: Char,
@@ -15,7 +27,39 @@ data class MgrsCoordinate(
     val northing: Int
 ) {
     override fun toString(): String {
-        return "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter $easting $northing"
+        return usng(MgrsPrecision.ONE_M)
+    }
+
+    /**
+     * USNG is the human readable version of mgrs which has no spaces.
+     */
+    fun usng(precision: MgrsPrecision=MgrsPrecision.ONE_M) =
+        "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter ${easting / precision.divisor} ${northing / precision.divisor}"
+
+
+    fun mgrs(precision: MgrsPrecision=MgrsPrecision.ONE_M) =
+        "$longitudeZone$latitudeZoneLetter$firstLetter$secondLetter${easting/precision.divisor}${northing/precision.divisor}"
+
+}
+
+private val mgrsRegex = "([0-9]+)\\s*([A-Z])\\s*([A-Z])\\s*([A-Z])\\s*([0-9]{1,5}\\s*[0-9]{1,5})".toRegex()
+fun String.parseMgrs(): MgrsCoordinate? {
+    return mgrsRegex.find(this)?.let { match ->
+        val groups = match.groups
+        val longitudeZone = groups[1]!!.value.toInt()
+        val latitudeZoneLetter = groups[2]!!.value[0]
+        val firstLetter = groups[3]!!.value[0]
+        val secondLetter = groups[4]!!.value[0]
+        val numbers = groups[5]!!.value.replace(" ","")
+        if (numbers.length % 2 != 0) {
+            null
+        } else {
+            val mid = numbers.length / 2
+            val precision = MgrsPrecision.entries[mid - 1]
+            val easting = numbers.substring(0, mid).toInt() * precision.divisor
+            val northing = numbers.substring(mid).toInt() * precision.divisor
+            MgrsCoordinate(longitudeZone, latitudeZoneLetter, firstLetter, secondLetter, easting, northing)
+        }
     }
 }
 
@@ -94,6 +138,7 @@ data class LatitudeBandConstants(
     val northingOffset: Double
 )
 
+// These is a useful set of constants I extracted from https://github.com/andreynovikov/Geo-Coordinate-Conversion-Java/blob/master/src/main/java/gov/nasa/worldwind/geom/coords/MGRSCoord.java
 private val latitudeBandConstants = listOf(
     LatitudeBandConstants('C', 1100000.0, -72.0, -80.5, 0.0),
     LatitudeBandConstants('D', 2000000.0, -64.0, -72.0, 2000000.0),
