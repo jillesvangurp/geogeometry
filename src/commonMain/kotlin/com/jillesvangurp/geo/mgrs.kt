@@ -97,8 +97,9 @@ private fun Int.colLetters() = when (this) {
 
 private fun Int.rowLetters() = if (this % 2 == 0) "FGHJKLMNPQRSTUVABCDE" else "ABCDEFGHJKLMNPQRSTUV"
 
-fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
+private fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     var row = 1
+    // always floor in mgrs, or you might end up in the wrong grid cell
     var n = floor(northing).toInt()
     while (n >= GRID_SIZE_M) {
         n -= GRID_SIZE_M
@@ -107,6 +108,7 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     row %= 20
 
     var col = 0
+    // always floor in mgrs, or you might end up in the wrong grid cell
     var e = floor(easting).toInt()
     while (e >= GRID_SIZE_M) {
         e -= GRID_SIZE_M
@@ -132,11 +134,11 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
  * various precision.
  *
  * Note, this does not support coordinates in the UPS coordinate system currently.
- *
  */
 fun UtmCoordinate.toMgrs(): MgrsCoordinate {
     val (l1, l2) = lookupGridLetters()
 
+    // always floor in mgrs, or you might end up in the wrong grid cell
     val mgrsEasting = floor(easting % GRID_SIZE_M).toInt()
     val mgrsNorthing = floor(northing % GRID_SIZE_M).toInt()
 //    println("cols ${northing.toInt() / BLOCK_SIZE} $northing ${(northing / 1000).toInt()}")
