@@ -25,7 +25,7 @@ class MGRSTest {
         val utm = p.toUtmCoordinate()
         utm.toPointCoordinates().distanceTo(p) shouldBeLessThan 2.0
 
-        utm.convertUTMToMGRS().let { mgrs ->
+        utm.toMgrs().let { mgrs ->
             val toUtm = mgrs.toUtm()
             println(mgrs)
             withClue("$utm -> $mgrs -> $toUtm") {

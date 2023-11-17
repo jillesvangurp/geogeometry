@@ -109,12 +109,20 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
 
     val set = longitudeZone.setForZone()
 
-    val actualCol = if (col == 0) 7 else col - 1
-    val actualRow = if (row == 0) 19 else row - 1
+    val actualCol = if (col == 0) {
+        7
+    } else col - 1
+    val actualRow = if (row == 0) {
+        19
+    } else row - 1
     return set.colLetters()[actualCol] to set.rowLetters()[actualRow]
 }
 
-fun UtmCoordinate.convertUTMToMGRS(): MgrsCoordinate {
+/**
+ * This code mostly works but has some edge cases that somehow fail, which means that you
+ * should not blindly trust this code.
+ */
+fun UtmCoordinate.toMgrs(): MgrsCoordinate {
     val (l1, l2) = lookupGridLetters()
 
     val mgrsEasting = floor(easting % BLOCK_SIZE).toInt()

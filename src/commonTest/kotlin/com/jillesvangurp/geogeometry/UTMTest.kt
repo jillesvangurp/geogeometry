@@ -158,22 +158,26 @@ class UTMTest {
         val letters = mutableSetOf<Char>()
 
         assertSoftly {
-            repeat(100000) {
+            repeat(1000000) {
                 Random.supportedUtmCoordinate().let { p ->
                     val toUTM = p.toUtmCoordinate()
                     letters.add(toUTM.latitudeZoneLetter)
+
                     runCatching {
                         val convertedBack = toUTM.utmToPointCoordinates()
                         withClue("${p.stringify()} -> ${convertedBack.stringify()} - $toUTM") {
-                            convertedBack.let { out ->
-                                out.distanceTo(p) shouldBeLessThan 1.0
-                            }
+                            convertedBack.distanceTo(p) shouldBeLessThan 1.0
                         }
                     }
+
+                    // conversion to mgrs and back to utm should not deviate
+                    // FIXME small amount of coordinates that fail this test
+//                    withClue(toUTM) {
+//                        toUTM.toMgrs().toUtm().toPointCoordinates().distanceTo(p) shouldBeLessThan 2.0
+//                    }
                 }
             }
         }
-        println(letters)
     }
 
     @Test
@@ -276,7 +280,7 @@ class UTMTest {
                             }
                         }
 
-                        println("${testCase.name} ${testCase.point.latitude},${testCase.point.longitude} -> ${utmCalculated.convertUTMToMGRS()}")
+                        println("${testCase.name} ${testCase.point.latitude},${testCase.point.longitude} -> ${utmCalculated.toMgrs()}")
                     }
                 } else {
                     // reserve for test cases that aren't working
