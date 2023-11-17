@@ -49,6 +49,7 @@ You can find the latest version in the [releases section](https://github.com/jil
   - **translate a wgs84 coordinate** by x & y meters along the latitude and longitude
   - **rotate** a point around another point
   - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)  and [UPS coordinates](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system).
+  - Conversion to and from MGRS / USNG format
 
 - GeoHashUtils class with methods that allow you to: 
   - **encode and decode** geo hashes; this functionality has been adapted from the original Apache Lucene implementation of this class.

@@ -1,14 +1,22 @@
 package com.jillesvangurp.geo
 
+import com.jillesvangurp.geojson.PointCoordinates
 import kotlin.math.floor
-import kotlin.math.roundToInt
 
 /**
  * This mgrs code is the result of me doing a bit of dead code archeology on various
  * Java code repositories that appear abandoned.
  *
- * All of them had issues, and Java is just hard to read. Objectively, this looks a lot cleaner.
+ * All of them had issues, and Java is just hard to read for this stuff (verbose, many levels of indirection, etc.).
  *
+ * This implementation does not handle UPS currently but should work for UTM coordinates in the supported latitudes for that
+ *
+ * With some tweaks and fixes, I think I've nailed most of them. But it's always possible that I
+ * missed an edge case.
+ *
+ * The simple test here is that any coordinate in the UTM range should convert from and back
+ * to UTM without ending up more than a few meters away. The UTMTest contains such a test that also tests
+ * the conversion to and from mgrs.
  */
 
 enum class MgrsPrecision(val divisor: Int) {
@@ -42,28 +50,7 @@ data class MgrsCoordinate(
 
 }
 
-private val mgrsRegex = "([0-9]+)\\s*([A-Z])\\s*([A-Z])\\s*([A-Z])\\s*([0-9]{1,5}\\s*[0-9]{1,5})".toRegex()
-fun String.parseMgrs(): MgrsCoordinate? {
-    return mgrsRegex.find(this)?.let { match ->
-        val groups = match.groups
-        val longitudeZone = groups[1]!!.value.toInt()
-        val latitudeZoneLetter = groups[2]!!.value[0]
-        val firstLetter = groups[3]!!.value[0]
-        val secondLetter = groups[4]!!.value[0]
-        val numbers = groups[5]!!.value.replace(" ","")
-        if (numbers.length % 2 != 0) {
-            null
-        } else {
-            val mid = numbers.length / 2
-            val precision = MgrsPrecision.entries[mid - 1]
-            val easting = numbers.substring(0, mid).toInt() * precision.divisor
-            val northing = numbers.substring(mid).toInt() * precision.divisor
-            MgrsCoordinate(longitudeZone, latitudeZoneLetter, firstLetter, secondLetter, easting, northing)
-        }
-    }
-}
-
-fun Int.setForZone(): Int {
+private fun Int.setForZone(): Int {
     return when (this % 6) {
         0 -> 6
         1 -> 1
@@ -75,9 +62,8 @@ fun Int.setForZone(): Int {
     }
 }
 
-private const val BLOCK_SIZE = 100000
-
-
+private const val GRID_SIZE_M = 100_000
+private const val TWO_MILLION = 2_000_000
 private fun Int.colLetters() = when (this) {
     1 -> "ABCDEFGH"
     2 -> "JKLMNPQR"
@@ -92,17 +78,18 @@ private fun Int.rowLetters() = if (this % 2 == 0) "FGHJKLMNPQRSTUVABCDE" else "A
 
 fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     var row = 1
-    var n = northing.roundToInt()
-    while (n >= BLOCK_SIZE) {
-        n -= BLOCK_SIZE
+//    var n = northing.roundToInt()
+    var n = floor(northing).toInt()
+    while (n >= GRID_SIZE_M) {
+        n -= GRID_SIZE_M
         row++
     }
     row %= 20
 
     var col = 0
-    var e = easting.roundToInt()
-    while (e >= BLOCK_SIZE) {
-        e -= BLOCK_SIZE
+    var e = floor(easting).toInt()
+    while (e >= GRID_SIZE_M) {
+        e -= GRID_SIZE_M
         col++
     }
     col %= 8
@@ -125,8 +112,8 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
 fun UtmCoordinate.toMgrs(): MgrsCoordinate {
     val (l1, l2) = lookupGridLetters()
 
-    val mgrsEasting = floor(easting % BLOCK_SIZE).toInt()
-    val mgrsNorthing = floor(northing % BLOCK_SIZE).toInt()
+    val mgrsEasting = floor(easting % GRID_SIZE_M).toInt()
+    val mgrsNorthing = floor(northing % GRID_SIZE_M).toInt()
 //    println("cols ${northing.toInt() / BLOCK_SIZE} $northing ${(northing / 1000).toInt()}")
     return MgrsCoordinate(
         longitudeZone,
@@ -138,7 +125,7 @@ fun UtmCoordinate.toMgrs(): MgrsCoordinate {
     )
 }
 
-data class LatitudeBandConstants(
+private data class LatitudeBandConstants(
     val firstLetter: Char, // col
     val minNorthing: Double,
     val northLat: Double,
@@ -170,9 +157,7 @@ private val latitudeBandConstants = listOf(
     LatitudeBandConstants('X', 7900000.0, 84.5, 72.0, 6000000.0)
 ).associateBy { it.firstLetter }
 
-val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", "GQY", "HRZ")
-
-private const val TWO_MILLION = 2000000
+private val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", "GQY", "HRZ")
 
 fun MgrsCoordinate.toUtm(): UtmCoordinate {
 
@@ -181,7 +166,7 @@ fun MgrsCoordinate.toUtm(): UtmCoordinate {
     val utmEasting = eastingArray.withIndex().first { (i,letters) ->
         firstLetter in letters
     }.let { (i, letters) ->
-        i * BLOCK_SIZE + easting
+        (i * GRID_SIZE_M + easting).toDouble()
     }
 
     val setNumber = longitudeZone.setForZone()
@@ -193,7 +178,33 @@ fun MgrsCoordinate.toUtm(): UtmCoordinate {
     while(utmNorthing < bandConstants.minNorthing) {
         utmNorthing += TWO_MILLION
     }
+
     utmNorthing += northing
 
-    return UtmCoordinate(longitudeZone, latitudeZoneLetter, utmEasting.toDouble(), utmNorthing)
+    return UtmCoordinate(longitudeZone, latitudeZoneLetter, utmEasting, utmNorthing)
 }
+
+fun PointCoordinates.toMgrs() = toUtmCoordinate().toMgrs()
+fun MgrsCoordinate.toPointCoordinate() = toUtm().toPointCoordinates()
+
+private val mgrsRegex = "([0-9]+)\\s*([A-Z])\\s*([A-Z])\\s*([A-Z])\\s*([0-9]{1,5}\\s*[0-9]{1,5})".toRegex()
+fun String.parseMgrs(): MgrsCoordinate? {
+    return mgrsRegex.find(this)?.let { match ->
+        val groups = match.groups
+        val longitudeZone = groups[1]!!.value.toInt()
+        val latitudeZoneLetter = groups[2]!!.value[0]
+        val firstLetter = groups[3]!!.value[0]
+        val secondLetter = groups[4]!!.value[0]
+        val numbers = groups[5]!!.value.replace(" ","")
+        if (numbers.length % 2 != 0) {
+            null
+        } else {
+            val mid = numbers.length / 2
+            val precision = MgrsPrecision.entries[mid - 1]
+            val easting = numbers.substring(0, mid).toInt() * precision.divisor
+            val northing = numbers.substring(mid).toInt() * precision.divisor
+            MgrsCoordinate(longitudeZone, latitudeZoneLetter, firstLetter, secondLetter, easting, northing)
+        }
+    }
+}
+
