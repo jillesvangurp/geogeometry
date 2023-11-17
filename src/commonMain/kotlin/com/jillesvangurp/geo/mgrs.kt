@@ -9,13 +9,13 @@ import kotlin.math.roundToInt
 data class MgrsCoordinate(
     val longitudeZone: Int,
     val latitudeZoneLetter: Char,
-    val colLetter: Char,
-    val rowLetter: Char,
+    val firstLetter: Char, // aka col
+    val secondLetter: Char, //aka row
     val easting: Int,
     val northing: Int
 ) {
     override fun toString(): String {
-        return "$longitudeZone$latitudeZoneLetter $colLetter$rowLetter $easting $northing"
+        return "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter $easting $northing"
     }
 }
 
@@ -75,6 +75,7 @@ fun UtmCoordinate.convertUTMToMGRS(): MgrsCoordinate {
 
     val mgrsEasting = floor(easting % BLOCK_SIZE).toInt()
     val mgrsNorthing = floor(northing % BLOCK_SIZE).toInt()
+//    println("cols ${northing.toInt() / BLOCK_SIZE} $northing ${(northing / 1000).toInt()}")
     return MgrsCoordinate(
         longitudeZone,
         latitudeZoneLetter,
@@ -85,55 +86,61 @@ fun UtmCoordinate.convertUTMToMGRS(): MgrsCoordinate {
     )
 }
 
+data class LatitudeBandConstants(
+    val firstLetter: Char, // col
+    val minNorthing: Double,
+    val northLat: Double,
+    val southLat: Double,
+    val northingOffset: Double
+)
+
+private val latitudeBandConstants = listOf(
+    LatitudeBandConstants('C', 1100000.0, -72.0, -80.5, 0.0),
+    LatitudeBandConstants('D', 2000000.0, -64.0, -72.0, 2000000.0),
+    LatitudeBandConstants('E', 2800000.0, -56.0, -64.0, 2000000.0),
+    LatitudeBandConstants('F', 3700000.0, -48.0, -56.0, 2000000.0),
+    LatitudeBandConstants('G', 4600000.0, -40.0, -48.0, 4000000.0),
+    LatitudeBandConstants('H', 5500000.0, -32.0, -40.0, 4000000.0),
+    LatitudeBandConstants('J', 6400000.0, -24.0, -32.0, 6000000.0),
+    LatitudeBandConstants('K', 7300000.0, -16.0, -24.0, 6000000.0),
+    LatitudeBandConstants('L', 8200000.0, -8.0, -16.0, 8000000.0),
+    LatitudeBandConstants('M', 9100000.0, 0.0, -8.0, 8000000.0),
+    LatitudeBandConstants('N', 0.0, 8.0, 0.0, 0.0),
+    LatitudeBandConstants('P', 800000.0, 16.0, 8.0, 0.0),
+    LatitudeBandConstants('Q', 1700000.0, 24.0, 16.0, 0.0),
+    LatitudeBandConstants('R', 2600000.0, 32.0, 24.0, 2000000.0),
+    LatitudeBandConstants('S', 3500000.0, 40.0, 32.0, 2000000.0),
+    LatitudeBandConstants('T', 4400000.0, 48.0, 40.0, 4000000.0),
+    LatitudeBandConstants('U', 5300000.0, 56.0, 48.0, 4000000.0),
+    LatitudeBandConstants('V', 6200000.0, 64.0, 56.0, 6000000.0),
+    LatitudeBandConstants('W', 7000000.0, 72.0, 64.0, 6000000.0),
+    LatitudeBandConstants('X', 7900000.0, 84.5, 72.0, 6000000.0)
+).associateBy { it.firstLetter }
+
+val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", "GQY", "HRZ")
+
+private const val TWO_MILLION = 2000000
+
 fun MgrsCoordinate.toUtm(): UtmCoordinate {
-    val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", "GQY", "HRZ")
-    val zoneBase = listOf(
-        1.1,
-        2.0,
-        2.8,
-        3.7,
-        4.6,
-        5.5,
-        6.4,
-        7.3,
-        8.2,
-        9.1,
-        0.0,
-        0.8,
-        1.7,
-        2.6,
-        3.5,
-        4.4,
-        5.3,
-        6.2,
-        7.0,
-        7.9
-    ).map { it * 1000000 }
 
-    var utmEasting = -1
-    for ((i, letters) in eastingArray.withIndex()) {
-        if (colLetter in letters) {
-            utmEasting = i * BLOCK_SIZE + easting
-            break
-        }
+    val bandConstants = latitudeBandConstants[latitudeZoneLetter]!!
+
+    val utmEasting = eastingArray.withIndex().first { (i,letters) ->
+        firstLetter in letters
+    }.let { (i, letters) ->
+        i * BLOCK_SIZE + easting
     }
 
-    var utmNorthing = 0.0
-    if (rowLetter != ' ') {
-        utmNorthing = if (longitudeZone % 2 == 0) {
-            ("FGHJKLMNPQRSTUVABCDE".indexOf(rowLetter) * 100000).toDouble()
-        } else {
-            ("ABCDEFGHJKLMNPQRSTUV".indexOf(rowLetter) * 100000).toDouble()
-        }
+    val setNumber = longitudeZone.setForZone()
 
-        while (utmNorthing < zoneBase["CDEFGHJKLMNPQRSTUVWX".indexOf(rowLetter)-1]) {
-            utmNorthing += 2000000
-        }
-        utmNorthing += northing
+    val rowLettersForZone = setNumber.rowLetters()
+    var utmNorthing = (rowLettersForZone.indexOf(secondLetter) * 100000).toDouble()
 
-    } else {
-        utmNorthing = zoneBase["CDEFGHJKLMNPQRSTUVWX".indexOf(rowLetter)] + 499600
+    utmNorthing += bandConstants.northingOffset
+    while(utmNorthing < bandConstants.minNorthing) {
+        utmNorthing += TWO_MILLION
     }
+    utmNorthing += northing
 
     return UtmCoordinate(longitudeZone, latitudeZoneLetter, utmEasting.toDouble(), utmNorthing)
 }
