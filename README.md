@@ -75,6 +75,15 @@ Geojson classes are provided that allow you to easily work with GeoJson, which j
 - calculate a centroid for a shape
 
 ## Coordinate conversions
+
+I put quite a bit of effort in doing code archeology to combine bits and pieces of various
+old Java implementations for this. Lots of edge cases and "you just have to know why" bits
+of code. As a consequence, I have some nice robust tests around this and all seems to work.
+
+I used this amazing [Coordinates converter](https://coordinates-converter.com) to verify my 
+converters. Also, I use randomized points to ensure round trip conversions end up being 
+close to where they should be. Feedback and pull requests to improve this further are welcome
+
   - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)  and [UPS coordinates](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system).
   - Conversion to and from [MGRS](https://en.wikipedia.org/wiki/Military_Grid_Reference_System) / [USNG](https://en.wikipedia.org/wiki/United_States_National_Grid) format
 
