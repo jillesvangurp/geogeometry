@@ -3,7 +3,7 @@ package com.jillesvangurp.geo
 import com.jillesvangurp.geojson.PointCoordinates
 import kotlin.math.floor
 
-/**
+/*
  * This mgrs code is the result of me doing a bit of dead code archeology on various
  * Java code repositories that appear abandoned.
  *
@@ -17,8 +17,18 @@ import kotlin.math.floor
  * The simple test here is that any coordinate in the UTM range should convert from and back
  * to UTM without ending up more than a few meters away. The UTMTest contains such a test that also tests
  * the conversion to and from mgrs.
+ *
+ * Some of the code bases I looked at:
+ *
+ * @see https://github.com/andreynovikov/Geo-Coordinate-Conversion-Java/blob/master/src/main/java/gov/nasa/worldwind/geom/coords/MGRSCoordConverter.java
+ * @see https://github.com/ngageoint/mgrs-java/blob/master/src/main/java/mil/nga/mgrs/MGRS.java
+ * @see https://github.com/OpenSextant/opensextant/blob/master/Xponents/XCoord/src/main/java/org/mitre/xcoord/MGRSFilter.java
  */
 
+/**
+ * MGRS precision for the easting and northing.
+ * [MgrsCoordinate] stores everything in meter precision but can format with any of these precisions.
+ */
 enum class MgrsPrecision(val divisor: Int) {
     TEN_KM(10000),
     ONE_KM(1000),
@@ -26,6 +36,17 @@ enum class MgrsPrecision(val divisor: Int) {
     TEN_M(10),
     ONE_M(1)
 }
+
+/**
+ * Represent an MGRS coordinate.
+ *
+ * [longitudeZone] same as in [UtmCoordinate]
+ * [latitudeZoneLetter] same as in [UtmCoordinate]
+ * [firstLetter] First latter of the grid inside the UTM zone. Aka. the grid column.
+ * [secondLetter] Second letter of the grid inside the UTM zone. Aka. the grid row.
+ * [easting] Easting inside the 100km grid
+ * [northing] Northing inside the 100km grid
+ */
 data class MgrsCoordinate(
     val longitudeZone: Int,
     val latitudeZoneLetter: Char,
@@ -78,7 +99,6 @@ private fun Int.rowLetters() = if (this % 2 == 0) "FGHJKLMNPQRSTUVABCDE" else "A
 
 fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     var row = 1
-//    var n = northing.roundToInt()
     var n = floor(northing).toInt()
     while (n >= GRID_SIZE_M) {
         n -= GRID_SIZE_M
@@ -106,8 +126,13 @@ fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
 }
 
 /**
- * This code mostly works but has some edge cases that somehow fail, which means that you
- * should not blindly trust this code.
+ * Convert to MGRS coordinate.
+ *
+ * After converting, you can format either as mgrs (no spaces) or usng format with
+ * various precision.
+ *
+ * Note, this does not support coordinates in the UPS coordinate system currently.
+ *
  */
 fun UtmCoordinate.toMgrs(): MgrsCoordinate {
     val (l1, l2) = lookupGridLetters()
@@ -159,6 +184,11 @@ private val latitudeBandConstants = listOf(
 
 private val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", "GQY", "HRZ")
 
+/**
+ * Returns the UTM coordinate for the MGRS coordinate.
+ *
+ * Note, this does not support coordinates in the UPS coordinate system currently.
+ */
 fun MgrsCoordinate.toUtm(): UtmCoordinate {
 
     val bandConstants = latitudeBandConstants[latitudeZoneLetter]!!
@@ -188,6 +218,10 @@ fun PointCoordinates.toMgrs() = toUtmCoordinate().toMgrs()
 fun MgrsCoordinate.toPointCoordinate() = toUtm().toPointCoordinates()
 
 private val mgrsRegex = "([0-9]+)\\s*([A-Z])\\s*([A-Z])\\s*([A-Z])\\s*([0-9]{1,5}\\s*[0-9]{1,5})".toRegex()
+
+/**
+ * Parses a mgrs or usng string to [MgrsCoordinate]. Returns the coordinate or null if none was found.
+ */
 fun String.parseMgrs(): MgrsCoordinate? {
     return mgrsRegex.find(this)?.let { match ->
         val groups = match.groups
