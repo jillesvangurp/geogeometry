@@ -221,6 +221,8 @@ private val mgrsRegex = "([0-9]+)\\s*([A-Z])\\s*([A-Z])\\s*([A-Z])\\s*([0-9]{1,5
 
 /**
  * Parses a mgrs or usng string to [MgrsCoordinate]. Returns the coordinate or null if none was found.
+ *
+ * Note the string may contain other things, this implementation simply looks for the first matching coordinate.
  */
 fun String.parseMgrs(): MgrsCoordinate? {
     return mgrsRegex.find(this)?.let { match ->
