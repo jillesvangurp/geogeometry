@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -31,7 +33,9 @@ kotlin {
 //    }
     iosArm64()
     iosX64()
-    // no kotlinx serialization for wasm yet
+    // blocked on kotest wasm support https://github.com/kotest/kotest/pull/3805
+    // should be there soonish
+//    @OptIn(ExperimentalWasmDsl::class)
 //    wasmJs()
 
     sourceSets {
