@@ -35,13 +35,12 @@ import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.junit.Test
-import java.util.*
-import kotlin.math.abs
-import kotlin.math.round
+import kotlin.math.*
+import kotlin.random.Random
+import kotlin.test.Test
 
 
-class GeoGeometryJvmTest {
+class GeoGeometryMigratedTests {
     val bergstr16InvalidenBerlin = doubleArrayOf(13.393674, 52.5310059)
     val bergstr16Berlin = doubleArrayOf(13.3941763, 52.5298311)
     val berlin = doubleArrayOf(13.385721, 52.527109)
@@ -156,7 +155,7 @@ class GeoGeometryJvmTest {
     @Test
     fun shouldTranslateCorrectly() {
         val translated = translate(52.530564, 13.394964, 1000.0, 3000.0)
-        val pythagorasDistance = Math.sqrt(Math.pow(1000.0, 2.0) + Math.pow(3000.0, 2.0))
+        val pythagorasDistance = sqrt(1000.0.pow(2.0) + 3000.0.pow(2.0))
         val distance = distance(doubleArrayOf(13.394964, 52.530564), translated)
         withClue("distance should be correct for translated coordinate") {
             abs(distance - pythagorasDistance) shouldBeLessThan 1.0
@@ -177,7 +176,7 @@ class GeoGeometryJvmTest {
             }
             val distance =
                 distance(doubleArrayOf(london[0], london[1]), point)
-            val difference = Math.abs(radius - distance)
+            val difference = abs(radius - distance)
             withClue(difference) {
                 difference shouldBeLessThan 100.0
             }
@@ -185,7 +184,7 @@ class GeoGeometryJvmTest {
         }
         // close the circle
         d += distance(polygon[0][0], last!!)
-        val difference = Math.abs(d - 2 * Math.PI * radius)
+        val difference = abs(d - 2 * PI * radius)
         difference shouldBeLessThan 100.0
     }
 
@@ -228,7 +227,8 @@ class GeoGeometryJvmTest {
         for (p in polygon) {
             buf.append("[" + p[0] + "," + p[1] + "],")
         }
-        buf.deleteCharAt(buf.length - 1)
+
+        buf.deleteAt(buf.length - 1)
         buf.append("]")
 
         // FIXME complete test
@@ -273,7 +273,7 @@ class GeoGeometryJvmTest {
     }
 
     @Test
-    fun `check intersection point for both lines when one of the lines is vertical - issue #12`() {
+    fun checkIntersectionIssue12() {
         // reported by a user
         // line 1 is vertical
         // line 2 intersects in between the points of line 1
@@ -292,9 +292,9 @@ class GeoGeometryJvmTest {
         val latitude = 52.0
         val longitude = 13.0
         val points = Array(1000) { DoubleArray(2) }
-        val random = Random()
+
         for (i in 0..999) {
-            points[i] = doubleArrayOf(longitude + random.nextDouble(), latitude + random.nextDouble())
+            points[i] = doubleArrayOf(longitude + Random.nextDouble(), latitude + Random.nextDouble())
         }
         // insert a few 'bad' points
         points[50] = doubleArrayOf(100.0, 100.0)
@@ -535,14 +535,14 @@ class GeoGeometryJvmTest {
             doubleArrayOf(13.423709, 52.528149),
             doubleArrayOf(13.425724, 52.524992)
         )
-        var d = Math.round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls))
+        var d = round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls))
         d shouldBe 416
         val ls2 = arrayOf(
             doubleArrayOf(13.425724, 52.524992),
             doubleArrayOf(13.414654, 52.520316),
             doubleArrayOf(13.423709, 52.528149)
         )
-        d = Math.round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls2))
+        d = round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls2))
         d shouldBe 416
     }
 
@@ -554,7 +554,7 @@ class GeoGeometryJvmTest {
             doubleArrayOf(13.425724, 52.524992),
             doubleArrayOf(13.414654, 52.520316)
         )
-        var d = Math.round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon))
+        var d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon))
         d shouldBe 416
         val polygon2 = arrayOf(
             doubleArrayOf(13.425724, 52.524992),
@@ -562,9 +562,9 @@ class GeoGeometryJvmTest {
             doubleArrayOf(13.423709, 52.528149),
             doubleArrayOf(13.425724, 52.524992)
         )
-        d = Math.round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon2))
+        d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon2))
         d shouldBe 416
-        d = Math.round(
+        d = round(
             distanceToPolygon(
                 doubleArrayOf(13.412122, 52.52392),
                 arrayOf(polygon2)
@@ -572,7 +572,7 @@ class GeoGeometryJvmTest {
         )
         d shouldBe 416
         val center = polygonCenter(*polygon)
-        d = Math.round(distanceToPolygon(center, polygon2))
+        d = round(distanceToPolygon(center, polygon2))
         d shouldBe 0
     }
 
@@ -609,9 +609,9 @@ class GeoGeometryJvmTest {
                 arrayOf(polygon)
             )
         var d =
-            Math.round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon))
+            round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon))
         d shouldBe 416
-        d = Math.round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon2))
+        d = round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon2))
         d shouldBe 416
     }
 
@@ -620,7 +620,7 @@ class GeoGeometryJvmTest {
         val circle =
             circle2polygon(5000, 52.0, 13.0, 1000.0)
         val calculatedArea = area(circle)
-        val circleArea = Math.PI * 1000 * 1000
+        val circleArea = PI * 1000 * 1000
         // 0.005% difference allowed perfect circle area and calculated area
         abs(circleArea - calculatedArea) shouldBeLessThan calculatedArea / 200
     }
@@ -645,7 +645,7 @@ class GeoGeometryJvmTest {
 //        System.out.println(gson.toJson(new FeatureCollection(l,null)));
 
         // area should be roughly similar to that of the ideal rectangle of 2000x2000
-        Math.abs(area - expectedArea) shouldBeLessThan expectedArea * 0.05
+        abs(area - expectedArea) shouldBeLessThan expectedArea * 0.05
     }
 
     @Test
