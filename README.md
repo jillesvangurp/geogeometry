@@ -39,6 +39,9 @@ You can find the latest version in the [releases section](https://github.com/jil
   - No runtime dependencies other than the kotlin stdlib
   - Adding more targets should 'just work' but has not been tested.
 
+For a few of the algorithms in this code base, I've adapted / been inspired by code from others. This work would not be possible without that and I try to credit any such sources in the code 
+base.
+
 ## GeoGeometry class
 GeoGeometry class with lots of functions that allow you to:
 - **Calculate distance** between two coordinates using the **Haversine** or **Vicenty** algorithm
@@ -111,6 +114,9 @@ Note. this is a kotlin multi-platform build, and currently it produces a JavaScr
 
 # License
 
-Like all my other projects, this project is licensed under the so-called MIT license. However, `GeoHashUtils` was copied and adapted from Apache Lucene (a long time ago) and I have retained the Apache License for that file, as required in that license. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
+Like all my other projects, this project is licensed under the so-called MIT license. 
+
+However, `GeoHashUtils` was copied and adapted from Apache Lucene (a long time ago) and I have retained the Apache License for that file, as required in that license. The rest of this repository is MIT licensed. Both licenses are compatible and should also pose no issues when used with software under most other OSS licenses.
 
 For more details see the [LICENSE](LICENSE) file
+

@@ -62,12 +62,12 @@ data class MgrsCoordinate(
     /**
      * USNG is the human readable version of mgrs which has no spaces.
      */
-    fun usng(precision: MgrsPrecision=MgrsPrecision.ONE_M) =
+    fun usng(precision: MgrsPrecision = MgrsPrecision.ONE_M) =
         "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter ${easting / precision.divisor} ${northing / precision.divisor}"
 
 
-    fun mgrs(precision: MgrsPrecision=MgrsPrecision.ONE_M) =
-        "$longitudeZone$latitudeZoneLetter$firstLetter$secondLetter${easting/precision.divisor}${northing/precision.divisor}"
+    fun mgrs(precision: MgrsPrecision = MgrsPrecision.ONE_M) =
+        "$longitudeZone$latitudeZoneLetter$firstLetter$secondLetter${easting / precision.divisor}${northing / precision.divisor}"
 
 }
 
@@ -83,7 +83,7 @@ private fun Int.setForZone(): Int {
     }
 }
 
-private const val GRID_SIZE_M = 100_000
+private const val HUNDRED_KM = 100_000
 private const val TWO_MILLION = 2_000_000
 private fun Int.colLetters() = when (this) {
     1 -> "ABCDEFGH"
@@ -101,8 +101,8 @@ private fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     var row = 1
     // always floor in mgrs, or you might end up in the wrong grid cell
     var n = floor(northing).toInt()
-    while (n >= GRID_SIZE_M) {
-        n -= GRID_SIZE_M
+    while (n >= HUNDRED_KM) {
+        n -= HUNDRED_KM
         row++
     }
     row %= 20
@@ -110,8 +110,8 @@ private fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     var col = 0
     // always floor in mgrs, or you might end up in the wrong grid cell
     var e = floor(easting).toInt()
-    while (e >= GRID_SIZE_M) {
-        e -= GRID_SIZE_M
+    while (e >= HUNDRED_KM) {
+        e -= HUNDRED_KM
         col++
     }
     col %= 8
@@ -139,8 +139,8 @@ fun UtmCoordinate.toMgrs(): MgrsCoordinate {
     val (l1, l2) = lookupGridLetters()
 
     // always floor in mgrs, or you might end up in the wrong grid cell
-    val mgrsEasting = floor(easting % GRID_SIZE_M).toInt()
-    val mgrsNorthing = floor(northing % GRID_SIZE_M).toInt()
+    val mgrsEasting = floor(easting % HUNDRED_KM).toInt()
+    val mgrsNorthing = floor(northing % HUNDRED_KM).toInt()
 //    println("cols ${northing.toInt() / BLOCK_SIZE} $northing ${(northing / 1000).toInt()}")
     return MgrsCoordinate(
         longitudeZone,
@@ -192,13 +192,13 @@ private val eastingArray = listOf("", "AJS", "BKT", "CLU", "DMV", "ENW", "FPX", 
  * Note, this does not support coordinates in the UPS coordinate system currently.
  */
 fun MgrsCoordinate.toUtm(): UtmCoordinate {
-
+    // FIXME check if ups or utm, this implementation is for utm
     val bandConstants = latitudeBandConstants[latitudeZoneLetter]!!
 
-    val utmEasting = eastingArray.withIndex().first { (i,letters) ->
+    val utmEasting = eastingArray.withIndex().first { (i, letters) ->
         firstLetter in letters
     }.let { (i, letters) ->
-        (i * GRID_SIZE_M + easting).toDouble()
+        (i * HUNDRED_KM + easting).toDouble()
     }
 
     val setNumber = longitudeZone.setForZone()
@@ -207,7 +207,7 @@ fun MgrsCoordinate.toUtm(): UtmCoordinate {
     var utmNorthing = (rowLettersForZone.indexOf(secondLetter) * 100000).toDouble()
 
     utmNorthing += bandConstants.northingOffset
-    while(utmNorthing < bandConstants.minNorthing) {
+    while (utmNorthing < bandConstants.minNorthing) {
         utmNorthing += TWO_MILLION
     }
 
@@ -233,7 +233,7 @@ fun String.parseMgrs(): MgrsCoordinate? {
         val latitudeZoneLetter = groups[2]!!.value[0]
         val firstLetter = groups[3]!!.value[0]
         val secondLetter = groups[4]!!.value[0]
-        val numbers = groups[5]!!.value.replace(" ","")
+        val numbers = groups[5]!!.value.replace(" ", "")
         if (numbers.length % 2 != 0) {
             null
         } else {
@@ -246,3 +246,66 @@ fun String.parseMgrs(): MgrsCoordinate? {
     }
 }
 
+private fun roundMGRS(value: Double): Long {
+    val ival = floor(value).toLong()
+    val fraction = value - ival
+    // double fraction = modf (value, &ivalue);
+    return if (fraction > 0.5 || fraction == 0.5 && ival % 2L == 1L) ival + 1 else ival
+}
+
+data class UpsConstant(
+    val latitudeZoneLetter: Char,
+    val chars: List<Char>,
+    val falseEasting: Int,
+    val falseNorthing: Int
+)
+
+private val upsConstants = arrayOf<UpsConstant>(
+    UpsConstant('A', listOf('J', 'Z', 'Z'), 800000, 800000),
+    UpsConstant('B', listOf('A', 'R', 'Z'), 2000000, 800000),
+    UpsConstant('Y', listOf('J', 'Z', 'P'), 800000, 1300000),
+    UpsConstant('Z', listOf('A', 'J', 'P'), 2000000, 1300000),
+).associateBy { it.latitudeZoneLetter }
+
+fun UtmCoordinate.convertUPSToMGRS(): MgrsCoordinate {
+    // FIXME test and convert back to UPS
+    val falseEasting: Double /* False easting for 2nd letter                 */
+    val falseNorthing: Double /* False northing for 3rd letter                */
+    val ltr2LowValue: Char /* 2nd letter range - low number                */
+    var firstLetter: Char
+    var secondLetter: Char
+    if (!isUps) {
+        error("not a ups coordinate")
+    }
+    val upsConstant = upsConstants[latitudeZoneLetter]!!
+    ltr2LowValue = upsConstant.chars[0]
+    falseEasting = upsConstant.falseEasting.toDouble()
+    falseNorthing = upsConstant.falseNorthing.toDouble()
+
+    val grid_northing: Double = northing - falseNorthing /* Northing used to derive 3rd letter of MGRS   */
+
+    secondLetter = (grid_northing / HUNDRED_KM).toInt().toChar()
+
+    if (secondLetter > 'H') secondLetter += 1
+    if (secondLetter > 'N') secondLetter += 1
+    val gridEasting: Double = easting - falseEasting /* Easting used to derive 2nd letter of MGRS    */
+
+    firstLetter = (ltr2LowValue + (gridEasting / HUNDRED_KM).toInt())
+    if (easting < TWO_MILLION) {
+        if (firstLetter > 'L') firstLetter = firstLetter + 3
+        if (firstLetter > 'U') firstLetter = firstLetter + 2
+    } else {
+        if (firstLetter > 'C') firstLetter = firstLetter + 2
+        if (firstLetter > 'H') firstLetter = firstLetter + 1
+        if (firstLetter > 'L') firstLetter = firstLetter + 3
+    }
+
+    return MgrsCoordinate(
+        longitudeZone,
+        latitudeZoneLetter,
+        firstLetter,
+        secondLetter,
+        floor(easting).toInt() % HUNDRED_KM,
+        floor(northing).toInt() % HUNDRED_KM
+    )
+}

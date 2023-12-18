@@ -25,19 +25,21 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
+import io.kotest.matchers.shouldNotBe
 import org.junit.Test
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.round
+
 
 class GeoGeometryJvmTest {
     val bergstr16InvalidenBerlin = doubleArrayOf(13.393674, 52.5310059)
@@ -76,22 +78,11 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldCheckThatLinesDontCross() {
-        MatcherAssert.assertThat(
-            "should not intersect lines intersect but not in the specified interval",
-            !linesCross(1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 20.0, 10.0)
-        )
-        MatcherAssert.assertThat(
-            "should not intersect parallel",
-            !linesCross(1.0, 1.0, 2.0, 2.0, 2.1, 2.1, 3.0, 3.0)
-        )
-        MatcherAssert.assertThat(
-            "should not intersect same vertical line but not overlapping",
-            !linesCross(1.0, 1.0, 1.0, 5.0, 1.0, 6.0, 1.0, 10.0)
-        )
-        MatcherAssert.assertThat(
-            "should not intersect same horizontal line but not overlapping",
-            !linesCross(1.0, 666.0, 5.0, 666.0, 6.0, 666.0, 10.0, 666.0)
-        )
+        linesCross(1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 20.0, 10.0) shouldNotBe true
+        linesCross(1.0, 1.0, 2.0, 2.0, 2.1, 2.1, 3.0, 3.0) shouldNotBe true
+        linesCross(1.0, 1.0, 1.0, 5.0, 1.0, 6.0, 1.0, 10.0) shouldNotBe true
+        linesCross(1.0, 666.0, 5.0, 666.0, 6.0, 666.0, 10.0, 666.0) shouldNotBe true
+
     }
 
     @Test
@@ -117,48 +108,35 @@ class GeoGeometryJvmTest {
         val westLongitude = -2.0
         val eastLongitude = 2.0
         val bbox = doubleArrayOf(westLongitude, southLatitude, eastLongitude, northLatitude)
-        MatcherAssert.assertThat("should be contained", bboxContains(bbox, 0.0, 0.0))
-        MatcherAssert.assertThat("should be contained", bboxContains(bbox, 1.0, 2.0))
-        MatcherAssert.assertThat(
-            "should be contained",
-            bboxContains(bbox, -1.0, 2.0)
-        )
-        MatcherAssert.assertThat("should be contained", bboxContains(bbox, 1.0, 2.0))
-        MatcherAssert.assertThat(
-            "should be contained",
-            bboxContains(bbox, -1.0, -2.0)
-        )
-        MatcherAssert.assertThat(
-            "should not be contained",
-            !bboxContains(bbox, -1.1, -2.1)
-        )
+
+        withClue("should be contained") { bboxContains(bbox, 0.0, 0.0) shouldBe true }
+        withClue("should be contained") { bboxContains(bbox, 1.0, 2.0) shouldBe true }
+        withClue("should be contained") { bboxContains(bbox, -1.0, 2.0) shouldBe true }
+        withClue("should be contained") { bboxContains(bbox, 1.0, 2.0) shouldBe true }
+        withClue("should be contained") { bboxContains(bbox, -1.0, -2.0) shouldBe true }
+        withClue("should not be contained") { bboxContains(bbox, -1.1, -2.1) shouldBe false }
+
     }
 
     @Test
     fun shouldGetCorrectBboxForPolygon() {
         val bbox = boundingBox(samplePolygon)
-        MatcherAssert.assertThat("should be contained", bboxContains(bbox, 0.0, 0.0))
+        withClue("should be contained") { bboxContains(bbox, 0.0, 0.0) shouldBe true }
         for (coordinate in samplePolygon) {
-            MatcherAssert.assertThat(
-                "should contain point",
-                bboxContains(bbox, coordinate[1], coordinate[0])
-            )
-            MatcherAssert.assertThat(
-                "should not contain point",
-                !bboxContains(bbox, 20 * coordinate[1], 20 * coordinate[0])
-            )
+            withClue("should contain point") {
+                bboxContains(bbox, coordinate[1], coordinate[0]) shouldBe true
+            }
+            withClue("should not contain point") {
+                bboxContains(bbox, 20 * coordinate[1], 20 * coordinate[0]) shouldBe false
+            }
         }
+
     }
 
     @Test
     fun shouldRoundDouble() {
-        MatcherAssert.assertThat(
-            roundToDecimals(
-                0.1234567891111112,
-                17
-            ),
-            CoreMatchers.`is`(0.1234567891111112)
-        )
+        roundToDecimals(0.1234567891111112, 17) shouldBe 0.1234567891111112
+
     }
 
     @Test
@@ -180,10 +158,9 @@ class GeoGeometryJvmTest {
         val translated = translate(52.530564, 13.394964, 1000.0, 3000.0)
         val pythagorasDistance = Math.sqrt(Math.pow(1000.0, 2.0) + Math.pow(3000.0, 2.0))
         val distance = distance(doubleArrayOf(13.394964, 52.530564), translated)
-        MatcherAssert.assertThat(
-            "distance should be correct for translated coordinate",
-            Math.abs(distance - pythagorasDistance) < 1.0
-        )
+        withClue("distance should be correct for translated coordinate") {
+            abs(distance - pythagorasDistance) shouldBeLessThan 1.0
+        }
     }
 
     @Test
@@ -201,19 +178,15 @@ class GeoGeometryJvmTest {
             val distance =
                 distance(doubleArrayOf(london[0], london[1]), point)
             val difference = Math.abs(radius - distance)
-            MatcherAssert.assertThat(
-                "should have distance of radius to origin within 100 meter but was $difference",
-                difference < 100
-            )
+            withClue(difference) {
+                difference shouldBeLessThan 100.0
+            }
             last = point
         }
         // close the circle
         d += distance(polygon[0][0], last!!)
         val difference = Math.abs(d - 2 * Math.PI * radius)
-        MatcherAssert.assertThat(
-            "circumference should be within 100 meter of length of the polygon but difference was $difference",
-            difference < 100
-        )
+        difference shouldBeLessThan 100.0
     }
 
     @Test
@@ -222,18 +195,9 @@ class GeoGeometryJvmTest {
             brandenBurgerGate, potsDammerPlatz, moritzPlatz, senefelderPlatz, naturkundeMuseum
         )
         val polygon = polygonForPoints(placesInMitte)
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(rosenthalerPlatz[1], rosenthalerPlatz[0], *polygon)
-        )
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(oranienburgerTor[1], oranienburgerTor[0], *polygon)
-        )
-        MatcherAssert.assertThat(
-            "should NOT be inside",
-            !polygonContains(1.0, 1.0, *polygon)
-        )
+        polygonContains(rosenthalerPlatz[1], rosenthalerPlatz[0], *polygon) shouldBe true
+        polygonContains(oranienburgerTor[1], oranienburgerTor[0], *polygon) shouldBe true
+        polygonContains(1.0, 1.0, *polygon) shouldBe false
     }
 
     @Test
@@ -274,14 +238,8 @@ class GeoGeometryJvmTest {
     fun polygonForPointsInFourQuadrantsShouldContainStuffInside() {
         val polygon =
             polygonForPoints(arrayOf(sydney, newyork, amsterdam, buenosaires))
-        MatcherAssert.assertThat(
-            "should be inside",
-            polygonContains(london[1], london[0], *polygon)
-        )
-        MatcherAssert.assertThat(
-            "should NOT be inside",
-            !polygonContains(berlin[1], berlin[0], *polygon)
-        )
+        polygonContains(london[1], london[0], *polygon) shouldBe true
+        polygonContains(berlin[1], berlin[0], *polygon) shouldBe false
     }
 
     @Test
@@ -344,7 +302,7 @@ class GeoGeometryJvmTest {
         points[150] = doubleArrayOf(100.0, -100.0)
         points[200] = doubleArrayOf(-100.0, -100.0)
         val filtered = filterNoiseFromPointCloud(points, 0.005f)
-        MatcherAssert.assertThat(filtered.size, CoreMatchers.`is`(996))
+        filtered.size shouldBe 996
         val bbox = boundingBox(filtered)
 
         // the four bad pois should be gone
@@ -363,10 +321,7 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldOverLapWithSelf() {
-        MatcherAssert.assertThat(
-            "should overlap with itself",
-            overlap(samplePolygon, samplePolygon)
-        )
+        overlap(samplePolygon, samplePolygon) shouldBe true
     }
 
     val overlappingPolygons = listOf(
@@ -384,38 +339,31 @@ class GeoGeometryJvmTest {
     @Test
     fun shouldOverlap() {
         overlappingPolygons.forEach { (left, right) ->
-            MatcherAssert.assertThat("left should overlap with right", overlap(left, right))
-            MatcherAssert.assertThat("right should overlap with left", overlap(right, left))
+            overlap(left,right) shouldBe true
+            overlap(right,left) shouldBe true
         }
     }
 
     @Test
     fun shouldExpandPolygon() {
         val expandPolygon = expandPolygon(2000, samplePolygon)
-        MatcherAssert.assertThat(
-            "expanded polygon should contain polygon",
-            contains(expandPolygon, samplePolygon)
-        )
+        contains(expandPolygon,samplePolygon) shouldBe true
     }
 
     @Test
     fun shouldBeRight() {
-        MatcherAssert.assertThat(
-            "should be right",
-            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(2.0, 2.0), doubleArrayOf(1.0, 10.0))
-        )
-        MatcherAssert.assertThat(
-            "should be right",
-            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(2.0, 2.0), doubleArrayOf(3.0, 4.0))
-        )
-        MatcherAssert.assertThat(
-            "should not be right",
-            !rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(0.0, 2.0), doubleArrayOf(1.0, 10.0))
-        )
-        MatcherAssert.assertThat(
-            "should not be right",
-            !rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(1.0, 2.0), doubleArrayOf(1.0, 10.0))
-        )
+        withClue("should be right") {
+            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(2.0, 2.0), doubleArrayOf(1.0, 10.0)) shouldBe true
+        }
+        withClue("should be right") {
+            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(2.0, 2.0), doubleArrayOf(3.0, 4.0)) shouldBe true
+        }
+        withClue("should not be right") {
+            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(0.0, 2.0), doubleArrayOf(1.0, 10.0)) shouldBe false
+        }
+        withClue("should not be right") {
+            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(1.0, 2.0), doubleArrayOf(1.0, 10.0)) shouldBe false
+        }
     }
 
     val clouds =
@@ -442,14 +390,11 @@ class GeoGeometryJvmTest {
         clouds.forEach { (points, contained) ->
             val polygonForPoints = polygonForPoints(points)
             for (i in contained.indices) {
-                MatcherAssert.assertThat(
-                    "point in the middle should be contained",
-                    polygonContains(
-                        contained[i][1],
-                        contained[i][0],
-                        *polygonForPoints
-                    )
-                )
+                polygonContains(
+                    contained[i][1],
+                    contained[i][0],
+                    *polygonForPoints
+                ) shouldBe true
             }
         }
     }
@@ -510,22 +455,10 @@ class GeoGeometryJvmTest {
     @Test
     fun shouldCalculateBboxForPoint() {
         val bbox = boundingBox(doubleArrayOf(13.0, 52.0))
-        MatcherAssert.assertThat(
-            bbox[1],
-            CoreMatchers.`is`(52.0)
-        )
-        MatcherAssert.assertThat(
-            bbox[3],
-            CoreMatchers.`is`(52.0)
-        )
-        MatcherAssert.assertThat(
-            bbox[0],
-            CoreMatchers.`is`(13.0)
-        )
-        MatcherAssert.assertThat(
-            bbox[2],
-            CoreMatchers.`is`(13.0)
-        )
+        bbox[1] shouldBe 52.0
+        bbox[3] shouldBe 52.0
+        bbox[0] shouldBe 13.0
+        bbox[2] shouldBe 13.0
     }
 
     @Test
@@ -535,29 +468,21 @@ class GeoGeometryJvmTest {
         val polygon = arrayOf(line)
         val multiPolygon =
             arrayOf(polygon)
-        MatcherAssert.assertThat(
-            area(
-                boundingBox(
-                    line
-                )
-            ),
-            CoreMatchers.`is`(
-                area(
-                    boundingBox(polygon)
-                )
+
+        area(
+            boundingBox(
+                line
             )
+        ) shouldBe area(
+            boundingBox(polygon)
         )
-        MatcherAssert.assertThat(
-            area(
-                boundingBox(
-                    line
-                )
-            ),
-            CoreMatchers.`is`(
-                area(
-                    boundingBox(multiPolygon)
-                )
+
+        area(
+            boundingBox(
+                line
             )
+        ) shouldBe area(
+            boundingBox(multiPolygon)
         )
     }
 
@@ -578,8 +503,8 @@ class GeoGeometryJvmTest {
         doubleArrayOf(1.0, 1.0, 3.0, 1.0, 2.0, 1.0, 0.0),
         doubleArrayOf(1.0, 1.0, 1.0, 3.0, 1.0, 2.0, 0.0),
         doubleArrayOf(1.0, 1.0, 3.0, 3.0, 2.0, 2.1, 7860.0),
-        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 90.0, 90.0, distance(3.0, 3.0, 90.0, 90.0)),
-        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 0.0, 0.0, distance(1.0, 1.0, 0.0, 0.0))
+        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 90.0, 90.0, round(distance(3.0, 3.0, 90.0, 90.0))),
+        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 0.0, 0.0, round(distance(1.0, 1.0, 0.0, 0.0)))
     )
 
     // Ugly ;-)
@@ -593,14 +518,9 @@ class GeoGeometryJvmTest {
             val distance = distance(x1, y1, x2, y2, px, py)
             val distance2 =
                 distance(doubleArrayOf(y1, x1), doubleArrayOf(y2, x2), doubleArrayOf(py, px))
-            MatcherAssert.assertThat(
-                distance,
-                CoreMatchers.`is`(distance2)
-            )
-            MatcherAssert.assertThat(
-                Math.round(distance),
-                CoreMatchers.`is`(Math.round(expectedDistance))
-            )
+            distance shouldBe distance2
+            round(distance) shouldBe expectedDistance
+
             val distToPoint1 = distance(x1, y1, px, py)
             val distToPoint2 = distance(x1, y1, px, py)
             distance shouldBeLessThanOrEqual distToPoint1
@@ -616,14 +536,14 @@ class GeoGeometryJvmTest {
             doubleArrayOf(13.425724, 52.524992)
         )
         var d = Math.round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls))
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(416L))
+        d shouldBe 416
         val ls2 = arrayOf(
             doubleArrayOf(13.425724, 52.524992),
             doubleArrayOf(13.414654, 52.520316),
             doubleArrayOf(13.423709, 52.528149)
         )
         d = Math.round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls2))
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(416L))
+        d shouldBe 416
     }
 
     @Test
@@ -635,7 +555,7 @@ class GeoGeometryJvmTest {
             doubleArrayOf(13.414654, 52.520316)
         )
         var d = Math.round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon))
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(416L))
+        d shouldBe 416
         val polygon2 = arrayOf(
             doubleArrayOf(13.425724, 52.524992),
             doubleArrayOf(13.414654, 52.520316),
@@ -643,17 +563,17 @@ class GeoGeometryJvmTest {
             doubleArrayOf(13.425724, 52.524992)
         )
         d = Math.round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon2))
-        d shouldBe 416L
+        d shouldBe 416
         d = Math.round(
             distanceToPolygon(
                 doubleArrayOf(13.412122, 52.52392),
                 arrayOf(polygon2)
             )
         )
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(416L))
+        d shouldBe 416
         val center = polygonCenter(*polygon)
         d = Math.round(distanceToPolygon(center, polygon2))
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(0L))
+        d shouldBe 0
     }
 
     @Test
@@ -690,9 +610,9 @@ class GeoGeometryJvmTest {
             )
         var d =
             Math.round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon))
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(416L))
+        d shouldBe 416
         d = Math.round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon2))
-        MatcherAssert.assertThat(d, CoreMatchers.`is`(416L))
+        d shouldBe 416
     }
 
     @Test
@@ -734,12 +654,7 @@ class GeoGeometryJvmTest {
         val inner = circle2polygon(5000, 52.0, 13.0, 1000.0)[0]
         val polygon =
             arrayOf(outer, inner)
-        MatcherAssert.assertThat(
-            area(polygon),
-            CoreMatchers.`is`(
-                area(outer) - area(inner)
-            )
-        )
+        area(polygon) shouldBe area(outer) - area(inner)
     }
 
     @Test
@@ -750,10 +665,8 @@ class GeoGeometryJvmTest {
             arrayOf(outer, inner)
         val multiPolygon =
             arrayOf(polygon, polygon)
-        MatcherAssert.assertThat(
-            area(multiPolygon),
-            CoreMatchers.`is`(2 * area(polygon))
-        )
+
+        area(multiPolygon) shouldBe 2* area(polygon)
     }
 
     val straightLines = arrayOf(
@@ -799,7 +712,7 @@ class GeoGeometryJvmTest {
     fun shouldSimplifyStraightLines() {
         straightLines.forEach { line ->
             val simplified = simplifyLine(line, 1.0)
-            MatcherAssert.assertThat(simplified.size, CoreMatchers.`is`(2))
+            simplified.size shouldBe 2
         }
     }
 
@@ -823,7 +736,7 @@ class GeoGeometryJvmTest {
 
     @Test
     fun shouldNotValidate() {
-        io.kotest.assertions.assertSoftly {
+        assertSoftly {
             arrayOf(
                 doubleArrayOf(180.001, 0.0),
                 doubleArrayOf(-180.001, 0.0),
@@ -866,8 +779,6 @@ class GeoGeometryJvmTest {
             )
         )
         val point = doubleArrayOf(42.503615, 1.641881)
-        MatcherAssert.assertThat("should contain the point", polygonContains(point, polygon))
+        polygonContains(point,polygon) shouldBe true
     }
-
-
 }

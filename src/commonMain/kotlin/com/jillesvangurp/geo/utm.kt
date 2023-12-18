@@ -113,6 +113,9 @@ data class UtmCoordinate(
 val UtmCoordinate.isUps get() = latitudeZoneLetter in listOf('A','B', 'Y', 'Z')
 val UtmCoordinate.isUtm get() = !isUps
 
+val UtmCoordinate.isSouth get() = latitudeZoneLetter < 'N'
+val UtmCoordinate.isNorth get() = !isSouth
+
 internal val utmRegex = "(([0-9]{1,2})\\s*([a-zA-Z])\\s+(\\d*\\.?\\d+)\\s+(\\d*\\.?\\d+))".toRegex()
 
 fun String.parseUTM(): UtmCoordinate? {

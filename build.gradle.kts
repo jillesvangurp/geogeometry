@@ -65,8 +65,6 @@ kotlin {
                 runtimeOnly("org.junit.jupiter:junit-jupiter:_")
                 implementation(kotlin("test-junit"))
 
-                implementation("org.hamcrest:hamcrest-all:_")
-
                 implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:_")
                 implementation("com.fasterxml.jackson.core:jackson-annotations:_")
                 implementation("com.fasterxml.jackson.module:jackson-module-kotlin:_")

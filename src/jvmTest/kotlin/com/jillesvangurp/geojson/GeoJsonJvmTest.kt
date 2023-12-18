@@ -6,8 +6,6 @@ import com.jillesvangurp.geogeometry.json
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldInclude
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Test
 
@@ -46,7 +44,7 @@ class GeoJsonJvmTest {
         berlin.shouldBe(berlin.copy())
         berlin shouldNotBe berlin.copy(coordinates = null)
         berlin.copy(coordinates = null) shouldNotBe berlin
-        val reversed = berlin.coordinates?.clone()
+        val reversed = berlin.coordinates?.copyOf()
         reversed?.reverse()
         berlin.copy(coordinates = reversed) shouldNotBe berlin
 
