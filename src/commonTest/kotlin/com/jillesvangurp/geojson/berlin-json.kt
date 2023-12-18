@@ -1,3 +1,6 @@
+package com.jillesvangurp.geojson
+
+val berlinGeoJson = """
 {
     "type": "MultiPolygon",
     "coordinates": [
@@ -5872,4 +5875,4 @@
         ]
     ]
 }
-
+""".trimIndent()

@@ -195,9 +195,9 @@ fun MgrsCoordinate.toUtm(): UtmCoordinate {
     // FIXME check if ups or utm, this implementation is for utm
     val bandConstants = latitudeBandConstants[latitudeZoneLetter]!!
 
-    val utmEasting = eastingArray.withIndex().first { (i, letters) ->
+    val utmEasting = eastingArray.withIndex().first { (_, letters) ->
         firstLetter in letters
-    }.let { (i, letters) ->
+    }.let { (i, _) ->
         (i * HUNDRED_KM + easting).toDouble()
     }
 

@@ -64,17 +64,6 @@ kotlin {
             dependencies {
                 runtimeOnly("org.junit.jupiter:junit-jupiter:_")
                 implementation(kotlin("test-junit"))
-
-                implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:_")
-                implementation("com.fasterxml.jackson.core:jackson-annotations:_")
-                implementation("com.fasterxml.jackson.module:jackson-module-kotlin:_")
-
-                // kotlintest runner needs this to enable logging
-                implementation("org.slf4j:slf4j-api:_")
-                implementation("org.slf4j:jcl-over-slf4j:_")
-                implementation("org.slf4j:log4j-over-slf4j:_")
-                implementation("org.slf4j:jul-to-slf4j:_")
-                implementation("ch.qos.logback:logback-classic:_")
             }
         }
 
