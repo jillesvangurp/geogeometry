@@ -6,6 +6,8 @@ import com.jillesvangurp.geojson.PointCoordinates
 import io.kotest.matchers.doubles.shouldBeLessThan
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import kotlin.math.abs
 
 infix fun PointCoordinates.shouldBeNear(expected: PointCoordinates) {
@@ -55,3 +57,5 @@ val jsonPretty: Json by lazy {
         prettyPrint = true
     }
 }
+
+fun Map<String,String>.toJsonObject() = Json.Default.encodeToJsonElement(this).jsonObject
