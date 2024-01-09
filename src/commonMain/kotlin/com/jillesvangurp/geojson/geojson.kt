@@ -10,22 +10,21 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.*
 import kotlin.math.*
 
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
  */
 typealias PointCoordinates = DoubleArray
+// should be array with 2 points
+typealias LineSegment = Array<PointCoordinates>
 typealias MultiPointCoordinates = Array<PointCoordinates>
 typealias LineStringCoordinates = Array<PointCoordinates>
 typealias LinearRingCoordinates = Array<PointCoordinates>
 typealias MultiLineStringCoordinates = Array<LineStringCoordinates> // Outer polygon + holes
 typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + holes
 typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
-
 /**
  * Lowest axes followed by highest axes
  * BoundingBox = [westLongitude,southLatitude,eastLongitude,westLatitude]
@@ -43,6 +42,14 @@ fun LineStringCoordinates.lineStringGeometry() = Geometry.LineString(coordinates
 fun MultiLineStringCoordinates.multiLineStringGeometry() = Geometry.MultiLineString(coordinates = this)
 fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
 fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
+
+val LinearRingCoordinates.segments
+    get() =
+        this.indices.map { index ->
+            arrayOf(this[index], this[(index + 1) % this.size])
+        }
+
+val PolygonCoordinates.outerSegments get() = this[0].segments
 
 fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
     is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
@@ -66,8 +73,12 @@ fun BoundingBox.isValid(): Boolean {
 
 val PointCoordinates.latitude: Double
     get() = this[1]
+val PointCoordinates.y: Double
+    get() = this[1]
 
 val PointCoordinates.longitude: Double
+    get() = this[0]
+val PointCoordinates.x: Double
     get() = this[0]
 
 enum class CompassDirection(val letter: Char) { East('E'), West('W'), South('S'), North('N') }
@@ -81,8 +92,19 @@ val Degree.northOrSouth: CompassDirection get() = if (this >= 0) CompassDirectio
 val Degree.eastOrWest: CompassDirection get() = if (this >= 0) CompassDirection.East else CompassDirection.West
 
 fun PointCoordinates.humanReadable(): String {
-    return """${latitude.degree}° ${latitude.minutes}' ${roundToDecimals(latitude.seconds,2)}" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${roundToDecimals(longitude.seconds,2)}" ${longitude.eastOrWest.letter}"""
+    return """${latitude.degree}° ${latitude.minutes}' ${
+        roundToDecimals(
+            latitude.seconds,
+            2
+        )
+    }" ${latitude.northOrSouth.letter}, ${longitude.degree}° ${longitude.minutes}' ${
+        roundToDecimals(
+            longitude.seconds,
+            2
+        )
+    }" ${longitude.eastOrWest.letter}"""
 }
+
 val PointCoordinates.altitude: Double?
     get() = if (this.size == 3) this[2] else null
 
@@ -133,7 +155,11 @@ fun BoundingBox.zoomLevel(height: Int = 512, width: Int = 512, minZoom: Double =
     val latFraction = (GeoGeometry.toRadians(northEast.latitude) - GeoGeometry.toRadians(southWest.latitude)) / PI
 
     val lngDiff = northEast.longitude - southWest.longitude
-    val lngFraction = if (lngDiff < 0) { (lngDiff + 360) / 360 } else { (lngDiff / 360) }
+    val lngFraction = if (lngDiff < 0) {
+        (lngDiff + 360) / 360
+    } else {
+        (lngDiff / 360)
+    }
 
     val globePixelSize = 256 // Google's world dimensions in pixels at zoom level 0 for the globe
     val latZoom = zoom(height, globePixelSize, latFraction)
@@ -142,8 +168,36 @@ fun BoundingBox.zoomLevel(height: Int = 512, width: Int = 512, minZoom: Double =
     return minOf(latZoom, lngZoom, minZoom)
 }
 
-fun Geometry.asFeature(properties: JsonObject? = JsonObject(mapOf()), bbox: BoundingBox? = null) =
-    Feature(this, properties, bbox)
+// extension function to set a few supported properties on feature properties
+// note, not everything is supported in geojson.io
+// https://github.com/mapbox/simplestyle-spec/tree/master/1.1.0
+fun JsonObjectBuilder.markerColor(color: String = "red") = put("marker-color", color)
+
+/**
+ * Set size of small, medium, large
+ */
+fun JsonObjectBuilder.markerSize(size: Int) = put("marker-size", size)
+fun JsonObjectBuilder.markerSymbol(symbol: String) = put("marker-symbol", symbol)
+fun JsonObjectBuilder.symbolColor(color: String) = put("symbol-color", color)
+fun JsonObjectBuilder.stroke(color: String) = put("stroke", color)
+fun JsonObjectBuilder.strokeOpacity(opacity: Double) = put("stroke-opacity", opacity)
+fun JsonObjectBuilder.strokeWidth(width: Double) = put("stroke-opacity", width)
+fun JsonObjectBuilder.fill(color: String) = put("fill", color)
+fun JsonObjectBuilder.fillOpacity(opacity: Double) = put("fill-opacity", opacity)
+fun JsonObjectBuilder.title(title: String) = put("title", title)
+fun JsonObjectBuilder.description(description: String) = put("description", description)
+
+fun Geometry.asFeature(
+    properties: JsonObject? = null,
+    bbox: BoundingBox? = null,
+    propertiesBuilder: ((JsonObjectBuilder) -> Unit)? = null
+): Feature {
+    val ps = properties ?: buildJsonObject {
+        propertiesBuilder?.invoke(this)
+    }
+
+    return Feature(this, ps, bbox)
+}
 
 private fun deepEquals(left: Array<*>?, right: Array<*>?): Boolean {
     // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
@@ -179,6 +233,7 @@ sealed class Geometry {
             is GeometryCollection -> GeometryType.GeometryCollection
         }
     }
+
     @Serializable
     @SerialName("Point")
     data class Point(
@@ -391,6 +446,12 @@ data class Feature(
 
     override fun toString(): String = Json.encodeToString(serializer(), this)
 }
+
+fun Collection<PointCoordinates>.asFeatureCollection(properties: JsonObject? = null) =
+    FeatureCollection(map { it.geometry().asFeature(properties) })
+
+fun Collection<Geometry>.asFeatureCollection(properties: JsonObject? = null) =
+    FeatureCollection(map { it.asFeature(properties) })
 
 @Serializable
 data class FeatureCollection(
