@@ -3,7 +3,6 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geogeometry.bergstr16Berlin
-import com.jillesvangurp.geogeometry.json
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -82,7 +81,7 @@ class GeojsonKtTest {
 
     @Test
     fun shouldCoverBerlinWithGeohashes() {
-        val berlin = json.decodeFromString(Geometry.serializer(), berlinGeoJson) as Geometry.MultiPolygon
+        val berlin = DEFAULT_JSON.decodeFromString(Geometry.serializer(), berlinGeoJson) as Geometry.MultiPolygon
 
         val hashes = GeoHashUtils.geoHashesForMultiPolygon(
             coordinates = berlin.coordinates ?: throw IllegalArgumentException("coordinates missing"),
@@ -90,7 +89,7 @@ class GeojsonKtTest {
             maxLength = 6
         )
         FeatureCollection.fromGeoHashes(hashes)
-        val json = json.encodeToString(
+        val json = DEFAULT_JSON.encodeToString(
             FeatureCollection.serializer(),
             //hashesCollection +
             FeatureCollection(listOf(berlin.asFeature()))
@@ -106,7 +105,7 @@ class GeojsonKtTest {
 
     @Test
     fun equalsTestForGeometry() {
-        val berlin = json.decodeFromString(Geometry.serializer(), berlinGeoJson) as Geometry.MultiPolygon
+        val berlin = DEFAULT_JSON.decodeFromString(Geometry.serializer(), berlinGeoJson) as Geometry.MultiPolygon
 
         berlin.shouldBe(berlin)
         berlin.shouldBe(berlin.copy())

@@ -26,7 +26,7 @@ class ConcaveHullTest {
         ).toTypedArray()))
 
         println(
-            jsonPretty.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature())))
+            DEFAULT_JSON_PRETTY.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature())))
         )
     }
 

@@ -11,7 +11,6 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlin.math.abs
-import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 import kotlin.test.Test
 
@@ -78,16 +77,16 @@ class GeoGeometryTest {
 
     @Test
     fun shouldBeValid() {
-        val polygon = json.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
+        val polygon = DEFAULT_JSON.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
         polygon.coordinates?.isValid() shouldBe false
         (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.isValid() shouldBe true
     }
 
     @Test
     fun shouldSerializeToSame() {
-        val polygonObject = json.decodeFromString(JsonObject.serializer(), testPolygon)
-        val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
-        val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
+        val polygonObject = DEFAULT_JSON.decodeFromString(JsonObject.serializer(), testPolygon)
+        val polygon = DEFAULT_JSON.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
+        val serializedPolygonObject = DEFAULT_JSON.encodeToJsonElement(Geometry.serializer(), polygon)
 
         polygonObject shouldBe serializedPolygonObject
     }
