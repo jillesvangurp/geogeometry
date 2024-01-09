@@ -509,26 +509,12 @@ class GeoGeometry {
         fun translate(
             latitude: Double,
             longitude: Double,
-            dy: Double,
-            dx: Double
+            latitudalMeters: Double,
+            longitudalMeters: Double
         ): DoubleArray {
-            val earthRadius = 6378137.0 // Earth's radius in meters
-
-            // Convert latitude and longitude to radians
-            val latRadians = toRadians(latitude)
-            val lonRadians = toRadians(longitude)
-
-            // Calculate the new latitude in radians
-            val newLatRadians = latRadians + dy / earthRadius
-
-            // Calculate the new longitude in radians
-            val newLonRadians = lonRadians + dx / (earthRadius * cos(latRadians))
-
-            // Convert the new latitude and longitude back to degrees
-            val newLatitude = fromRadians(newLatRadians)
-            val newLongitude = fromRadians(newLonRadians)
-
-            return doubleArrayOf(newLongitude, newLatitude)
+            validate(latitude, longitude, false)
+            val longitudal = translateLongitude(latitude, longitude, longitudalMeters)
+            return translateLatitude(longitudal.latitude, longitudal.longitude, latitudalMeters)
         }
 
         fun translate(
