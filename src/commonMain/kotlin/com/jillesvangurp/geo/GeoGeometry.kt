@@ -517,7 +517,14 @@ class GeoGeometry {
             return translateLatitude(longitudal.latitude, longitudal.longitude, latitudalMeters)
         }
 
-        /**
+        fun translate(
+            point: PointCoordinates,
+            xMeters: Double,
+            yMeters: Double
+        ): DoubleArray = translate(point.latitude,point.longitude, yMeters,xMeters)
+
+
+            /**
          * Calculate a bounding box of the specified longitudal and latitudal meters with the latitude/longitude as the center.
          * @param latitude latitude
          * @param longitude longitude
