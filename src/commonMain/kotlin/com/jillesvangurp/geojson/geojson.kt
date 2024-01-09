@@ -188,10 +188,15 @@ fun JsonObjectBuilder.description(description: String) = put("description", desc
 fun Geometry.asFeature(
     properties: JsonObject? = null,
     bbox: BoundingBox? = null,
-    propertiesBuilder: (JsonObjectBuilder.() -> Unit)? = null
 ): Feature {
-    val ps = properties ?: buildJsonObject {
-        propertiesBuilder?.invoke(this)
+    return Feature(this, properties, bbox)
+}
+fun Geometry.asFeatureWithProperties(
+    bbox: BoundingBox? = null,
+    propertiesBuilder: (JsonObjectBuilder.() -> Unit)
+): Feature {
+    val ps = buildJsonObject {
+        propertiesBuilder.invoke(this)
     }
 
     return Feature(this, ps, bbox)
