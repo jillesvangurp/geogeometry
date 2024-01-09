@@ -37,9 +37,10 @@ val DEFAULT_JSON_PRETTY: Json by lazy {
 }
 
 
-val FeatureCollection.geoJsonIOUrl get() = DEFAULT_JSON.encodeToString(this).urlEncode().let {
-    "https:geojson.io/#data=data:application/json,$it"
+val FeatureCollection.geoJsonIOUrl get() = DEFAULT_JSON.encodeToString(this).let { json->
+    "https://geojson.io/#data=${"data:application/json,$json".urlEncode()}"
 }
+
 val Geometry.geoJsonIOUrl get() = this.asFeatureCollection.geoJsonIOUrl
 
 fun String.urlEncode(): String {

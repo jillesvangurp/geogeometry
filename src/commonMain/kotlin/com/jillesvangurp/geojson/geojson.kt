@@ -73,13 +73,11 @@ fun BoundingBox.isValid(): Boolean {
 
 val PointCoordinates.latitude: Double
     get() = this[1]
-val PointCoordinates.y: Double
-    get() = this[1]
+val PointCoordinates.y get() = latitude
 
 val PointCoordinates.longitude: Double
     get() = this[0]
-val PointCoordinates.x: Double
-    get() = this[0]
+val PointCoordinates.x get() = longitude
 
 enum class CompassDirection(val letter: Char) { East('E'), West('W'), South('S'), North('N') }
 
@@ -176,7 +174,7 @@ fun JsonObjectBuilder.markerColor(color: String = "red") = put("marker-color", c
 /**
  * Set size of small, medium, large
  */
-fun JsonObjectBuilder.markerSize(size: Int) = put("marker-size", size)
+fun JsonObjectBuilder.markerSize(size: String) = put("marker-size", size)
 fun JsonObjectBuilder.markerSymbol(symbol: String) = put("marker-symbol", symbol)
 fun JsonObjectBuilder.symbolColor(color: String) = put("symbol-color", color)
 fun JsonObjectBuilder.stroke(color: String) = put("stroke", color)
@@ -190,7 +188,7 @@ fun JsonObjectBuilder.description(description: String) = put("description", desc
 fun Geometry.asFeature(
     properties: JsonObject? = null,
     bbox: BoundingBox? = null,
-    propertiesBuilder: ((JsonObjectBuilder) -> Unit)? = null
+    propertiesBuilder: (JsonObjectBuilder.() -> Unit)? = null
 ): Feature {
     val ps = properties ?: buildJsonObject {
         propertiesBuilder?.invoke(this)
@@ -447,7 +445,7 @@ data class Feature(
     override fun toString(): String = Json.encodeToString(serializer(), this)
 }
 
-fun Collection<PointCoordinates>.asFeatureCollection(properties: JsonObject? = null) =
+fun Collection<PointCoordinates>.toFeatureCollection(properties: JsonObject? = null) =
     FeatureCollection(map { it.geometry().asFeature(properties) })
 
 fun Collection<Geometry>.asFeatureCollection(properties: JsonObject? = null) =

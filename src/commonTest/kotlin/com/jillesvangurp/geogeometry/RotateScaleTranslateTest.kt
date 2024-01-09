@@ -4,7 +4,9 @@ import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.calculateAngle
 import com.jillesvangurp.geo.calculateHeadingDifference
 import com.jillesvangurp.geojson.*
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
@@ -176,50 +178,135 @@ class RotationTest {
     }
 
     @Test
-    fun shouldCalculateAngleCorrectly() {
-        val p1 = doubleArrayOf(13.401361, 52.529948)
-        val p2 = doubleArrayOf(13.410717, 52.503663)
-        val p3 = doubleArrayOf(13.376599, 52.509515)
-
-        val s1 = arrayOf(p1, p2)
-        val s2 = arrayOf(p2, p3)
-        val s3 = arrayOf(p3, p1)
-
-//        val a1 = calculateHeadingDifference(s1, s2)
-//        println(a1) //119.32
-//        val a2 = calculateHeadingDifference(s2, s3)
-//        println(a2) //130.73
-//        val a3 = calculateHeadingDifference(s3, s1)
-//        println(a3) // 109.93
-//
-//        (a1+a2+a3).roundToInt() shouldBe 180 // actual 360
-
-        val triangle = arrayOf(arrayOf(p1, p2, p3, p1))
-
-//        val around = triangle.centroid()
-//        FeatureCollection(
-//            listOf(Geometry.Point(around).asFeature())+
-//            listOf(triangle, triangle.rotate(45.0,around), triangle.rotate(45.0,around).rotate(45.0,around)).map {it.polygonGeometry().asFeature()}).geoJsonIOUrl.let {
-//            println(it)
-//        }
-
-        val around = potsDammerPlatz
+    fun shouldRotatePointAround() {
+        val around = moritzPlatz
         val distance = GeoGeometry.distance(around, rosenthalerPlatz)
 
         val rotatedPoints = (0..36).map { d ->
-            rosenthalerPlatz.rotate(d.toDouble() * 10, around)
+            rosenthalerPlatz.rotate(d.toDouble() * 10, around).geometry().asFeature {
+                val gray = (d.toDouble()/36*255).roundToInt().toString(16).padStart(2,'0')
+                markerColor("#$gray$gray$gray")
+                title("$d")
+            }
         }
         rotatedPoints.forEach {
-            val actualDistance = GeoGeometry.distance(around, it)
+            val actualDistance = GeoGeometry.distance(around, (it.geometry as Geometry.Point).coordinates!!)
             withClue("$actualDistance is too different from expected $distance") {
                 abs(actualDistance - distance) shouldBeLessThan 1.0
             }
         }
 
-        println((rotatedPoints + around).asFeatureCollection(buildJsonObject {
-
+        println(FeatureCollection(rotatedPoints + around.geometry().asFeature {
+            markerColor("red")
         }).geoJsonIOUrl)
     }
+
+    @Test
+    fun shouldRotateTriangle() {
+        val triangle = arrayOf(arrayOf(rosenthalerPlatz, moritzPlatz, potsDammerPlatz, rosenthalerPlatz))
+        FeatureCollection(listOf(
+        triangle.polygonGeometry().asFeature {
+            fill("red")
+            fillOpacity(0.25)
+        },
+        rosenthalerPlatz.geometry().asFeature {
+            markerColor("green")
+            title("og rosenthaler")
+        },
+        rosenthalerPlatz.rotate(0.0, moritzPlatz).geometry().asFeature {
+            markerColor("pink")
+            title("0 degrees")
+        },
+        rosenthalerPlatz.rotate(10.0, moritzPlatz).geometry().asFeature {
+            markerColor("yellow")
+            title("10 degrees")
+        },
+        potsDammerPlatz.rotate(20.0, rosenthalerPlatz).geometry().asFeature {
+            fill("brown")
+            fillOpacity(0.25)
+            title("20 degrees potsdammerplatz")
+        },
+        triangle.rotate(20.0, rosenthalerPlatz).polygonGeometry().asFeature {
+            fill("green")
+            fillOpacity(0.25)
+        },
+        triangle.rotate(20.0, rosenthalerPlatz).rotate(20.0, rosenthalerPlatz).polygonGeometry().asFeature {
+            fill("blue")
+            fillOpacity(0.25)
+        }
+        )).geoJsonIOUrl.let {
+            println(it)
+        }
+    }
+
+    @Test
+    fun shouldRotateMetersCorrectly() {
+        rotateMeters(2.0,2.0, 0.0).map { it.roundToInt().toDouble() } shouldContainInOrder listOf(2.0,2.0)
+        rotateMeters(2.0,2.0, 180.0).map { it.roundToInt().toDouble() } shouldContainInOrder listOf(-2.0,-2.0)
+    }
+
+    @Test
+    fun shouldMoveBackAndForth() {
+        val moved = rosenthalerPlatz.translate(-1000.0,-2000.0).translate(1000.0,2000.0)
+        GeoGeometry.distance(rosenthalerPlatz,moved) shouldBeLessThan 1.0
+    }
+
+    @Test
+    fun wtf() {
+        val anchor = moritzPlatz
+        val point = rosenthalerPlatz
+        val horizontalMarker = doubleArrayOf(point.x, anchor.y)
+        val x = GeoGeometry.distance(anchor, horizontalMarker).let {
+            if(anchor.x>point.x) {
+                -it
+            } else {
+                it
+            }
+        }
+        val verticalMarker = doubleArrayOf(anchor.x, point.y)
+        val y = GeoGeometry.distance(anchor, verticalMarker).let {
+            if(anchor.y>point.y) {
+                -it
+            } else {
+                it
+            }
+        }
+
+
+        val translated = anchor.translate(y, x)
+        val d = GeoGeometry.distance(translated, point)
+
+        listOf(
+            anchor.geometry().asFeature {
+                title("anchor")
+            },
+            point.geometry().asFeature {
+                title("point")
+            },
+            horizontalMarker.geometry().asFeature {
+                title("horizontal")
+            },
+            verticalMarker.geometry().asFeature {
+                title("vertical")
+            },
+            translated.geometry().asFeature {
+                title("translated")
+            },
+        ).let {
+            println(FeatureCollection(it).geoJsonIOUrl)
+        }
+
+        d shouldBeLessThan 10.0
+    }
+}
+
+fun rotateMeters(x:Double, y:Double, degrees: Double): List<Double> {
+    val radians = GeoGeometry.toRadians(degrees)
+
+    val newX = x*cos(radians) - y*sin(radians)
+    val newY = x*sin(radians) + y*cos(radians)
+
+    return listOf(newX,newY)
 }
 
 val PolygonCoordinates.angles

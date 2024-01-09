@@ -213,7 +213,7 @@ fun PointCoordinates.rotate (degrees: Double, around: PointCoordinates?=null): P
 fun Array<PointCoordinates>.rotate(degrees: Double, around: PointCoordinates?=null): Array<PointCoordinates> {
     val centroid = around?:centroid()
     return map { p ->
-            GeoGeometry.rotateAround(centroid, p, degrees)
+        p.rotate(degrees, centroid)
     }.toTypedArray()
 }
 

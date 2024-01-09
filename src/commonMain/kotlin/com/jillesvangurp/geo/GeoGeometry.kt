@@ -61,7 +61,7 @@ class GeoGeometry {
         const val WGS84_RADIUS = 6378137
         const val EARTH_CIRCUMFERENCE_METERS = EARTH_RADIUS_METERS * PI * 2.0
         const val DEGREE_LATITUDE_METERS = EARTH_RADIUS_METERS * PI / 180.0
-        const val DEGREES_TO_RADIANS = 2.0 * PI / 360.0
+        const val DEGREES_TO_RADIANS =  PI / 180.0
         const val RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
 
 
@@ -509,19 +509,33 @@ class GeoGeometry {
         fun translate(
             latitude: Double,
             longitude: Double,
-            latitudalMeters: Double,
-            longitudalMeters: Double
+            dy: Double,
+            dx: Double
         ): DoubleArray {
-            validate(latitude, longitude, false)
-            val longitudal = translateLongitude(latitude, longitude, longitudalMeters)
-            return translateLatitude(longitudal.latitude, longitudal.longitude, latitudalMeters)
+            val earthRadius = 6378137.0 // Earth's radius in meters
+
+            // Convert latitude and longitude to radians
+            val latRadians = toRadians(latitude)
+            val lonRadians = toRadians(longitude)
+
+            // Calculate the new latitude in radians
+            val newLatRadians = latRadians + dy / earthRadius
+
+            // Calculate the new longitude in radians
+            val newLonRadians = lonRadians + dx / (earthRadius * cos(latRadians))
+
+            // Convert the new latitude and longitude back to degrees
+            val newLatitude = fromRadians(newLatRadians)
+            val newLongitude = fromRadians(newLonRadians)
+
+            return doubleArrayOf(newLongitude, newLatitude)
         }
 
         fun translate(
             point: PointCoordinates,
             xMeters: Double,
             yMeters: Double
-        ): DoubleArray = translate(point.latitude,point.longitude, yMeters,xMeters)
+        ): DoubleArray = translate(point.latitude,point.longitude, yMeters, xMeters)
 
 
             /**
@@ -570,8 +584,8 @@ class GeoGeometry {
             return degrees * DEGREES_TO_RADIANS
         }
 
-        fun fromRadians(degrees: Double): Double {
-            return degrees * RADIANS_TO_DEGREES
+        fun fromRadians(radians: Double): Double {
+            return radians * RADIANS_TO_DEGREES
         }
 
         /**
@@ -869,8 +883,8 @@ class GeoGeometry {
             return arrayOf(points.toTypedArray())
         }
 
-        fun rotateAround(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
-            // we have to work coordinates in meters because otherwise we get a weird elipse :-)
+        fun rotateAroundOld(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
+            // we have to work in meters because otherwise we get a weird elipse instead of a circle :-)
             // start by calculating the compass direction of the point from the anchor
             val heading = headingFromTwoPoints(anchor, point)
             // calculate the distance in meters
@@ -883,6 +897,34 @@ class GeoGeometry {
 
             // use the x and y to translate the anchor and get the point on the circle
             return translate(anchor.latitude, anchor.longitude, y, x)
+        }
+
+        fun rotateAround(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
+            val x = distance(anchor, doubleArrayOf(point.x, anchor.y)).let {
+                if(anchor.x>point.x) {
+                    -it
+                } else {
+                    it
+                }
+            }
+            val y = distance(anchor, doubleArrayOf(anchor.x, point.y)).let {
+                if(anchor.y>point.y) {
+                    -it
+                } else {
+                    it
+                }
+            }
+
+            val d = distance(anchor.translate(y, x), point)
+
+            if(d > 50.0) error("srously WTF?!?!?!? $d")
+
+            val radians = toRadians(degrees)
+
+            val newX = x*cos(radians) - y*sin(radians)
+            val newY = x*sin(radians) + y*cos(radians)
+
+            return translate(anchor,newX,newY)
         }
 
         /**
