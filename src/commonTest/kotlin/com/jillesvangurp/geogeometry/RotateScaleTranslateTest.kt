@@ -216,9 +216,26 @@ class RotationTest {
     }
 
     @Test
-    fun shouldRotateMetersCorrectly() {
-        rotateMeters(2.0,2.0, 0.0).map { it.roundToInt().toDouble() } shouldContainInOrder listOf(2.0,2.0)
-        rotateMeters(2.0,2.0, 180.0).map { it.roundToInt().toDouble() } shouldContainInOrder listOf(-2.0,-2.0)
+    fun shouldNotDistortTriangleWhenRotatingManyTimes() {
+        val triangle = arrayOf(arrayOf(rosenthalerPlatz, moritzPlatz, potsDammerPlatz, rosenthalerPlatz))
+        var rotated = triangle
+        repeat(200) {
+            // it all gets translated to radians so 5000 degrees is fine
+            rotated = rotated.rotate(5000.0, triangle.centroid())
+        }
+        triangle.outerSegments.zip(rotated.outerSegments).forEach { (originalSegment, rotatedSegment) ->
+            // verify segments have same length as the original even after rotating many times
+            val ogLength = GeoGeometry.distance(originalSegment[0], originalSegment[1])
+            val rotatedLength = GeoGeometry.distance(rotatedSegment[0], rotatedSegment[1])
+            ogLength - rotatedLength shouldBeLessThan 1.0
+        }
+
+        listOf(
+            triangle,
+            rotated
+        ).map { it.polygonGeometry() }.asFeatureCollection().let {
+            println(it.geoJsonIOUrl)
+        }
     }
 
     @Test
@@ -226,15 +243,21 @@ class RotationTest {
         val moved = rosenthalerPlatz.translate(-1000.0,-2000.0).translate(1000.0,2000.0)
         GeoGeometry.distance(rosenthalerPlatz,moved) shouldBeLessThan 1.0
     }
-}
 
-fun rotateMeters(x:Double, y:Double, degrees: Double): List<Double> {
-    val radians = GeoGeometry.toRadians(degrees)
 
-    val newX = x*cos(radians) - y*sin(radians)
-    val newY = x*sin(radians) + y*cos(radians)
+    @Test
+    fun shouldNotDistortRotatedRectanglesWhenScaling() {
+        val rectangle = rectangle(rosenthalerPlatz,4.0).rotate(30.0)
+        var scaled = rectangle
+        (1..5).forEach { percent ->
+            scaled = scaled.scaleX(percent*102.0).scaleY(percent*102.0)
+        }
 
-    return listOf(newX,newY)
+
+        println(FeatureCollection(
+            listOf(rectangle, scaled).map { it.asFeature() }
+        ).geoJsonIOUrl)
+    }
 }
 
 fun rectangle(point: PointCoordinates, size: Double): Geometry.Polygon {

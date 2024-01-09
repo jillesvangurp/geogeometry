@@ -869,23 +869,14 @@ class GeoGeometry {
             return arrayOf(points.toTypedArray())
         }
 
-        fun rotateAroundOld(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
-            // we have to work in meters because otherwise we get a weird elipse instead of a circle :-)
-            // start by calculating the compass direction of the point from the anchor
-            val heading = headingFromTwoPoints(anchor, point)
-            // calculate the distance in meters
-            val distance = distance(anchor, point)
-
-            // basic high school math: given an angle in radians and a distance, calculate x and y ...
-            val angle = toRadians((heading + degrees) % 360)
-            val x = sin(angle) * distance
-            val y = cos(angle) * distance
-
-            // use the x and y to translate the anchor and get the point on the circle
-            return translate(anchor.latitude, anchor.longitude, y, x)
-        }
-
+        /**
+         * Rotates a [point] around an [anchor] by [degrees]. Returns rotated point.
+         *
+         * Note, rotation is counter clockwise. That's just how the math works. Negate [degrees] for clockwise.
+         */
         fun rotateAround(anchor: PointCoordinates, point: PointCoordinates, degrees: Double): PointCoordinates {
+
+            // distances are absolute, so calculate the direction we need to translate to
             val x = distance(anchor, doubleArrayOf(point.x, anchor.y)).let {
                 if(anchor.x>point.x) {
                     -it
@@ -900,10 +891,6 @@ class GeoGeometry {
                     it
                 }
             }
-
-            val d = distance(anchor.translate(y, x), point)
-
-            if(d > 50.0) error("srously WTF?!?!?!? $d")
 
             val radians = toRadians(degrees)
 
