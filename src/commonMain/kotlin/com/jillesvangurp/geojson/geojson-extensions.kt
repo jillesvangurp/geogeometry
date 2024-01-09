@@ -1,7 +1,6 @@
 package com.jillesvangurp.geojson
 
 import com.jillesvangurp.geo.GeoGeometry
-import kotlinx.serialization.encodeToString
 
 fun LineStringCoordinates.centroid(): DoubleArray {
     var minLon = 180.0
@@ -225,7 +224,7 @@ fun  Array<Array<PointCoordinates>>.rotate(degrees: Double, around: PointCoordin
 
 fun  Array<Array<Array<PointCoordinates>>>.rotate(degrees: Double, around: PointCoordinates?=null): Array<Array<Array<PointCoordinates>>> {
     return map { ps ->
-        ps.rotate(degrees)
+        ps.rotate(degrees, around)
     }.toTypedArray()
 }
 
