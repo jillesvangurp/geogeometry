@@ -1,6 +1,7 @@
 package com.jillesvangurp.geojson
 
 import com.jillesvangurp.geo.GeoGeometry
+import kotlinx.serialization.encodeToString
 
 fun LineStringCoordinates.centroid(): DoubleArray {
     var minLon = 180.0
@@ -86,6 +87,8 @@ fun Geometry.area() = when(this) {
     } ?:0.0
     else -> 0.0
 }
+
+val Geometry.asFeatureCollection get() = FeatureCollection(listOf(this.asFeature()))
 
 fun <T: Geometry> T.scaleX(percent: Double): T {
     @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
@@ -185,44 +188,52 @@ fun  Array<Array<Array<Array<PointCoordinates>>>>.scaleY(percent: Double): Array
 fun Feature.scaleY(percent: Double) = copy(geometry=geometry?.scaleY(percent))
 fun FeatureCollection.scaleY(percent: Double) = copy(features = features.map { it.scaleY(percent) })
 
-fun <T: Geometry> T.rotate(degrees: Double): T {
+fun <T: Geometry> T.rotate(degrees: Double, around: PointCoordinates?=null): T {
     @Suppress("UNCHECKED_CAST") // it's fine, generics confusing things
     return when(this) {
-        is Geometry.Point -> this
-        is Geometry.LineString -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
-        is Geometry.MultiLineString -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
-        is Geometry.MultiPoint -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
-        is Geometry.Polygon -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
-        is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.rotate(degrees)) as T
-        is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.rotate(degrees) }.toTypedArray()) as T
+        is Geometry.Point -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
+        is Geometry.LineString -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
+        is Geometry.MultiLineString -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
+        is Geometry.MultiPoint -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
+        is Geometry.Polygon -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
+        is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
+        is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.rotate(degrees,around) }.toTypedArray()) as T
         else -> error("shouldn't happen")
     }
 }
 
-fun  Array<PointCoordinates>.rotate(degrees: Double): Array<PointCoordinates> {
-    val centroid = centroid()
+fun PointCoordinates.rotate (degrees: Double, around: PointCoordinates?=null): PointCoordinates {
+    return if(around == null) {
+        this
+    } else {
+        GeoGeometry.rotateAround(around, this, degrees)
+    }
+}
+
+fun Array<PointCoordinates>.rotate(degrees: Double, around: PointCoordinates?=null): Array<PointCoordinates> {
+    val centroid = around?:centroid()
     return map { p ->
-            GeoGeometry.rotateAround(centroid, p, degrees)
+        p.rotate(degrees, centroid)
     }.toTypedArray()
 }
 
-fun  Array<Array<PointCoordinates>>.rotate(degrees: Double): Array<Array<PointCoordinates>> {
+fun  Array<Array<PointCoordinates>>.rotate(degrees: Double, around: PointCoordinates?=null): Array<Array<PointCoordinates>> {
+    return map { ps ->
+        ps.rotate(degrees,around)
+    }.toTypedArray()
+}
+
+fun  Array<Array<Array<PointCoordinates>>>.rotate(degrees: Double, around: PointCoordinates?=null): Array<Array<Array<PointCoordinates>>> {
     return map { ps ->
         ps.rotate(degrees)
     }.toTypedArray()
 }
 
-fun  Array<Array<Array<PointCoordinates>>>.rotate(degrees: Double): Array<Array<Array<PointCoordinates>>> {
+fun  Array<Array<Array<Array<PointCoordinates>>>>.rotate(degrees: Double, around: PointCoordinates?=null): Array<Array<Array<Array<PointCoordinates>>>> {
     return map { ps ->
-        ps.rotate(degrees)
+        ps.rotate(degrees,around)
     }.toTypedArray()
 }
 
-fun  Array<Array<Array<Array<PointCoordinates>>>>.rotate(degrees: Double): Array<Array<Array<Array<PointCoordinates>>>> {
-    return map { ps ->
-        ps.rotate(degrees)
-    }.toTypedArray()
-}
-
-fun Feature.rotate(degrees: Double) = copy(geometry=geometry?.rotate(degrees))
-fun FeatureCollection.rotate(degrees: Double) = copy(features = features.map { it.rotate(degrees) })
+fun Feature.rotate(degrees: Double, around: PointCoordinates?=null) = copy(geometry=geometry?.rotate(degrees,around))
+fun FeatureCollection.rotate(degrees: Double, around: PointCoordinates?=null) = copy(features = features.map { it.rotate(degrees,around) })

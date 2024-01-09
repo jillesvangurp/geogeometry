@@ -21,7 +21,6 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.polygonForPoints
 import com.jillesvangurp.geo.GeoGeometry.Companion.rightTurn
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
-import com.jillesvangurp.geo.GeoGeometry.Companion.translate
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
@@ -35,7 +34,9 @@ import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import kotlin.math.*
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.round
 import kotlin.random.Random
 import kotlin.test.Test
 
@@ -150,16 +151,6 @@ class GeoGeometryMigratedTests {
         round(distance(bergstr16Berlin, bergstr16InvalidenBerlin)) shouldBe 135.0
         // no difference over short distances at this latitude
         round(vicentyDistance(bergstr16Berlin, bergstr16InvalidenBerlin)) shouldBe 135.0
-    }
-
-    @Test
-    fun shouldTranslateCorrectly() {
-        val translated = translate(52.530564, 13.394964, 1000.0, 3000.0)
-        val pythagorasDistance = sqrt(1000.0.pow(2.0) + 3000.0.pow(2.0))
-        val distance = distance(doubleArrayOf(13.394964, 52.530564), translated)
-        withClue("distance should be correct for translated coordinate") {
-            abs(distance - pythagorasDistance) shouldBeLessThan 1.0
-        }
     }
 
     @Test

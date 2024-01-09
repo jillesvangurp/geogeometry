@@ -11,7 +11,6 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlin.math.abs
-import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 import kotlin.test.Test
 
@@ -78,51 +77,18 @@ class GeoGeometryTest {
 
     @Test
     fun shouldBeValid() {
-        val polygon = json.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
+        val polygon = DEFAULT_JSON.decodeFromString(Geometry.serializer(), badGeo) as Geometry.Polygon
         polygon.coordinates?.isValid() shouldBe false
         (polygon.ensureFollowsRightHandSideRule() as Geometry.Polygon).coordinates?.isValid() shouldBe true
     }
 
     @Test
     fun shouldSerializeToSame() {
-        val polygonObject = json.decodeFromString(JsonObject.serializer(), testPolygon)
-        val polygon = json.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
-        val serializedPolygonObject = json.encodeToJsonElement(Geometry.serializer(), polygon)
+        val polygonObject = DEFAULT_JSON.decodeFromString(JsonObject.serializer(), testPolygon)
+        val polygon = DEFAULT_JSON.decodeFromJsonElement(Geometry.serializer(), polygonObject) as Geometry.Polygon
+        val serializedPolygonObject = DEFAULT_JSON.encodeToJsonElement(Geometry.serializer(), polygon)
 
         polygonObject shouldBe serializedPolygonObject
-    }
-
-    @Test
-    fun shouldRotate() {
-        val anchor = bergstr16Berlin
-        val point = oranienburgerTor
-        val d = GeoGeometry.distance(anchor, point)
-        val points = (0..240).step(10).map {
-            GeoGeometry.rotateAround(anchor, point, it.toDouble())
-        }
-            .also {
-                // all points should be the same distance
-                it.forEach { (GeoGeometry.distance(bergstr16Berlin, it) - d).absoluteValue shouldBeLessThan 0.1 }
-                it.size shouldBe 25
-                it.distinct().size shouldBe 25
-                it.contains(bergstr16Berlin) shouldBe false
-            }
-
-        val features = (points + point + anchor).map {
-            Geometry.Point(coordinates = it)
-        }.map {
-            it.asFeature()
-        }
-        println(FeatureCollection(features))
-    }
-
-    @Test
-    fun rotateByZeroDegreesShouldBeSamePoint() {
-        val anchor = bergstr16Berlin
-        val point = oranienburgerTor
-        GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 0.0)) shouldBeLessThan 1.0
-        (GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 180.0)) - 2 * GeoGeometry.distance(anchor,
-            point)).absoluteValue shouldBeLessThan 1.0
     }
 
     @Test

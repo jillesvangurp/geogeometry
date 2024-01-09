@@ -108,12 +108,12 @@ class GeoHashUtilsTest {
         ]
       }            
         """.trimIndent()
-        val p = json.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
+        val p = DEFAULT_JSON.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
         val coordinates = p.coordinates?.get(0) ?: throw IllegalStateException()
         val hashes = GeoHashUtils.geoHashesForLinearRing(coordinates = coordinates, includePartial = true)
 
         println(hashes.size)
-        println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
+        println(DEFAULT_JSON.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
 
         val totalHashedArea = hashes.map { GeoHashUtils.decodeBbox(it) }.sumOf { GeoGeometry.area(it) }
         val bboxArea = GeoGeometry.area(GeoGeometry.boundingBox(p.coordinates as PolygonCoordinates))
@@ -443,7 +443,7 @@ class GeoHashUtilsTest {
         val longitude = 13.401284
         val radius = 100
         val hashes = GeoHashUtils.geoHashesForCircle(8, latitude, longitude, radius.toDouble())
-        println(json.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
+        println(DEFAULT_JSON.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
         println(hashes.size)
         for (hash in hashes) {
             GeoGeometry.distance(
