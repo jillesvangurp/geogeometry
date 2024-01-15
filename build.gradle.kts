@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -10,7 +13,9 @@ repositories {
 }
 
 kotlin {
-    jvm {   }
+    jvm {
+
+    }
     js(IR) {
         nodejs {
             testTask(Action {
@@ -87,6 +92,15 @@ kotlin {
     }
 }
 
+tasks.withType<KotlinJvmCompile> {
+    jvmTargetValidationMode.set(JvmTargetValidationMode.WARNING)
+
+    kotlinOptions {
+        // this is the minimum LTS version we support, 8 is no longer supported
+        jvmTarget = "11"
+        languageVersion = "1.9"
+    }
+}
 
 publishing {
     repositories {
