@@ -97,7 +97,7 @@ tasks.withType<KotlinJvmCompile> {
 
     kotlinOptions {
         // this is the minimum LTS version we support, 8 is no longer supported
-        jvmTarget = "11"
+        jvmTarget = "8"
         languageVersion = "1.9"
     }
 }
