@@ -10,11 +10,9 @@ I initially used Java for this and over time added several implementations of co
 
 [![](https://jitpack.io/v/jillesvangurp/geogeometry.svg)](https://jitpack.io/#jillesvangurp/geogeometry)
 
-This is a Kotlin multi-platform distribution with packages for `-jvm` and `-js` (currently) and several other platforms. Currently, 
-multi-platform and multi-module does not work with `jitpack.io`. You can get this library via them but if that doesn't work,
-you can also try to pull from my website as described below. There's an [open bug for this](https://github.com/jitpack/jitpack.io/issues/3853).
+This is a Kotlin multi-platform distribution supporting all major compilation targets for Kotlin, including jvm, js, wasm, ios, linux, mac, windows, etc.
 
-As a workaround, I currently distribute jars via [our own maven repo](https://maven.tryformation.com/releases):
+We use our own maven repo for distributing this: Add the repository:
 
 ```kotlin
 repositories {
@@ -23,7 +21,7 @@ repositories {
 }
 ```
 
-and then add the dependency :
+and then add the dependency:
 
 ```kotlin
 implementation("com.github.jillesvangurp:geogeometry:<VERSION>")

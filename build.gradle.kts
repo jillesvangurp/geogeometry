@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
@@ -36,8 +39,9 @@ kotlin {
 //    }
     iosArm64()
     iosX64()
-    // no kotlinx serialization for wasm yet
-//    wasmJs()
+    wasmJs()
+    // no kotest support yet for this
+//    wasmWasi()
 
     sourceSets {
 
