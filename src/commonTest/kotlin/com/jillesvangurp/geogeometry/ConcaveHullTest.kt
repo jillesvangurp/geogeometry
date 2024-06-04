@@ -2,6 +2,7 @@ package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.calculateConcaveHull
 import com.jillesvangurp.geojson.*
+import com.jillesvangurp.serializationext.DEFAULT_PRETTY_JSON
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
@@ -10,7 +11,14 @@ class ConcaveHullTest {
 
     @Test
     fun shouldCalculateConcaveHull() {
-        val points = listOf(bergstr16Berlin, rosenthalerPlatz, oranienburgerTor, senefelderPlatz, potsDammerPlatz, naturkundeMuseum)
+        val points = listOf(
+            bergstr16Berlin,
+            rosenthalerPlatz,
+            oranienburgerTor,
+            senefelderPlatz,
+            potsDammerPlatz,
+            naturkundeMuseum
+        )
 
         val p = Geometry.Polygon(coordinates = arrayOf(calculateConcaveHull(points, 4).toTypedArray()))
         println(p.toString())
@@ -20,13 +28,20 @@ class ConcaveHullTest {
     fun shouldCalculateAppropriatePolygon() {
         val polygon = Json.decodeFromString(Geometry.serializer(), concavePoly) as Geometry.Polygon
 
-        val p = Geometry.Polygon(coordinates = arrayOf(calculateConcaveHull(
-            polygon.coordinates!![0].toList().shuffled(),
-            7
-        ).toTypedArray()))
+        val p = Geometry.Polygon(
+            coordinates = arrayOf(
+                calculateConcaveHull(
+                    polygon.coordinates!![0].toList().shuffled(),
+                    7
+                ).toTypedArray()
+            )
+        )
 
         println(
-            DEFAULT_JSON_PRETTY.encodeToString(FeatureCollection.serializer(), FeatureCollection(listOf(p.asFeature(), polygon.asFeature())))
+            DEFAULT_PRETTY_JSON.encodeToString(
+                FeatureCollection.serializer(),
+                FeatureCollection(listOf(p.asFeature(), polygon.asFeature()))
+            )
         )
     }
 
@@ -43,7 +58,7 @@ class ConcaveHullTest {
 
         val hull = arrayOf(hullCoords.toTypedArray()).polygonGeometry().asFeature()
 
-        (points.map { Geometry.Point(it).asFeature() }  + hull).let {
+        (points.map { Geometry.Point(it).asFeature() } + hull).let {
             println(FeatureCollection(it))
         }
     }

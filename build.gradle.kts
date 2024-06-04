@@ -1,8 +1,8 @@
 @file:OptIn(ExperimentalWasmDsl::class)
 
-import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     kotlin("multiplatform")
@@ -13,20 +13,28 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://maven.tryformation.com/releases") {
+        content {
+            includeGroup("com.jillesvangurp")
+        }
+    }
 }
 
 kotlin {
     jvm {
-
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
     }
     js(IR) {
         nodejs {
-            testTask(Action {
+            testTask {
                 useMocha {
                     // javascript is a lot slower than Java, we hit the default timeout of 2000
                     timeout = "60s"
                 }
-            })
+            }
         }
     }
     linuxX64()
@@ -34,12 +42,32 @@ kotlin {
     mingwX64()
     macosX64()
     macosArm64()
-//    androidTarget {
-//        publishLibraryVariants("release", "debug")
-//    }
     iosArm64()
     iosX64()
-    wasmJs()
+    wasmJs {
+        browser {
+            testTask {
+                useMocha {
+                    timeout = "60s"
+                }
+            }
+        }
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "60s"
+                }
+            }
+        }
+        d8 {
+            testTask {
+                useMocha {
+                    timeout = "60s"
+                }
+            }
+        }
+
+    }
     // no kotest support yet for this
 //    wasmWasi()
 
@@ -49,6 +77,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+                api("com.jillesvangurp:kotlinx-serialization-extensions:_")
+
             }
         }
 
@@ -63,7 +93,7 @@ kotlin {
             }
         }
 
-        jvmMain  {
+        jvmMain {
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
@@ -76,33 +106,33 @@ kotlin {
             }
         }
 
-        jsMain  {
+        jsMain {
             dependencies {
                 implementation(kotlin("stdlib-js"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
 
-        jsTest  {
+        jsTest {
             dependencies {
                 implementation(kotlin("test-js"))
             }
         }
 
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+        wasmJsTest {
+            dependencies {
+                implementation(kotlin("test-wasm-js"))
+            }
         }
-    }
-}
 
-tasks.withType<KotlinJvmCompile> {
-    jvmTargetValidationMode.set(JvmTargetValidationMode.WARNING)
-
-    kotlinOptions {
-        // this is the minimum LTS version we support, 8 is no longer supported
-        jvmTarget = "11"
-        languageVersion = "1.9"
+        all {
+            languageSettings {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+                languageVersion = "1.9"
+                apiVersion = "1.9"
+            }
+        }
     }
 }
 

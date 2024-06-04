@@ -2,7 +2,17 @@ package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoHashUtils
-import com.jillesvangurp.geojson.*
+import com.jillesvangurp.geojson.FeatureCollection
+import com.jillesvangurp.geojson.Geometry
+import com.jillesvangurp.geojson.PolygonCoordinates
+import com.jillesvangurp.geojson.eastLongitude
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.northLatitude
+import com.jillesvangurp.geojson.polygon
+import com.jillesvangurp.geojson.southLatitude
+import com.jillesvangurp.geojson.westLongitude
+import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.data.blocking.forAll

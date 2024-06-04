@@ -6,13 +6,20 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
 import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
-import com.jillesvangurp.geojson.*
+import com.jillesvangurp.geojson.Geometry
+import com.jillesvangurp.geojson.degree
+import com.jillesvangurp.geojson.eastOrWest
+import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
+import com.jillesvangurp.geojson.humanReadable
+import com.jillesvangurp.geojson.minutes
+import com.jillesvangurp.geojson.seconds
+import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.json.JsonObject
 import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.test.Test
+import kotlinx.serialization.json.JsonObject
 
 //    val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
 //    val smallRing = arrayOf(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin, rosenthalerPlatz)

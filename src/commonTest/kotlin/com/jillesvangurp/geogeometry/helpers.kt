@@ -3,7 +3,7 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geojson.PointCoordinates
-import com.jillesvangurp.geojson.DEFAULT_JSON
+import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.matchers.doubles.shouldBeLessThan
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.encodeToJsonElement

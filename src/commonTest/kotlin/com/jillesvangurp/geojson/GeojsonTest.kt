@@ -3,6 +3,7 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geogeometry.bergstr16Berlin
+import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

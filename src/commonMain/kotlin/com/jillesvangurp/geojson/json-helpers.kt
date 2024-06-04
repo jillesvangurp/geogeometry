@@ -1,45 +1,14 @@
 package com.jillesvangurp.geojson
 
+import com.jillesvangurp.serializationext.DEFAULT_JSON
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-
-val DEFAULT_JSON: Json by lazy {
-    Json {
-        // don't rely on external systems being written in kotlin or even having a language with default values
-        // the default of false is FFing insane and dangerous
-        encodeDefaults = true
-        // save space
-        prettyPrint = false
-        // people adding shit to the json is OK, we're forward compatible and will just ignore it
-        isLenient = true
-        // encoding nulls is meaningless and a waste of space.
-        explicitNulls = false
-        // adding enum values is OK even if older clients won't understand it
-        ignoreUnknownKeys = true
-    }
-}
-
-val DEFAULT_JSON_PRETTY: Json by lazy {
-    Json {
-        // don't rely on external systems being written in kotlin or even having a language with default values
-        // the default of false is FFing insane and dangerous
-        encodeDefaults = true
-        // save space
-        prettyPrint = false
-        // people adding shit to the json is OK, we're forward compatible and will just ignore it
-        isLenient = true
-        // encoding nulls is meaningless and a waste of space.
-        explicitNulls = false
-        // adding enum values is OK even if older clients won't understand it
-        ignoreUnknownKeys = true
-        prettyPrint = true
-    }
-}
 
 
-val FeatureCollection.geoJsonIOUrl
-    get() = DEFAULT_JSON.encodeToString(this).let { json ->
-        "https://geojson.io/#data=${"data:application/json,$json".urlEncode()}"
+val FeatureCollection.geoJsonIOUrl: Any
+    get() {
+        return DEFAULT_JSON.encodeToString(this).let { json ->
+            "https://geojson.io/#data=${"data:application/json,$json".urlEncode()}"
+        }
     }
 
 val Geometry.geoJsonIOUrl get() = this.asFeatureCollection.geoJsonIOUrl
