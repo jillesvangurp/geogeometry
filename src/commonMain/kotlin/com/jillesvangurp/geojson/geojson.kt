@@ -417,7 +417,8 @@ data class Feature(
     val geometry: Geometry?,
     @Required
     val properties: JsonObject? = null,
-    val bbox: BoundingBox? = null
+    val bbox: BoundingBox? = null,
+    val id: String? = null,
 ) {
     @Required
     val type = "Feature"
