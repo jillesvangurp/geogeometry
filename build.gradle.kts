@@ -8,7 +8,6 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     `maven-publish`
-//    id("com.android.library") version "3.6.1"
 }
 
 repositories {
@@ -44,6 +43,7 @@ kotlin {
     macosArm64()
     iosArm64()
     iosX64()
+    iosSimulatorArm64()
     wasmJs {
         browser {
             testTask {
@@ -128,12 +128,18 @@ kotlin {
         all {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
-                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+//                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
                 languageVersion = "1.9"
                 apiVersion = "1.9"
             }
         }
     }
+}
+
+tasks.named("iosSimulatorArm64Test") {
+    // requires IOS simulator and tens of GB of other stuff to be installed
+    // so keep it disabled
+    enabled = false
 }
 
 publishing {
