@@ -1,12 +1,17 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.*
+import com.jillesvangurp.geo.GeoGeometry.Companion.roundDecimals
 import com.jillesvangurp.geojson.distanceTo
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.stringify
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlin.math.abs
+import kotlin.random.Random
 import kotlin.test.Test
 
 class MGRSTest {
@@ -32,8 +37,8 @@ class MGRSTest {
                 mgrs.longitudeZone shouldBe utm.longitudeZone
                 mgrs.latitudeZoneLetter shouldBe utm.latitudeZoneLetter
 
-                abs(utm.easting-toUtm.easting) shouldBeLessThan 2.0
-                abs(utm.northing-toUtm.northing) shouldBeLessThan 2.0
+                abs(utm.easting - toUtm.easting) shouldBeLessThan 2.0
+                abs(utm.northing - toUtm.northing) shouldBeLessThan 2.0
 //                toUtm.toPointCoordinates().distanceTo(p) shouldBeLessThan 2.0
             }
         }
@@ -42,17 +47,18 @@ class MGRSTest {
     @Test
     fun shouldTestMgrsParsing() {
         data class TestStrings(val input: String, val expected: String?)
+
         val fixture = listOf(
-            TestStrings("23K PQ 82383 65269","23K PQ 82383 65269"),
-            TestStrings("23K PQ 8238 6526","23K PQ 82380 65260"),
-            TestStrings("23K PQ 823 652","23K PQ 82300 65200"),
-            TestStrings("23K PQ 82 65","23K PQ 82000 65000"),
-            TestStrings("23K PQ 8 6","23K PQ 80000 60000"),
-            TestStrings("23KPQ8238365269","23K PQ 82383 65269"),
-            TestStrings("23KPQ82386526","23K PQ 82380 65260"),
-            TestStrings("23KPQ823652","23K PQ 82300 65200"),
-            TestStrings("23KPQ8265","23K PQ 82000 65000"),
-            TestStrings("23KPQ86","23K PQ 80000 60000"),
+            TestStrings("23K PQ 82383 65269", "23K PQ 82383 65269"),
+            TestStrings("23K PQ 8238 6526", "23K PQ 82380 65260"),
+            TestStrings("23K PQ 823 652", "23K PQ 82300 65200"),
+            TestStrings("23K PQ 82 65", "23K PQ 82000 65000"),
+            TestStrings("23K PQ 8 6", "23K PQ 80000 60000"),
+            TestStrings("23KPQ8238365269", "23K PQ 82383 65269"),
+            TestStrings("23KPQ82386526", "23K PQ 82380 65260"),
+            TestStrings("23KPQ823652", "23K PQ 82300 65200"),
+            TestStrings("23KPQ8265", "23K PQ 82000 65000"),
+            TestStrings("23KPQ86", "23K PQ 80000 60000"),
         )
         assertSoftly {
             fixture.forEach { testString ->
@@ -63,3 +69,4 @@ class MGRSTest {
         }
     }
 }
+

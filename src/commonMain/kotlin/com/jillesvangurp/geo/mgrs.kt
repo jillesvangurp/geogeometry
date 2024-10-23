@@ -1,6 +1,7 @@
 package com.jillesvangurp.geo
 
 import com.jillesvangurp.geojson.PointCoordinates
+import kotlin.math.abs
 import kotlin.math.floor
 
 /*
@@ -29,12 +30,12 @@ import kotlin.math.floor
  * MGRS precision for the easting and northing.
  * [MgrsCoordinate] stores everything in meter precision but can format with any of these precisions.
  */
-enum class MgrsPrecision(val divisor: Int) {
-    TEN_KM(10000),
-    ONE_KM(1000),
-    HUNDRED_M(100),
-    TEN_M(10),
-    ONE_M(1)
+enum class MgrsPrecision(val divisor: Int, val digits: Int) {
+    TEN_KM(10000,1),
+    ONE_KM(1000,2),
+    HUNDRED_M(100,3),
+    TEN_M(10, 4),
+    ONE_M(1, 5)
 }
 
 /**
@@ -60,15 +61,22 @@ data class MgrsCoordinate(
     }
 
     /**
-     * USNG is the human readable version of mgrs which has no spaces.
+     * USNG is the human-readable version of MGRS which includes spaces.
      */
-    fun usng(precision: MgrsPrecision = MgrsPrecision.ONE_M) =
-        "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter ${easting / precision.divisor} ${northing / precision.divisor}"
+    fun usng(precision: MgrsPrecision = MgrsPrecision.ONE_M): String {
+        val eastingStr = (easting / precision.divisor).toString().padStart(precision.digits, '0')
+        val northingStr = (northing / precision.divisor).toString().padStart(precision.digits, '0')
+        return "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter $eastingStr $northingStr"
+    }
 
-
-    fun mgrs(precision: MgrsPrecision = MgrsPrecision.ONE_M) =
-        "$longitudeZone$latitudeZoneLetter$firstLetter$secondLetter${easting / precision.divisor}${northing / precision.divisor}"
-
+    /**
+     * MGRS is the compact format without spaces.
+     */
+    fun mgrs(precision: MgrsPrecision = MgrsPrecision.ONE_M): String {
+        val eastingStr = (easting / precision.divisor).toString().padStart(precision.digits, '0')
+        val northingStr = (northing / precision.divisor).toString().padStart(precision.digits, '0')
+        return "$longitudeZone$latitudeZoneLetter$firstLetter$secondLetter$eastingStr$northingStr"
+    }
 }
 
 private fun Int.setForZone(): Int {
@@ -126,6 +134,7 @@ private fun UtmCoordinate.lookupGridLetters(): Pair<Char, Char> {
     } else row - 1
     return set.colLetters()[actualCol] to set.rowLetters()[actualRow]
 }
+
 
 /**
  * Convert to MGRS coordinate.

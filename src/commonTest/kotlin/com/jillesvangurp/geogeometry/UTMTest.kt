@@ -166,9 +166,12 @@ class UTMTest {
                             convertedBack.distanceTo(p) shouldBeLessThan 1.0
                         }
                     }
-
-                    // conversion to mgrs and back to utm should not deviate
+                    
                     val toMgrs = toUTM.toMgrs()
+                    withClue("${p.latitude},${p.longitude} $toMgrs") {
+                        toMgrs.toString().parseMgrs()!!.toPointCoordinate().distanceTo(p) shouldBeLessThan 2.0
+                    }
+
                     val newUtm = toMgrs.toUtm()
                     withClue("${p.latitude},${p.longitude} $toUTM | $toMgrs | $newUtm") {
                         // rounding errors can add up to 2 meters but close enough
