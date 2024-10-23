@@ -24,6 +24,9 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
 import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
+import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
@@ -772,4 +775,24 @@ class GeoGeometryMigratedTests {
         val point = doubleArrayOf(42.503615, 1.641881)
         polygonContains(point,polygon) shouldBe true
     }
+
+    @Test
+    fun shouldTestContainmentWithRandomCircles() {
+        assertSoftly {
+            repeat(1000000) {
+                val point = randomLatLonAwayFromPolesAndDateLine()
+                withClue("${point.latitude}, ${point.longitude}") {
+                    val poly = GeoGeometry.circle2polygon(40, point.latitude, point.longitude, 50.0)
+
+                    polygonContains(point, poly) shouldBe true
+                }
+            }
+        }
+    }
+}
+
+fun randomLatLonAwayFromPolesAndDateLine(): PointCoordinates {
+    val lat = Random.nextDouble(-89.0, 89.0)
+    val lon = Random.nextDouble(-179.0, 179.0)
+    return doubleArrayOf(lon, lat)
 }
