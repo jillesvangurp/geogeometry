@@ -79,6 +79,29 @@ val PointCoordinates.longitude: Double
     get() = this[0]
 val PointCoordinates.x get() = longitude
 
+fun PointCoordinates.normalize(): PointCoordinates {
+    return if (longitude < -180.0 || longitude > 180.0 || latitude < -90.0 || latitude > 90.0) {
+        doubleArrayOf(
+            // Longitude normalization
+            ((longitude + 180.0) % 360.0 + 360.0) % 360.0 - 180.0,
+            // Latitude normalization with modulo to account for multiple rotations (edge case)
+            when (val lat = ((latitude + 90.0) % 360.0 + 360.0) % 360.0 - 90.0) {
+                in 90.0..180.0 -> {
+                    180.0 - lat
+                }
+                in -180.0..-90.0 -> {
+                    -180.0 - lat
+                }
+                else -> {
+                    lat
+                }
+            }
+        )
+    } else {
+        this
+    }
+}
+
 enum class CompassDirection(val letter: Char) { East('E'), West('W'), South('S'), North('N') }
 
 typealias Degree = Double

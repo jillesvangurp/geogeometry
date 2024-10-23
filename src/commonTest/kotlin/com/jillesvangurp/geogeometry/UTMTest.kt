@@ -166,10 +166,14 @@ class UTMTest {
                             convertedBack.distanceTo(p) shouldBeLessThan 1.0
                         }
                     }
-                    
+
                     val toMgrs = toUTM.toMgrs()
                     withClue("${p.latitude},${p.longitude} $toMgrs") {
-                        toMgrs.toString().parseMgrs()!!.toPointCoordinate().distanceTo(p) shouldBeLessThan 2.0
+                        MgrsPrecision.entries.forEach {precision ->
+                            withClue(precision) {
+                                toMgrs.usng(precision).parseMgrs()!!.toPointCoordinate().distanceTo(p) shouldBeLessThan 2.0 * precision.meters
+                            }
+                        }
                     }
 
                     val newUtm = toMgrs.toUtm()

@@ -18,6 +18,7 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.toRadians
 import com.jillesvangurp.geojson.PointCoordinates
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.normalize
 import kotlin.math.*
 
 /**
@@ -110,7 +111,7 @@ data class UtmCoordinate(
     }
 }
 
-val UtmCoordinate.isUps get() = latitudeZoneLetter in listOf('A','B', 'Y', 'Z')
+val UtmCoordinate.isUps get() = latitudeZoneLetter in listOf('A', 'B', 'Y', 'Z')
 val UtmCoordinate.isUtm get() = !isUps
 
 val UtmCoordinate.isSouth get() = latitudeZoneLetter < 'N'
@@ -218,7 +219,7 @@ private fun getLongitudeZone(latLong: PointCoordinates): Int {
     // UPS longitude zones
     val longitude = latLong.longitude
     return if (isNorthPolar(latLong) || isSouthPolar(latLong)) {
-         if (longitude < 0.0) {
+        if (longitude < 0.0) {
             30
         } else {
             31
@@ -227,30 +228,35 @@ private fun getLongitudeZone(latLong: PointCoordinates): Int {
         val latitudeZone: Char = getLatitudeZoneLetter(latLong)
         when {
             latitudeZone == 'X' && longitude > 0.0 && longitude < 42.0 -> {
-            // X latitude exceptions
+                // X latitude exceptions
                 when {
                     longitude < 9.0 -> {
                         31
                     }
+
                     longitude < 21.0 -> {
                         33
                     }
+
                     longitude < 33.0 -> {
                         35
                     }
+
                     else -> {
                         37
                     }
                 }
             }
+
             latitudeZone == 'V' && longitude > 0.0 && longitude < 12.0 -> {
-            // V latitude exceptions
+                // V latitude exceptions
                 if (longitude < 3.0) {
                     31
                 } else {
                     32
                 }
             }
+
             else -> {
                 ((longitude + 180) / 6).toInt() + 1
             }
@@ -293,7 +299,7 @@ private fun getCentralMeridian(longitudeZone: Int, latitudeZone: Char): Double {
 /**
  * Converts to UTM or UPS and selects the coordinate system based on the latitude.
  */
-fun PointCoordinates.toUtmOrUps() : UtmCoordinate {
+fun PointCoordinates.toUtmOrUps(): UtmCoordinate {
     return if (latitude < UTM_SOUTHERN_LIMIT || latitude > UTM_NORTHERN_LIMIT) {
         toUpsCoordinate()
     } else {
@@ -301,8 +307,8 @@ fun PointCoordinates.toUtmOrUps() : UtmCoordinate {
     }
 }
 
-fun UtmCoordinate.toPointCoordinates() : PointCoordinates {
-    return if(isUps) upsToPointCoordinates() else utmToPointCoordinates()
+fun UtmCoordinate.toPointCoordinates(): PointCoordinates {
+    return if (isUps) upsToPointCoordinates() else utmToPointCoordinates()
 }
 
 fun PointCoordinates.toUtmCoordinate(): UtmCoordinate {
@@ -472,7 +478,10 @@ fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
             * (61.0 + 662.0 * tan2Phi + 1320.0 * tan4Phi + 720.0 * tan6Phi))
     val latitude = phi - dE2 * t10 + dE4 * t11 - dE6 * t12 + dE8 * t13
     val longitude = (lambda0 + dE * t14 - dE3 * t15 + dE5 * t16 - dE7 * t17)
-    return doubleArrayOf(fromRadians(longitude), fromRadians(latitude))
+    return doubleArrayOf(
+        fromRadians(longitude),
+        fromRadians(latitude)
+    ).normalize()
 }
 
 /**
@@ -487,7 +496,7 @@ fun UtmCoordinate.utmToPointCoordinates(): PointCoordinates {
  * - I've found and fixed several bugs in the UTM implementation where I did have access to those
  */
 fun PointCoordinates.toUpsCoordinate(): UtmCoordinate {
-    if (latitude >= UTM_SOUTHERN_LIMIT && latitude <= UTM_NORTHERN_LIMIT) {
+    if (latitude in UTM_SOUTHERN_LIMIT..UTM_NORTHERN_LIMIT) {
         error("$latitude is outside UPS supported latitude range of [-90 - $UTM_SOUTHERN_LIMIT] or [$UTM_NORTHERN_LIMIT - 90]. You should use UTM")
     }
 
@@ -572,7 +581,7 @@ fun UtmCoordinate.upsToPointCoordinates(): PointCoordinates {
     } else {
         -phi
     }
-    return doubleArrayOf(fromRadians(longitude), fromRadians(latitude))
+    return doubleArrayOf(fromRadians(longitude), fromRadians(latitude)).normalize()
 }
 
 

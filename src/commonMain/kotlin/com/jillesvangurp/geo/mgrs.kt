@@ -1,7 +1,6 @@
 package com.jillesvangurp.geo
 
 import com.jillesvangurp.geojson.PointCoordinates
-import kotlin.math.abs
 import kotlin.math.floor
 
 /*
@@ -30,7 +29,7 @@ import kotlin.math.floor
  * MGRS precision for the easting and northing.
  * [MgrsCoordinate] stores everything in meter precision but can format with any of these precisions.
  */
-enum class MgrsPrecision(val divisor: Int, val digits: Int) {
+enum class MgrsPrecision(val meters: Int, val digits: Int) {
     TEN_KM(10000,1),
     ONE_KM(1000,2),
     HUNDRED_M(100,3),
@@ -64,8 +63,8 @@ data class MgrsCoordinate(
      * USNG is the human-readable version of MGRS which includes spaces.
      */
     fun usng(precision: MgrsPrecision = MgrsPrecision.ONE_M): String {
-        val eastingStr = (easting / precision.divisor).toString().padStart(precision.digits, '0')
-        val northingStr = (northing / precision.divisor).toString().padStart(precision.digits, '0')
+        val eastingStr = (easting / precision.meters).toString().padStart(precision.digits, '0')
+        val northingStr = (northing / precision.meters).toString().padStart(precision.digits, '0')
         return "$longitudeZone$latitudeZoneLetter $firstLetter$secondLetter $eastingStr $northingStr"
     }
 
@@ -73,8 +72,8 @@ data class MgrsCoordinate(
      * MGRS is the compact format without spaces.
      */
     fun mgrs(precision: MgrsPrecision = MgrsPrecision.ONE_M): String {
-        val eastingStr = (easting / precision.divisor).toString().padStart(precision.digits, '0')
-        val northingStr = (northing / precision.divisor).toString().padStart(precision.digits, '0')
+        val eastingStr = (easting / precision.meters).toString().padStart(precision.digits, '0')
+        val northingStr = (northing / precision.meters).toString().padStart(precision.digits, '0')
         return "$longitudeZone$latitudeZoneLetter$firstLetter$secondLetter$eastingStr$northingStr"
     }
 }
@@ -248,18 +247,11 @@ fun String.parseMgrs(): MgrsCoordinate? {
         } else {
             val mid = numbers.length / 2
             val precision = MgrsPrecision.entries[mid - 1]
-            val easting = numbers.substring(0, mid).toInt() * precision.divisor
-            val northing = numbers.substring(mid).toInt() * precision.divisor
+            val easting = numbers.substring(0, mid).toInt() * precision.meters
+            val northing = numbers.substring(mid).toInt() * precision.meters
             MgrsCoordinate(longitudeZone, latitudeZoneLetter, firstLetter, secondLetter, easting, northing)
         }
     }
-}
-
-private fun roundMGRS(value: Double): Long {
-    val ival = floor(value).toLong()
-    val fraction = value - ival
-    // double fraction = modf (value, &ivalue);
-    return if (fraction > 0.5 || fraction == 0.5 && ival % 2L == 1L) ival + 1 else ival
 }
 
 data class UpsConstant(
