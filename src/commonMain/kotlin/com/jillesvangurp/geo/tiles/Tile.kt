@@ -74,7 +74,6 @@ val Tile.west: Tile
 
 val Tile.north: Tile
     get() {
-        val maxTiles = 1 shl zoom
         return if (y > 0) Tile(x, y - 1, zoom) else Tile(x, 0, zoom)
     }
 
