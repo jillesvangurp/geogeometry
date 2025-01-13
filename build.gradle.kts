@@ -76,8 +76,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
-                api("com.jillesvangurp:kotlinx-serialization-extensions:_")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+                implementation("com.jillesvangurp:kotlinx-serialization-extensions:_")
 
             }
         }
@@ -89,14 +89,14 @@ kotlin {
                 // yay kotest does multiplatform
                 implementation("io.kotest:kotest-assertions-core:_")
 
-                api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
             }
         }
 
         jvmMain {
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
         jvmTest {
@@ -109,7 +109,7 @@ kotlin {
         jsMain {
             dependencies {
                 implementation(kotlin("stdlib-js"))
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
             }
         }
 
