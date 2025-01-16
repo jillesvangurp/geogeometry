@@ -143,6 +143,36 @@ tasks.named("iosSimulatorArm64Test") {
 }
 
 publishing {
+    publications {
+        withType<MavenPublication> {
+            pom {
+                name.set("GeoGeometry")
+                description.set("A Kotlin Multiplatform library for geospatial geometry operations.")
+                url.set("https://github.com/jillesvangurp/geogeometry")
+
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://github.com/jillesvangurp/geogeometry/blob/master/LICENSE")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("jillesvangurp")
+                        name.set("Jilles van Gurp")
+                        email.set("jilles@no-reply.github.com")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/jillesvangurp/geogeometry.git")
+                    developerConnection.set("scm:git:ssh://github.com:jillesvangurp/geogeometry.git")
+                    url.set("https://github.com/jillesvangurp/geogeometry")
+                }
+            }
+        }
+    }
     repositories {
         maven {
             // GOOGLE_APPLICATION_CREDENTIALS env var must be set for this to work
