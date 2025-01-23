@@ -25,11 +25,90 @@ typealias LinearRingCoordinates = Array<PointCoordinates>
 typealias MultiLineStringCoordinates = Array<LineStringCoordinates> // Outer polygon + holes
 typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + holes
 typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
+
 /**
  * Lowest axes followed by highest axes
  * BoundingBox = [westLongitude,southLatitude,eastLongitude,westLatitude]
  */
 typealias BoundingBox = DoubleArray
+fun BoundingBox.toGeometry(): Geometry.Polygon {
+    val coordinates = arrayOf(
+        arrayOf(
+            doubleArrayOf(this.westLongitude, this.southLatitude),
+            doubleArrayOf(this.eastLongitude, this.southLatitude),
+            doubleArrayOf(this.eastLongitude, this.northLatitude),
+            doubleArrayOf(this.westLongitude, this.northLatitude),
+            doubleArrayOf(this.westLongitude, this.southLatitude) // Close the polygon
+        )
+    )
+    return Geometry.Polygon(coordinates)
+}
+
+fun BoundingBox.contains(point: PointCoordinates): Boolean {
+    val (longitude, latitude) = point
+
+    // Handle crossing the antimeridian (date line)
+    val crossesAntimeridian = this.westLongitude > this.eastLongitude
+
+    val withinLongitude = if (crossesAntimeridian) {
+        longitude >= this.westLongitude || longitude <= this.eastLongitude
+    } else {
+        longitude in this.westLongitude..this.eastLongitude
+    }
+
+    val withinLatitude = latitude in this.southLatitude..this.northLatitude
+
+    return withinLongitude && withinLatitude
+}
+
+fun PolygonCoordinates.contains(point: PointCoordinates): Boolean = GeoGeometry.polygonContains(point.latitude,point.longitude, polygonCoordinatesPoints = this)
+
+fun Geometry.contains(point: PointCoordinates): Boolean {
+    return when (this) {
+        is Geometry.Point -> this.coordinates?.let {
+            it.longitude == point.longitude && it.latitude == point.latitude
+        } ?: false
+
+        is Geometry.MultiPoint -> this.coordinates?.any {
+            it.longitude == point.longitude && it.latitude == point.latitude
+        } ?: false
+
+        is Geometry.LineString -> this.coordinates?.let { coords ->
+            (0 until coords.size - 1).any { i ->
+                point.onLineSegment(coords[i], coords[i + 1])
+            }
+        } ?: false
+
+        is Geometry.MultiLineString -> this.coordinates?.any { lineString ->
+            (0 until lineString.size - 1).any { i ->
+                point.onLineSegment(lineString[i], lineString[i + 1])
+            }
+        } ?: false
+
+        is Geometry.Polygon -> this.coordinates?.let {
+            GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = it)
+        } ?: false
+
+        is Geometry.MultiPolygon -> this.coordinates?.any { polygon ->
+            GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = polygon)
+        } ?: false
+
+        is Geometry.GeometryCollection -> this.geometries.any { it.contains(point) }
+    }
+}
+
+fun PointCoordinates.onLineSegment(start: PointCoordinates, end: PointCoordinates): Boolean {
+    val crossProduct = (latitude - start.latitude) * (end.longitude - start.longitude) -
+            (longitude - start.longitude) * (end.latitude - start.latitude)
+    if (abs(crossProduct) > 1e-10) return false
+
+    val dotProduct = (longitude - start.longitude) * (end.longitude - start.longitude) +
+            (latitude - start.latitude) * (end.latitude - start.latitude)
+    if (dotProduct < 0) return false
+
+    val squaredLength = (end.longitude - start.longitude).pow(2) + (end.latitude - start.latitude).pow(2)
+    return dotProduct <= squaredLength
+}
 
 fun PointCoordinates.stringify() = "[${this.longitude},${this.latitude}]"
 fun LineStringCoordinates.stringify() = "[${this.joinToString(", ") { it.stringify() }}]"
@@ -57,16 +136,50 @@ fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
     else -> this
 }
 
-fun Geometry.ensureHasAltitude() = when (this) {
-    is Geometry.Point -> if (this.coordinates?.size == 3) this else this.copy()
-    is Geometry.MultiPoint -> TODO()
-    is Geometry.LineString -> TODO()
-    is Geometry.MultiLineString -> TODO()
-    is Geometry.Polygon -> TODO()
-    is Geometry.MultiPolygon -> TODO()
-    is Geometry.GeometryCollection -> TODO()
+fun Geometry.ensureHasAltitude(): Geometry = when (this) {
+    is Geometry.Point -> {
+        if (this.coordinates?.size == 3) this
+        else this.copy(coordinates = this.coordinates?.let { it + doubleArrayOf(0.0) })
+    }
+    is Geometry.MultiPoint -> {
+        this.copy(coordinates = this.coordinates?.map {
+            if (it.size == 3) it else it + doubleArrayOf(0.0)
+        }?.toTypedArray())
+    }
+    is Geometry.LineString -> {
+        this.copy(coordinates = this.coordinates?.map {
+            if (it.size == 3) it else it + doubleArrayOf(0.0)
+        }?.toTypedArray())
+    }
+    is Geometry.MultiLineString -> {
+        this.copy(coordinates = this.coordinates?.map { line ->
+            line.map {
+                if (it.size == 3) it else it + doubleArrayOf(0.0)
+            }.toTypedArray()
+        }?.toTypedArray())
+    }
+    is Geometry.Polygon -> {
+        this.copy(coordinates = this.coordinates?.map { ring ->
+            ring.map {
+                if (it.size == 3) it else it + doubleArrayOf(0.0)
+            }.toTypedArray()
+        }?.toTypedArray())
+    }
+    is Geometry.MultiPolygon -> {
+        this.copy(coordinates = this.coordinates?.map { polygon ->
+            polygon.map { ring ->
+                ring.map {
+                    if (it.size == 3) it else it + doubleArrayOf(0.0)
+                }.toTypedArray()
+            }.toTypedArray()
+        }?.toTypedArray())
+    }
+    is Geometry.GeometryCollection -> {
+        this.copy(geometries = this.geometries.map { it.ensureHasAltitude() }.toTypedArray())
+    }
 }
 
+@Deprecated("does not handle bounding boxes that span the dateline")
 fun BoundingBox.isValid(): Boolean {
     return this.westLongitude <= this.eastLongitude && this.southLatitude <= this.northLatitude
 }

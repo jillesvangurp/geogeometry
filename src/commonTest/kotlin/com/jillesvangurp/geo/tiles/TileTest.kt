@@ -1,5 +1,6 @@
 package com.jillesvangurp.geo.tiles
 
+import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import io.kotest.assertions.assertSoftly
@@ -10,6 +11,8 @@ import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.test.Test
+
+fun randomTileCoordinate() = doubleArrayOf(Random.nextDouble(-180.0,180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
 
 class TileTest {
 
@@ -27,7 +30,7 @@ class TileTest {
                 val zoom = zoomLevels.random()
 
                 withClue("($lat, $lon) @ $zoom") {
-                    val tile = Tile.deg2num(lat, lon, zoom)
+                    val tile = coordinateToTile(lat, lon, zoom)
 
                     val topLeft =
                         Tile.topLeft(tile.x, tile.y, zoom)
@@ -40,7 +43,7 @@ class TileTest {
                     }
 
                     val recalculatedTile =
-                        Tile.deg2num(topLeft.latitude, topLeft.longitude, zoom)
+                        coordinateToTile(topLeft.latitude, topLeft.longitude, zoom)
 
                     // Validate that the recalculated tile matches the original tile
                     withClue("x should be same") {
@@ -48,7 +51,7 @@ class TileTest {
                     }
                     withClue("y should be same") {
                         // rounding errors can cause this to fall into the neighboring tile
-                        recalculatedTile.y shouldBeIn  arrayOf(tile.y, tile.y-1)
+                        recalculatedTile.y shouldBeIn arrayOf(tile.y, tile.y - 1)
                     }
                 }
             }
@@ -75,13 +78,13 @@ class TileTest {
         assertSoftly {
             testCases.forEach {t ->
                 withClue("$t -> https://www.openstreetmap.org/#map=${t.zoom}/${t.lat}/${t.lon} https://tile.openstreetmap.org/${t.zoom}/${t.x}/${t.y}.png") {
-                    val (zoom,x,y,lat,lon) = t
+                    val (zoom, x, y, lat, lon) = t
                     val topLeft = Tile.topLeft(x, y, zoom)
-                    withClue("topLeft of tile should be north and west of actual" ) {
+                    withClue("topLeft of tile should be north and west of actual") {
                         topLeft.latitude shouldBeGreaterThanOrEqual t.lat
                         topLeft.longitude shouldBeLessThanOrEqual t.lon
                     }
-                    val xy = Tile.deg2num(lat, lon, zoom)
+                    val xy = coordinateToTile(lat, lon, zoom)
                     withClue("x") {
                         xy.x shouldBe x
                     }
@@ -149,5 +152,22 @@ class TileTest {
         tile.southWest shouldBe tile
         tile.southEast shouldBe tile
         tile.northEast shouldBe tile
+    }
+
+    @Test
+    fun shouldGenerateContainingTiles() {
+        assertSoftly {
+            repeat(100000) {
+                val coordinate = randomTileCoordinate()
+                withClue(coordinate) {
+                    val tiles = coordinate.tiles()
+                    tiles.size shouldBe 23
+                }
+            }
+        }
+    }
+
+    fun shouldGenerateTilesThatContainEachOther() {
+
     }
 }

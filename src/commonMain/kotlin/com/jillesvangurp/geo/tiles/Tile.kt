@@ -1,5 +1,7 @@
 package com.jillesvangurp.geo.tiles
 
+import com.jillesvangurp.geo.tiles.Tile.Companion.MAX_ZOOM
+import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
 import com.jillesvangurp.geojson.BoundingBox
 import com.jillesvangurp.geojson.PointCoordinates
 import com.jillesvangurp.geojson.latitude
@@ -23,7 +25,21 @@ private fun toRadians(degrees: Double) = degrees * PI / 180.0
  */
 @Serializable
 data class Tile(val x: Int, val y: Int, val zoom: Int) {
+    val maxXY by lazy {
+        1 shl zoom
+    }
+
+    init {
+        require(zoom in 0..MAX_ZOOM) { "zoom should be between 0 and 22" }
+        require(x in 0..maxXY) { "x must be between 0 and $maxXY at $zoom" }
+        require(y in 0..maxXY) { "y must be between 0 and $maxXY at $zoom" }
+    }
+
     companion object {
+        const val MAX_ZOOM = 22
+        const val MIN_LATITUDE=-85.05112878
+        const val MAX_LATITUDE=85.05112878
+
         /**
          * Returns the topLeft corner of the tile.
          */
@@ -31,34 +47,58 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
             // n is the number of x and y coordinates at a zoom level
             // The shl operation (1 shl zoom) shifts the integer 1 to the left by zoom bits,
             // which is equivalent to calculating  2^zoom
+            require(zoom in 0..MAX_ZOOM) { "zoom should be between 0 and 22" }
             val maxCoords = 1 shl zoom
+            require(x in 0..maxCoords) { "x must be between 0 and $maxCoords at $zoom" }
+            require(y in 0..maxCoords) { "y must be between 0 and $maxCoords at $zoom" }
             val lon = x.toDouble() / maxCoords * 360.0 - 180.0
             val lat = atan(sinh(PI * (1 - 2 * y.toDouble() / maxCoords))).toDegrees()
-            return doubleArrayOf(lon,lat)
+            return doubleArrayOf(lon, lat)
         }
 
         /**
-         * Calculate the x,y coordinate at the zoom level and return that as a pair.
+         * Return the tile that contains the coordinate at the specified [zoom]
          */
-        fun deg2num(
+        fun coordinateToTile(
             lat: Double,
             lon: Double,
             zoom: Int
         ): Tile {
-            // FIXME add range checks on lat, lon, and zoom but do it in a way that doesn't impact performance
+            require(lat in -90.0..90.0) { "Latitude must be in range [-90, 90], but was $lat" }
+            require(lon in -180.0..180.0) { "Longitude must be in range [-180, 180], but was $lon" }
+            require(zoom in 0..MAX_ZOOM) { "Zoom level must be in range [0, $MAX_ZOOM], but was $zoom" }
+
+            // Tiles don't actually work near the poles. Correct behavior is to clamp into these ranges but not fail
+            val clampedLat = lat.coerceIn(MIN_LATITUDE, MAX_LATITUDE)
             val n = 1 shl zoom
             val x = ((lon + 180.0) / 360.0 * n).toInt()
             val y =
-                ((1.0 - ln(tan(toRadians(lat)) + 1 / cos(toRadians(lat))) / PI) / 2.0 * n).toInt()
+                ((1.0 - ln(tan(toRadians(clampedLat)) + 1 / cos(toRadians(clampedLat))) / PI) / 2.0 * n).toInt()
             return Tile(x = x, y = y, zoom = zoom)
         }
 
-        fun deg2num(p: PointCoordinates, zoom: Int) = deg2num(p.latitude, p.longitude, zoom)
+        @Deprecated("use coordinateToTile", ReplaceWith("coordinateToTile(lat,lon,zoom)"))
+        fun deg2num(
+            lat: Double,
+            lon: Double,
+            zoom: Int
+        ) = coordinateToTile(lat, lon, zoom)
+
+        @Deprecated("use coordinateToTile", ReplaceWith("coordinateToTile(p.latitude,p.longitude,zoom)"))
+        fun deg2num(p: PointCoordinates, zoom: Int) = coordinateToTile(p.latitude, p.longitude, zoom)
 
     }
 }
 
-val Tile.topLeft get() = Tile.topLeft(x,y,zoom)
+val Tile.topLeft get() = Tile.topLeft(x, y, zoom)
+val Tile.topRight: PointCoordinates
+    get() = Tile.topLeft(x + 1, y, zoom)
+
+val Tile.bottomLeft: PointCoordinates
+    get() = Tile.topLeft(x, y + 1, zoom)
+
+val Tile.bottomRight: PointCoordinates
+    get() = Tile.topLeft(x + 1, y + 1, zoom)
 
 val Tile.bbox: BoundingBox
     get() {
@@ -94,3 +134,19 @@ val Tile.southEast: Tile
 
 val Tile.northEast: Tile
     get() = north.east
+
+fun Tile.parentTiles(): List<Tile> {
+    val parentTiles = mutableListOf<Tile>()
+
+    var currentTile = this
+    for (z in zoom - 1 downTo 0) {
+        val parentX = currentTile.x / 2
+        val parentY = currentTile.y / 2
+        currentTile = Tile(parentX, parentY, z)
+        parentTiles.add(currentTile)
+    }
+
+    return parentTiles
+}
+
+fun PointCoordinates.tiles() = coordinateToTile(lat = this.latitude, lon = this.longitude, zoom = MAX_ZOOM).let { listOf(it)+ it.parentTiles()}
