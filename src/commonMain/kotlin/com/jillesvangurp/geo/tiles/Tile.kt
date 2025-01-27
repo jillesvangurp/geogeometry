@@ -10,6 +10,7 @@ import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.ln
+import kotlin.math.roundToInt
 import kotlin.math.sinh
 import kotlin.math.tan
 import kotlinx.serialization.Serializable
@@ -37,8 +38,8 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
 
     companion object {
         const val MAX_ZOOM = 22
-        const val MIN_LATITUDE=-85.05112878
-        const val MAX_LATITUDE=85.05112878
+        const val MIN_LATITUDE = -85.05112878
+        const val MAX_LATITUDE = 85.05112878
 
         /**
          * Returns the topLeft corner of the tile.
@@ -92,25 +93,24 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
 
 val Tile.topLeft get() = Tile.topLeft(x, y, zoom)
 val Tile.topRight: PointCoordinates
-    get() = Tile.topLeft(x + 1, y, zoom)
+    get() = Tile.topLeft((x + 1) % maxXY, y, zoom)
 
 val Tile.bottomLeft: PointCoordinates
-    get() = Tile.topLeft(x, y + 1, zoom)
+    get() = Tile.topLeft(x, (y + 1) % maxXY, zoom)
 
 val Tile.bottomRight: PointCoordinates
-    get() = Tile.topLeft(x + 1, y + 1, zoom)
+    get() = Tile.topLeft((x + 1) % maxXY, (y + 1) % maxXY, zoom)
 
 val Tile.bbox: BoundingBox
     get() {
-        val bottomRight = southWest.topLeft
         return doubleArrayOf(topLeft.longitude, bottomRight.latitude, bottomRight.longitude, topLeft.latitude)
     }
 
 val Tile.east: Tile
-    get() = Tile((x + 1) % (1 shl zoom), y, zoom)
+    get() = Tile((x + 1) % maxXY, y, zoom)
 
 val Tile.west: Tile
-    get() = Tile((x - 1 + (1 shl zoom)) % (1 shl zoom), y, zoom)
+    get() = Tile((x - 1 + maxXY) % maxXY, y, zoom)
 
 val Tile.north: Tile
     get() {
@@ -136,6 +136,7 @@ val Tile.northEast: Tile
     get() = north.east
 
 fun Tile.parentTiles(): List<Tile> {
+    if (zoom == 0) return emptyList()
     val parentTiles = mutableListOf<Tile>()
 
     var currentTile = this
@@ -149,4 +150,5 @@ fun Tile.parentTiles(): List<Tile> {
     return parentTiles
 }
 
-fun PointCoordinates.tiles() = coordinateToTile(lat = this.latitude, lon = this.longitude, zoom = MAX_ZOOM).let { listOf(it)+ it.parentTiles()}
+fun PointCoordinates.tiles() =
+    coordinateToTile(lat = this.latitude, lon = this.longitude, zoom = MAX_ZOOM).let { listOf(it) + it.parentTiles() }

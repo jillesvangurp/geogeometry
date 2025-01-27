@@ -1,8 +1,10 @@
 package com.jillesvangurp.geo.tiles
 
 import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
+import com.jillesvangurp.geojson.contains
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.toGeometry
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeIn
@@ -167,7 +169,11 @@ class TileTest {
         }
     }
 
-    fun shouldGenerateTilesThatContainEachOther() {
-
+    @Test
+    fun shouldGenerateTileWithPointInside() {
+        val zoom=8
+        val point = doubleArrayOf(-10.6202579166835,40.113983580628)
+        val tile = Tile.coordinateToTile(point.latitude,point.longitude,zoom)
+        tile.bbox.toGeometry().contains(point) shouldBe true
     }
 }
