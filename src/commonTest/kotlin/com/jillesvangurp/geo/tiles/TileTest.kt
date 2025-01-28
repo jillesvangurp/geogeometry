@@ -8,13 +8,16 @@ import com.jillesvangurp.geojson.toGeometry
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.test.Test
 
-fun randomTileCoordinate() = doubleArrayOf(Random.nextDouble(-180.0,180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
+fun randomTileCoordinate() =
+    doubleArrayOf(Random.nextDouble(-180.0, 180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
 
 class TileTest {
 
@@ -74,11 +77,11 @@ class TileTest {
 
         val testCases = listOf(
             TestCase(zoom = 13, x = 4399, y = 2687, lat = 52.49867, lon = 13.34169),
-            TestCase(14, 8802, 5373,52.5200, 13.4050),
-            TestCase(zoom = 18, x = 232797, y = 103246, lat = 35.659062,lon=139.698054),
+            TestCase(14, 8802, 5373, 52.5200, 13.4050),
+            TestCase(zoom = 18, x = 232797, y = 103246, lat = 35.659062, lon = 139.698054),
         )
         assertSoftly {
-            testCases.forEach {t ->
+            testCases.forEach { t ->
                 withClue("$t -> https://www.openstreetmap.org/#map=${t.zoom}/${t.lat}/${t.lon} https://tile.openstreetmap.org/${t.zoom}/${t.x}/${t.y}.png") {
                     val (zoom, x, y, lat, lon) = t
                     val topLeft = Tile.topLeft(x, y, zoom)
@@ -171,9 +174,29 @@ class TileTest {
 
     @Test
     fun shouldGenerateTileWithPointInside() {
-        val zoom=8
-        val point = doubleArrayOf(-10.6202579166835,40.113983580628)
-        val tile = Tile.coordinateToTile(point.latitude,point.longitude,zoom)
+        val zoom = 8
+        val point = doubleArrayOf(-10.6202579166835, 40.113983580628)
+        val tile = Tile.coordinateToTile(point.latitude, point.longitude, zoom)
         tile.bbox.toGeometry().contains(point) shouldBe true
+    }
+
+    @Test
+    fun tileBoundingBoxesShouldBeValid() {
+        assertSoftly {
+            for (zoom in 0..4) {
+                Tile.allTilesAt(zoom).forEach { tile ->
+                    withClue(tile) {
+                        tile.topLeft.longitude shouldBeLessThan tile.bottomRight.longitude
+                        tile.topLeft.latitude shouldBeGreaterThan tile.bottomRight.latitude
+                        tile.bbox.toGeometry().contains(
+                            doubleArrayOf(
+                                (tile.topLeft.longitude + tile.bottomRight.longitude) / 2,
+                                (tile.topLeft.latitude + tile.bottomRight.latitude) / 2,
+                            ),
+                        ) shouldBe true
+                    }
+                }
+            }
+        }
     }
 }

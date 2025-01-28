@@ -10,7 +10,6 @@ import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.ln
-import kotlin.math.roundToInt
 import kotlin.math.sinh
 import kotlin.math.tan
 import kotlinx.serialization.Serializable
@@ -36,15 +35,66 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
         require(y in 0..maxXY) { "y must be between 0 and $maxXY at $zoom" }
     }
 
+    override fun toString() = "$zoom/$x/$y"
+
+    val topLeft: PointCoordinates by lazy { topLeft(x = x, y = y, zoom = zoom) }
+
+    val topRight: PointCoordinates by lazy { topLeft(x = (x + 1) % maxXY, y = y, zoom = zoom, fixLonLat = true) }
+
+    val bottomLeft: PointCoordinates by lazy { topLeft(x = x, y = (y + 1) % maxXY, zoom = zoom) }
+
+    val bottomRight: PointCoordinates by lazy { topLeft(
+        x = (x + 1) % maxXY,
+        y = (y + 1) % maxXY,
+        zoom = zoom,
+        fixLonLat = true
+    ) }
+
+    val bbox: BoundingBox by lazy {
+        if(zoom>0) {
+            doubleArrayOf(
+                topLeft.longitude,
+                bottomRight.latitude,
+                bottomRight.longitude,
+                topLeft.latitude
+            )
+        } else {
+            doubleArrayOf(-180.0, MAX_LATITUDE,180.0, MIN_LATITUDE)
+        }
+    }
+
+    val east: Tile by lazy { Tile((x + 1) % maxXY, y, zoom) }
+
+    val west: Tile by lazy { Tile((x - 1 + maxXY) % maxXY, y, zoom) }
+
+    val north: Tile by lazy {
+        if (y > 0) Tile(x, y - 1, zoom) else Tile(x, 0, zoom)
+    }
+
+    val south: Tile by lazy {
+        val maxTiles = 1 shl zoom
+        if (y < maxTiles - 1) Tile(x, y + 1, zoom) else Tile(x, maxTiles - 1, zoom)
+    }
+
+    val northWest: Tile by lazy { north.west }
+
+    val southWest: Tile by lazy { south.west }
+
+    val southEast: Tile by lazy { south.east }
+
+    val northEast: Tile by lazy { north.east }
+
     companion object {
         const val MAX_ZOOM = 22
         const val MIN_LATITUDE = -85.05112878
         const val MAX_LATITUDE = 85.05112878
 
         /**
-         * Returns the topLeft corner of the tile.
+         * Returns the topLeft corner of the tile. Use [fixLonLat] if you are
+         * calculating the topleft of a tile that is North/East of the current one to
+         * dodge issues with MIN/MAX latitude and the dateline
          */
-        fun topLeft(x: Int, y: Int, zoom: Int): PointCoordinates {
+        fun topLeft(x: Int, y: Int, zoom: Int, fixLonLat: Boolean=false): PointCoordinates {
             // n is the number of x and y coordinates at a zoom level
             // The shl operation (1 shl zoom) shifts the integer 1 to the left by zoom bits,
             // which is equivalent to calculating  2^zoom
@@ -53,8 +103,17 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
             require(x in 0..maxCoords) { "x must be between 0 and $maxCoords at $zoom" }
             require(y in 0..maxCoords) { "y must be between 0 and $maxCoords at $zoom" }
             val lon = x.toDouble() / maxCoords * 360.0 - 180.0
-            val lat = atan(sinh(PI * (1 - 2 * y.toDouble() / maxCoords))).toDegrees()
-            return doubleArrayOf(lon, lat)
+            val lat =
+                atan(sinh(PI * (1 - 2 * y.toDouble() / maxCoords)))
+                    .toDegrees()
+                    .coerceIn(MIN_LATITUDE, MAX_LATITUDE)
+
+
+            return doubleArrayOf(
+                if(fixLonLat && lon <= -180.0) 180.0 else lon,
+                // nice little rounding error here calculating the bottom latitude
+                if(fixLonLat && lat >= 85.051128) MIN_LATITUDE else lat
+            )
         }
 
         /**
@@ -88,52 +147,19 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
         @Deprecated("use coordinateToTile", ReplaceWith("coordinateToTile(p.latitude,p.longitude,zoom)"))
         fun deg2num(p: PointCoordinates, zoom: Int) = coordinateToTile(p.latitude, p.longitude, zoom)
 
+        fun allTilesAt(zoom: Int): Sequence<Tile> {
+            require(zoom in 0..MAX_ZOOM) { "Zoom level must be between 0 and $MAX_ZOOM." }
+            val maxXY = 1 shl zoom
+            return sequence {
+                for (x in 0 until maxXY) {
+                    for (y in 0 until maxXY) {
+                        yield(Tile(x, y, zoom))
+                    }
+                }
+            }
+        }
     }
 }
-
-val Tile.topLeft get() = Tile.topLeft(x, y, zoom)
-val Tile.topRight: PointCoordinates
-    get() = Tile.topLeft((x + 1) % maxXY, y, zoom)
-
-val Tile.bottomLeft: PointCoordinates
-    get() = Tile.topLeft(x, (y + 1) % maxXY, zoom)
-
-val Tile.bottomRight: PointCoordinates
-    get() = Tile.topLeft((x + 1) % maxXY, (y + 1) % maxXY, zoom)
-
-val Tile.bbox: BoundingBox
-    get() {
-        return doubleArrayOf(topLeft.longitude, bottomRight.latitude, bottomRight.longitude, topLeft.latitude)
-    }
-
-val Tile.east: Tile
-    get() = Tile((x + 1) % maxXY, y, zoom)
-
-val Tile.west: Tile
-    get() = Tile((x - 1 + maxXY) % maxXY, y, zoom)
-
-val Tile.north: Tile
-    get() {
-        return if (y > 0) Tile(x, y - 1, zoom) else Tile(x, 0, zoom)
-    }
-
-val Tile.south: Tile
-    get() {
-        val maxTiles = 1 shl zoom
-        return if (y < maxTiles - 1) Tile(x, y + 1, zoom) else Tile(x, maxTiles - 1, zoom)
-    }
-
-val Tile.northWest: Tile
-    get() = north.west
-
-val Tile.southWest: Tile
-    get() = south.west
-
-val Tile.southEast: Tile
-    get() = south.east
-
-val Tile.northEast: Tile
-    get() = north.east
 
 fun Tile.parentTiles(): List<Tile> {
     if (zoom == 0) return emptyList()
