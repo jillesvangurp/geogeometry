@@ -19,6 +19,16 @@ import kotlin.test.Test
 fun randomTileCoordinate() =
     doubleArrayOf(Random.nextDouble(-180.0, 180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
 
+fun randomTile(): Tile {
+    val zl = (0..22).random()
+    val maxXY = 1 shl zl
+    return Tile(
+        x = (0 until maxXY).random(),
+        y = (0 until maxXY).random(),
+        zoom = zl
+    )
+}
+
 class TileTest {
 
     @Test
@@ -196,6 +206,56 @@ class TileTest {
                         ) shouldBe true
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testTileAtZoomZero() {
+        val tile = Tile(0, 0, 0)
+        tile.east shouldBe tile
+        tile.west shouldBe tile
+        tile.north shouldBe tile
+        tile.south shouldBe tile
+    }
+
+    @Test
+    fun testMaxZoomTile() {
+        val zoom = 22
+        val maxIndex = (1 shl zoom) - 1
+        val tile = Tile(maxIndex, maxIndex, zoom)
+
+        // Ensure no out-of-bounds errors occur
+        tile.east shouldBe Tile(0, maxIndex, zoom) // Wraps around
+        tile.west shouldBe Tile(maxIndex - 1, maxIndex, zoom)
+        tile.north shouldBe Tile(maxIndex, maxIndex - 1, zoom)
+        tile.south shouldBe tile // Max zoom, already at bottom
+    }
+
+    @Test
+    fun testTilesNearAntimeridian() {
+        val zoom = 8
+        val left = coordinateToTile(0.0, -179.999, zoom)
+        val right = coordinateToTile(0.0, 179.999, zoom)
+
+        left.x shouldBe 0
+        right.x shouldBe 255
+        right.east.x shouldBe 0
+        left.west.x shouldBe 255
+    }
+
+    @Test
+    fun shouldConvertBackAndForthToQuadTrees() {
+        assertSoftly {
+            repeat(10000) {
+                val tile = randomTile()
+
+                val strQuad = tile.toQuadKey()
+                tile.parentTiles().forEach {
+                    strQuad.startsWith(it.toQuadKey()) shouldBe true
+                }
+                Tile.fromQuadKey(strQuad) shouldBe tile
+                Tile.fromQuadKeyLong(tile.toQuadKeyLong(), tile.zoom) shouldBe tile
             }
         }
     }

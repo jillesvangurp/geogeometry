@@ -18,10 +18,12 @@ private fun Double.toDegrees() = this * 180.0 / PI
 private fun toRadians(degrees: Double) = degrees * PI / 180.0
 
 /**
- * Representation of Google and OSM style map tile
+ * Representation of Google and OSM style map tile grid systems. Tiles like this are commonly used
+ * for mapping. This Kotlin class makes it easy to work with tiles, convert to and from coordinates,
+ * quad tree paths, calculate neighboring tiles, bounding boxes, etc.
  *
- * zoom levels are from 0-22
- * each zoom level you have 2^zoom x and y tiles (4.1Mx4.1M at max zoom level)
+ * [zoom] levels are from 0-22
+ * each zoom level you have 2^zoom [x] and [y] tiles (4.1Mx4.1M at max zoom level)
  */
 @Serializable
 data class Tile(val x: Int, val y: Int, val zoom: Int) {
@@ -36,6 +38,36 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
     }
 
     override fun toString() = "$zoom/$x/$y"
+
+    /**
+     * Converts this tile to a QuadKey string with a base 4 representation of the quad tree path
+     *
+     * Tiles with the same quadkey prefix share the same parent tile.
+     */
+    fun toQuadKey(): String {
+        val quadKey = StringBuilder()
+        for (i in zoom downTo 1) {
+            var digit = 0
+            val mask = 1 shl (i - 1)
+            if ((x and mask) != 0) digit += 1
+            if ((y and mask) != 0) digit += 2
+            quadKey.append(digit)
+        }
+        return quadKey.toString()
+    }
+
+    /**
+     * Converts this tile to a compact Long representation of its QuadKey.
+     *
+     * More compact than the string because it works at the bit level.
+     */
+    fun toQuadKeyLong(): Long {
+        var value = 0L
+        for (digit in toQuadKey()) {
+            value = (value shl 2) or ((digit - '0').toLong())
+        }
+        return value
+    }
 
     val topLeft: PointCoordinates by lazy { topLeft(x = x, y = y, zoom = zoom) }
 
@@ -90,6 +122,42 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
         const val MAX_LATITUDE = 85.05112878
 
         /**
+         * Converts a QuadKey string back into a Tile.
+         */
+        fun fromQuadKey(quadKey: String): Tile {
+            var x = 0
+            var y = 0
+            val zoom = quadKey.length
+            for (i in 0 until zoom) {
+                val bit = zoom - i - 1
+                val mask = 1 shl bit
+                when (quadKey[i]) {
+                    '1' -> x = x or mask
+                    '2' -> y = y or mask
+                    '3' -> {
+                        x = x or mask
+                        y = y or mask
+                    }
+                }
+            }
+            return Tile(x, y, zoom)
+        }
+
+        /**
+         * Converts a long representation of a QuadKey back into a Tile.
+         */
+        fun fromQuadKeyLong(value: Long, zoom: Int): Tile {
+            val quadKey = StringBuilder()
+            var v = value
+            for (i in 0 until zoom) {
+                val digit = (v and 3).toInt()  // Extract last 2 bits
+                quadKey.append(digit)
+                v = v shr 2  // Shift right to process next digit
+            }
+            return fromQuadKey(quadKey.reverse().toString())  // Reverse since digits are stored in reverse order
+        }
+
+        /**
          * Returns the topLeft corner of the tile. Use [fixLonLat] if you are
          * calculating the topleft of a tile that is North/East of the current one to
          * dodge issues with MIN/MAX latitude and the dateline
@@ -131,7 +199,7 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
             // Tiles don't actually work near the poles. Correct behavior is to clamp into these ranges but not fail
             val clampedLat = lat.coerceIn(MIN_LATITUDE, MAX_LATITUDE)
             val n = 1 shl zoom
-            val x = ((lon + 180.0) / 360.0 * n).toInt()
+            val x = (((lon + 180.0) / 360.0 * n) % n).toInt()
             val y =
                 ((1.0 - ln(tan(toRadians(clampedLat)) + 1 / cos(toRadians(clampedLat))) / PI) / 2.0 * n).toInt()
             return Tile(x = x, y = y, zoom = zoom)
