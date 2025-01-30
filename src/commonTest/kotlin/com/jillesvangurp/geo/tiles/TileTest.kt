@@ -256,6 +256,7 @@ class TileTest {
                 }
                 Tile.fromQuadKey(strQuad) shouldBe tile
                 Tile.fromQuadKeyLong(tile.toQuadKeyLong(), tile.zoom) shouldBe tile
+                Tile.fromPath(tile.toString()) shouldBe tile
             }
         }
     }

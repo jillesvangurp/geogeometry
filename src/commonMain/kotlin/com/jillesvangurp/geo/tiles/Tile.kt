@@ -122,6 +122,22 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
         const val MAX_LATITUDE = 85.05112878
 
         /**
+         * Convert from a string like "22/2154259/1378425" to a Tile.
+         */
+        fun fromPath(path: String): Tile {
+            val parts = path.split("/")
+            require(parts.size == 3) { "Invalid path format. Expected format: zoom/x/y" }
+
+            val zoom = parts[0].toIntOrNull()
+            val x = parts[1].toIntOrNull()
+            val y = parts[2].toIntOrNull()
+
+            require(zoom != null && x != null && y != null) { "Invalid path components. Must be integers." }
+
+            return Tile(x, y, zoom)
+        }
+
+        /**
          * Converts a QuadKey string back into a Tile.
          */
         fun fromQuadKey(quadKey: String): Tile {
@@ -204,16 +220,6 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
                 ((1.0 - ln(tan(toRadians(clampedLat)) + 1 / cos(toRadians(clampedLat))) / PI) / 2.0 * n).toInt()
             return Tile(x = x, y = y, zoom = zoom)
         }
-
-        @Deprecated("use coordinateToTile", ReplaceWith("coordinateToTile(lat,lon,zoom)"))
-        fun deg2num(
-            lat: Double,
-            lon: Double,
-            zoom: Int
-        ) = coordinateToTile(lat, lon, zoom)
-
-        @Deprecated("use coordinateToTile", ReplaceWith("coordinateToTile(p.latitude,p.longitude,zoom)"))
-        fun deg2num(p: PointCoordinates, zoom: Int) = coordinateToTile(p.latitude, p.longitude, zoom)
 
         fun allTilesAt(zoom: Int): Sequence<Tile> {
             require(zoom in 0..MAX_ZOOM) { "Zoom level must be between 0 and $MAX_ZOOM." }
