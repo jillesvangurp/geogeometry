@@ -37,7 +37,9 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
         require(y in 0..maxXY) { "y must be between 0 and $maxXY at $zoom" }
     }
 
-    override fun toString() = "$zoom/$x/$y"
+    val path by lazy {"$zoom/$x/$y"}
+    
+    override fun toString() = path
 
     /**
      * Converts this tile to a QuadKey string with a base 4 representation of the quad tree path
