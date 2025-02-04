@@ -2,6 +2,13 @@
 
 # Introduction
 
+Geogeometry is a collection of geospatial algorithms and utilities in Kotlin. This library is what we use at FORMATION, which is the startup that I'm the CTO of. Mostly, whenever I do something that looks like it could be open sourced and is vaguely geo related, I put it in this library. A lot of this stuff is available in third party libraries for (mainly) Java. However, those libraries have two limitations that this library addresses: 
+
+- They are Java centric and generally have a terrible developer experience for Kotlin developers. This library is very Kotlin centric and uses things like extension functions, type aliases, etc. to make life easy for Kotlin developers.
+- They only work on the JVM. This library a multi platform library and works on all Kotlin platforms. We use it heavily with kotlin-js and the jvm. It should work fine on native IOS, Linux, Windows, etc. and WASM. I.e. basically everywhere. This is probably the **#1 multiplatform library for geospatial** stuff on Kotlin currently.
+
+# History
+
 GeoGeometry started out as a simple side project while I was building a startup in 2012. The key feature I needed at time was a list of geohashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, geo-referencing coordinates from various location providers, etc.
 
 I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. 
@@ -66,28 +73,38 @@ GeoHashUtils class with methods that allow you to:
 - get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
 - **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
 
-## GeoJson support
+## Extensive GeoJson support
 
-Geojson classes are provided that allow you to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use **kotlinx.serialization** for parsing and serializing this so this works across platforms as well!
+Geojson classes are provided that allow you to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use **kotlinx.serialization** for parsing and serializing this so this works across all Kotlin platforms.
   
 - sealed class hierarchy to represent the various geometries
 - uses type aliases to distinguish the different coordinate arrays
 - translate, scaleX, scaleY, and rotate to transform any Geojson Geometry
 - calculate a centroid for a shape
+- lots of extension functions to make working with geometries easy
+- convenient `geojsonIoUrl` extension function that allows you to check a geometry or feature collection on Mapboxes' https://geojson.io tool.
 
 ## Coordinate conversions
+
+Convert between WGS 84 coordinates and UTM, UPS, MGRS, and USNG style coordinates.
 
 I put quite a bit of effort in doing code archeology to combine bits and pieces of various
 old Java implementations for this. Lots of edge cases and "you just have to know why" bits
 of code. As a consequence, I have some nice robust tests around this and all seems to work.
 
 I used this amazing [Coordinates converter](https://coordinates-converter.com) to verify my 
-converters. Also, I use randomized points to ensure round trip conversions end up being 
-close to where they should be. Feedback and pull requests to improve this further are welcome
+converters. Also, I use lots of randomized points to ensure round trip conversions end up being 
+close to where they should be and squashed lots of edge cases in the process. Feedback and pull requests to improve this further are welcome
 
   - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)  and [UPS coordinates](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system).
   - Conversion to and from [MGRS](https://en.wikipedia.org/wiki/Military_Grid_Reference_System) / [USNG](https://en.wikipedia.org/wiki/United_States_National_Grid) format
 
+## Map Tile support
+
+Doing things with map tiles is useful if you work with a lot of map content and useful if you are looking to use e.g. Elasticsearch with its support for `geotile_grid` aggregations or filter content by tile path.
+
+- Tile class that represents tiles used in e.g. Openstreetmap and Google Maps. Useful for converting between coordinates, zoom levels and tile coordinates at different zoom levels.
+- Lots of extension functions to calculate parent tiles, quad keys in string or long format, etc.
 
 ## About Geo Hashes
 
