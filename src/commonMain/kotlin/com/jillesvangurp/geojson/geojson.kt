@@ -6,6 +6,7 @@ import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoHashUtils
+import com.jillesvangurp.geojson.Geometry.Polygon
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -31,6 +32,7 @@ typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
  * BoundingBox = [westLongitude,southLatitude,eastLongitude,westLatitude]
  */
 typealias BoundingBox = DoubleArray
+
 fun BoundingBox.toGeometry(): Geometry.Polygon {
     val coordinates = arrayOf(
         arrayOf(
@@ -61,7 +63,8 @@ fun BoundingBox.contains(point: PointCoordinates): Boolean {
     return withinLongitude && withinLatitude
 }
 
-fun PolygonCoordinates.contains(point: PointCoordinates): Boolean = GeoGeometry.polygonContains(point.latitude,point.longitude, polygonCoordinatesPoints = this)
+fun PolygonCoordinates.contains(point: PointCoordinates): Boolean =
+    GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = this)
 
 fun Geometry.contains(point: PointCoordinates): Boolean {
     return when (this) {
@@ -141,16 +144,19 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
         if (this.coordinates?.size == 3) this
         else this.copy(coordinates = this.coordinates?.let { it + doubleArrayOf(0.0) })
     }
+
     is Geometry.MultiPoint -> {
         this.copy(coordinates = this.coordinates?.map {
             if (it.size == 3) it else it + doubleArrayOf(0.0)
         }?.toTypedArray())
     }
+
     is Geometry.LineString -> {
         this.copy(coordinates = this.coordinates?.map {
             if (it.size == 3) it else it + doubleArrayOf(0.0)
         }?.toTypedArray())
     }
+
     is Geometry.MultiLineString -> {
         this.copy(coordinates = this.coordinates?.map { line ->
             line.map {
@@ -158,6 +164,7 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
             }.toTypedArray()
         }?.toTypedArray())
     }
+
     is Geometry.Polygon -> {
         this.copy(coordinates = this.coordinates?.map { ring ->
             ring.map {
@@ -165,6 +172,7 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
             }.toTypedArray()
         }?.toTypedArray())
     }
+
     is Geometry.MultiPolygon -> {
         this.copy(coordinates = this.coordinates?.map { polygon ->
             polygon.map { ring ->
@@ -174,6 +182,7 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
             }.toTypedArray()
         }?.toTypedArray())
     }
+
     is Geometry.GeometryCollection -> {
         this.copy(geometries = this.geometries.map { it.ensureHasAltitude() }.toTypedArray())
     }
@@ -202,9 +211,11 @@ fun PointCoordinates.normalize(): PointCoordinates {
                 in 90.0..180.0 -> {
                     180.0 - lat
                 }
+
                 in -180.0..-90.0 -> {
                     -180.0 - lat
                 }
+
                 else -> {
                     lat
                 }
@@ -327,6 +338,7 @@ fun Geometry.asFeature(
 ): Feature {
     return Feature(this, properties, bbox)
 }
+
 fun Geometry.asFeatureWithProperties(
     bbox: BoundingBox? = null,
     propertiesBuilder: (JsonObjectBuilder.() -> Unit)
@@ -497,6 +509,7 @@ sealed class Geometry {
         override fun toString(): String = Json.encodeToString(Geometry.serializer(), this)
     }
 
+
     @Serializable
     @SerialName("MultiPolygon")
     data class MultiPolygon(
@@ -547,6 +560,13 @@ sealed class Geometry {
         override fun toString(): String = Json.encodeToString(Geometry.serializer(), this)
     }
 }
+
+val PolygonCoordinates.outerCoordinates get() = this[0]
+val PolygonCoordinates.holeCoordinates get() = this.slice(1..<this.size)
+
+val Polygon.outerCoordinates get() = coordinates?.outerCoordinates ?: error("no points found")
+val Polygon.holeCoordinates get() = coordinates?.holeCoordinates ?: error("no points found")
+
 
 @Serializable
 data class Feature(

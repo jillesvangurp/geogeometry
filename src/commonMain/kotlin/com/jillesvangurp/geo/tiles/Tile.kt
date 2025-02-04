@@ -250,5 +250,15 @@ fun Tile.parentTiles(): List<Tile> {
     return parentTiles
 }
 
+fun Tile.parentAtZoom(zoom: Int): Tile {
+    require(zoom in 0 until this.zoom) { "Target zoom must be less than current zoom ($this.zoom)" }
+
+    val scale = 1 shl (this.zoom - zoom)
+    val parentX = this.x / scale
+    val parentY = this.y / scale
+
+    return Tile(parentX, parentY, zoom)
+}
+
 fun PointCoordinates.tiles() =
     coordinateToTile(lat = this.latitude, lon = this.longitude, zoom = MAX_ZOOM).let { listOf(it) + it.parentTiles() }

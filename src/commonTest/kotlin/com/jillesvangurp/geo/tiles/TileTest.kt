@@ -4,6 +4,8 @@ import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
 import com.jillesvangurp.geojson.contains
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.outerCoordinates
+import com.jillesvangurp.geojson.polygon
 import com.jillesvangurp.geojson.toGeometry
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
@@ -19,8 +21,8 @@ import kotlin.test.Test
 fun randomTileCoordinate() =
     doubleArrayOf(Random.nextDouble(-180.0, 180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
 
-fun randomTile(): Tile {
-    val zl = (0..22).random()
+fun randomTile(minZoom:Int=0): Tile {
+    val zl = (minZoom..22).random()
     val maxXY = 1 shl zl
     return Tile(
         x = (0 until maxXY).random(),
@@ -257,6 +259,19 @@ class TileTest {
                 Tile.fromQuadKey(strQuad) shouldBe tile
                 Tile.fromQuadKeyLong(tile.toQuadKeyLong(), tile.zoom) shouldBe tile
                 Tile.fromPath(tile.toString()) shouldBe tile
+            }
+        }
+    }
+
+    @Test
+    fun shouldBeContainedByParent() {
+        assertSoftly {
+            repeat(100) {
+                val tile = randomTile(5)
+                val parent = tile.parentAtZoom(tile.zoom - 3)
+                tile.bbox.polygon().outerCoordinates.forEach { point ->
+                    parent.bbox.contains(point) shouldBe true
+                }
             }
         }
     }

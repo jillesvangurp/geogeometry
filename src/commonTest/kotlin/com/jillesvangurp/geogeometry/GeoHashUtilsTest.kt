@@ -9,6 +9,7 @@ import com.jillesvangurp.geojson.eastLongitude
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.northLatitude
+import com.jillesvangurp.geojson.outerCoordinates
 import com.jillesvangurp.geojson.polygon
 import com.jillesvangurp.geojson.southLatitude
 import com.jillesvangurp.geojson.westLongitude
@@ -119,7 +120,7 @@ class GeoHashUtilsTest {
       }            
         """.trimIndent()
         val p = DEFAULT_JSON.decodeFromString(Geometry.serializer(), concavePolygon) as Geometry.Polygon
-        val coordinates = p.coordinates?.get(0) ?: throw IllegalStateException()
+        val coordinates = p.outerCoordinates
         val hashes = GeoHashUtils.geoHashesForLinearRing(coordinates = coordinates, includePartial = true)
 
         println(hashes.size)

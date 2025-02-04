@@ -24,7 +24,7 @@ class RotationTest {
         // we'll allow a few meters deviation. Earth is not perfectly spherical
         GeoGeometry.distance(oranienburgerTor, moved.centroid()) shouldBeLessThan 10.0
         moved as Geometry.Polygon
-        moved.coordinates?.get(0)!!.forEach {
+        moved.outerCoordinates.forEach {
             // radius of the circle should be similar, it will change a little
             val radius = GeoGeometry.distance(moved.centroid(), it)
             radius shouldBeGreaterThan 19.0
