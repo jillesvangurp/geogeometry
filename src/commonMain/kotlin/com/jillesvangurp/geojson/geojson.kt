@@ -33,7 +33,7 @@ typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
  */
 typealias BoundingBox = DoubleArray
 
-fun BoundingBox.toGeometry(): Geometry.Polygon {
+fun BoundingBox.toGeometry(): Polygon {
     val coordinates = arrayOf(
         arrayOf(
             doubleArrayOf(this.westLongitude, this.southLatitude),
@@ -43,7 +43,7 @@ fun BoundingBox.toGeometry(): Geometry.Polygon {
             doubleArrayOf(this.westLongitude, this.southLatitude) // Close the polygon
         )
     )
-    return Geometry.Polygon(coordinates)
+    return Polygon(coordinates)
 }
 
 fun BoundingBox.contains(point: PointCoordinates): Boolean {
@@ -88,7 +88,7 @@ fun Geometry.contains(point: PointCoordinates): Boolean {
             }
         } ?: false
 
-        is Geometry.Polygon -> this.coordinates?.let {
+        is Polygon -> this.coordinates?.let {
             GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = it)
         } ?: false
 
@@ -122,7 +122,7 @@ fun PointCoordinates.geometry() = Geometry.Point(coordinates = this)
 fun MultiPointCoordinates.multiPointGeometry() = Geometry.MultiPoint(coordinates = this)
 fun LineStringCoordinates.lineStringGeometry() = Geometry.LineString(coordinates = this)
 fun MultiLineStringCoordinates.multiLineStringGeometry() = Geometry.MultiLineString(coordinates = this)
-fun PolygonCoordinates.polygonGeometry() = Geometry.Polygon(coordinates = this)
+fun PolygonCoordinates.polygonGeometry() = Polygon(coordinates = this)
 fun MultiPolygonCoordinates.geometry() = Geometry.MultiPolygon(coordinates = this)
 
 val LinearRingCoordinates.segments
@@ -134,7 +134,7 @@ val LinearRingCoordinates.segments
 val PolygonCoordinates.outerSegments get() = this[0].segments
 
 fun Geometry.ensureFollowsRightHandSideRule() = when (this) {
-    is Geometry.Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
+    is Polygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
     is Geometry.MultiPolygon -> this.copy(coordinates = this.coordinates?.ensureFollowsRightHandSideRule())
     else -> this
 }
@@ -165,7 +165,7 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
         }?.toTypedArray())
     }
 
-    is Geometry.Polygon -> {
+    is Polygon -> {
         this.copy(coordinates = this.coordinates?.map { ring ->
             ring.map {
                 if (it.size == 3) it else it + doubleArrayOf(0.0)
@@ -187,6 +187,28 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
         this.copy(geometries = this.geometries.map { it.ensureHasAltitude() }.toTypedArray())
     }
 }
+
+fun Geometry.boundingBox(): BoundingBox =
+    when (this) {
+        is Geometry.GeometryCollection -> {
+            val bboxes = geometries.map { it.boundingBox() }
+            if (bboxes.isEmpty()) error("Cannot compute bounding box for an empty GeometryCollection")
+
+            val minLongitude = bboxes.minOf { it.westLongitude }
+            val minLatitude = bboxes.minOf { it.southLatitude }
+            val maxLongitude = bboxes.maxOf { it.eastLongitude }
+            val maxLatitude = bboxes.maxOf { it.northLatitude }
+
+            doubleArrayOf(minLongitude, minLatitude, maxLongitude, maxLatitude)
+        }
+
+        is Geometry.LineString -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.MultiLineString -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.MultiPoint -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.MultiPolygon -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.Point -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+        is Polygon -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+    }
 
 @Deprecated("does not handle bounding boxes that span the dateline")
 fun BoundingBox.isValid(): Boolean {
@@ -275,7 +297,7 @@ val BoundingBox.northWest get() = doubleArrayOf(this.westLongitude, this.northLa
 val BoundingBox.southEast get() = doubleArrayOf(this.eastLongitude, this.southLatitude)
 val BoundingBox.southWest get() = doubleArrayOf(this.westLongitude, this.southLatitude)
 
-fun BoundingBox.polygon(): Geometry.Polygon {
+fun BoundingBox.polygon(): Polygon {
     val coordinates = arrayOf(
         arrayOf(
             doubleArrayOf(this.westLongitude, this.southLatitude),
@@ -285,7 +307,7 @@ fun BoundingBox.polygon(): Geometry.Polygon {
             doubleArrayOf(this.westLongitude, this.southLatitude)
         )
     )
-    return Geometry.Polygon(coordinates)
+    return Polygon(coordinates)
 }
 
 /**
