@@ -71,7 +71,7 @@ class GeoGeometry {
          * [lat,lat,lon,lon}
          */
         fun boundingBox(pointCoordinates: PointCoordinates): BoundingBox {
-            return doubleArrayOf(pointCoordinates[0], pointCoordinates[1], pointCoordinates[0], pointCoordinates[1])
+            return doubleArrayOf(pointCoordinates.longitude, pointCoordinates.latitude, pointCoordinates.longitude, pointCoordinates.latitude)
         }
 
         /**
