@@ -1,11 +1,17 @@
 package com.jillesvangurp.geo.tiles
 
+import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.tiles.Tile.Companion.MAX_ZOOM
 import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
 import com.jillesvangurp.geojson.BoundingBox
+import com.jillesvangurp.geojson.Geometry
 import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geojson.bottomLeft
+import com.jillesvangurp.geojson.bottomRight
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.topLeft
+import com.jillesvangurp.geojson.topRight
 import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.cos
@@ -37,8 +43,8 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
         require(y in 0..maxXY) { "y must be between 0 and $maxXY at $zoom" }
     }
 
-    val path by lazy {"$zoom/$x/$y"}
-    
+    val path by lazy { "$zoom/$x/$y" }
+
     override fun toString() = path
 
     /**
@@ -77,15 +83,17 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
 
     val bottomLeft: PointCoordinates by lazy { topLeft(x = x, y = (y + 1) % maxXY, zoom = zoom) }
 
-    val bottomRight: PointCoordinates by lazy { topLeft(
-        x = (x + 1) % maxXY,
-        y = (y + 1) % maxXY,
-        zoom = zoom,
-        fixLonLat = true
-    ) }
+    val bottomRight: PointCoordinates by lazy {
+        topLeft(
+            x = (x + 1) % maxXY,
+            y = (y + 1) % maxXY,
+            zoom = zoom,
+            fixLonLat = true
+        )
+    }
 
     val bbox: BoundingBox by lazy {
-        if(zoom>0) {
+        if (zoom > 0) {
             doubleArrayOf(
                 topLeft.longitude,
                 bottomRight.latitude,
@@ -93,7 +101,7 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
                 topLeft.latitude
             )
         } else {
-            doubleArrayOf(-180.0, MAX_LATITUDE,180.0, MIN_LATITUDE)
+            doubleArrayOf(-180.0, MAX_LATITUDE, 180.0, MIN_LATITUDE)
         }
     }
 
@@ -180,7 +188,7 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
          * calculating the topleft of a tile that is North/East of the current one to
          * dodge issues with MIN/MAX latitude and the dateline
          */
-        fun topLeft(x: Int, y: Int, zoom: Int, fixLonLat: Boolean=false): PointCoordinates {
+        fun topLeft(x: Int, y: Int, zoom: Int, fixLonLat: Boolean = false): PointCoordinates {
             // n is the number of x and y coordinates at a zoom level
             // The shl operation (1 shl zoom) shifts the integer 1 to the left by zoom bits,
             // which is equivalent to calculating  2^zoom
@@ -196,9 +204,9 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
 
 
             return doubleArrayOf(
-                if(fixLonLat && lon <= -180.0) 180.0 else lon,
+                if (fixLonLat && lon <= -180.0) 180.0 else lon,
                 // nice little rounding error here calculating the bottom latitude
-                if(fixLonLat && lat >= 85.051128) MIN_LATITUDE else lat
+                if (fixLonLat && lat >= 85.051128) MIN_LATITUDE else lat
             )
         }
 
@@ -237,6 +245,21 @@ data class Tile(val x: Int, val y: Int, val zoom: Int) {
     }
 }
 
+fun BoundingBox.tiles(zoom: Int): Set<Tile> {
+    val tl = coordinateToTile(topLeft.latitude, topLeft.longitude, zoom)
+    val br = coordinateToTile(bottomRight.latitude, bottomRight.longitude, zoom)
+    val minX = tl.x
+    val maxX = br.x
+    val minY = tl.y
+    val maxY = br.y
+
+    return (minX..maxX).flatMap {x->
+        (minY..maxY).map { y->
+            Tile(x=x,y=y,zoom=zoom)
+        }
+    }.toSet()
+}
+
 fun Tile.parentTiles(): List<Tile> {
     if (zoom == 0) return emptyList()
     val parentTiles = mutableListOf<Tile>()
@@ -253,7 +276,7 @@ fun Tile.parentTiles(): List<Tile> {
 }
 
 fun Tile.parentAtZoom(zoom: Int): Tile {
-    require(zoom in 0 until this.zoom) { "Target zoom must be less than current zoom ($this.zoom)" }
+    require(zoom in 0 until this.zoom) { "Target zoom of $zoom must be less than current zoom ($this.zoom)" }
 
     val scale = 1 shl (this.zoom - zoom)
     val parentX = this.x / scale

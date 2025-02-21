@@ -1,6 +1,9 @@
 package com.jillesvangurp.geo.tiles
 
+import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
+import com.jillesvangurp.geogeometry.brandenBurgerGate
+import com.jillesvangurp.geogeometry.rosenthalerPlatz
 import com.jillesvangurp.geojson.contains
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
@@ -14,6 +17,7 @@ import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.test.Test
@@ -274,5 +278,18 @@ class TileTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun bboxShouldHaveCorrectTiles() {
+        val bbox = GeoGeometry.boundingBox(
+            arrayOf(
+                rosenthalerPlatz,
+                brandenBurgerGate,
+            )
+        )
+        val tiles = bbox.tiles(16)
+        tiles.size shouldBeGreaterThanOrEqual 2
+
     }
 }
