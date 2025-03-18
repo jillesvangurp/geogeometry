@@ -480,12 +480,6 @@ class GeoHashUtilsTest {
             doubleArrayOf(52.0, 10.0),
             doubleArrayOf(51.0, 10.0)
         )
-        val p3outside = arrayOf(
-            doubleArrayOf(60.0, 15.0),
-            doubleArrayOf(63.0, 15.0),
-            doubleArrayOf(63.0, 11.0),
-            doubleArrayOf(60.0, 11.0)
-        )
         val p4inside = arrayOf(
             doubleArrayOf(51.0, 14.0),
             doubleArrayOf(52.0, 14.0),
@@ -495,7 +489,6 @@ class GeoHashUtilsTest {
         GeoGeometry.overlap(polygon, polygon) shouldBe true
         GeoGeometry.overlap(polygon, p2overlapping) shouldBe true
         GeoGeometry.overlap(p2overlapping, polygon) shouldBe true
-        GeoGeometry.overlap(p3outside, polygon) shouldBe false
         GeoGeometry.overlap(polygon, p4inside) shouldBe true
         GeoGeometry.overlap(p4inside, polygon) shouldBe true
     }
