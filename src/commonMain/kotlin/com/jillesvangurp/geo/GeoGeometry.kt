@@ -921,6 +921,17 @@ class GeoGeometry {
                 }
             }
 
+            for (i in 0 until left.size - 1) {
+                val l1p1 = left[i]
+                val l1p2 = left[i + 1]
+                for (j in 0 until right.size - 1) {
+                    val l2p1 = right[j]
+                    val l2p2 = right[j + 1]
+                    if (linesCross(l1p1, l1p2, l2p1, l2p2)) {
+                        return true
+                    }
+                }
+            }
             return false
         }
 
