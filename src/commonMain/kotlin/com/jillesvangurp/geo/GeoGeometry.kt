@@ -927,6 +927,7 @@ class GeoGeometry {
                 for (j in 0 until right.size - 1) {
                     val l2p1 = right[j]
                     val l2p2 = right[j + 1]
+
                     if (linesCross(l1p1, l1p2, l2p1, l2p2)) {
                         return true
                     }
@@ -1526,5 +1527,33 @@ class GeoGeometry {
             }
             return sum > 0
         }
+
+        val latPattern = """(?:[+-])?(?:90(?:(?:\.0{1,6})?)|(?:[1-8][0-9]|[0-9])(?:(?:\.[0-9]{1,6})?))"""
+        val lonPattern = """(?:\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:1[0-7][0-9]|[1-9][0-9]|[0-9])(?:(?:\.[0-9]{1,6})?))"""
+        val latLonRegex = """(?<![0-9.])\s*($latPattern)\s*,\s*($lonPattern)\s*(?![0-9.])""".toRegex()
+
+        fun isValidCoordinate(input: String): Boolean {
+            return latLonRegex.matches(input)
+        }
+
+        fun parseCoordinate(input: String): PointCoordinates? {
+            val match = latLonRegex.matchEntire(input) ?: return null
+
+            val latitude = match.groupValues[1].toDouble()
+            val longitude = match.groupValues[2].toDouble()
+            return doubleArrayOf(longitude, latitude)
+        }
+
+        fun findAllCoordinates(input: String): List<PointCoordinates> {
+            return latLonRegex.findAll(input)
+                .mapNotNull { match ->
+                    val lat = match.groupValues[1].toDoubleOrNull()
+                    val lon = match.groupValues[2].toDoubleOrNull()
+                    if (lat != null && lon != null) doubleArrayOf(lon, lat) else null
+                }
+                .toList()
+        }
     }
 }
+
+
