@@ -1,7 +1,6 @@
 package com.jillesvangurp.geojson
 
 import com.jillesvangurp.serializationext.DEFAULT_JSON
-import kotlinx.serialization.encodeToString
 
 
 val FeatureCollection.geoJsonIOUrl: Any
@@ -13,17 +12,20 @@ val FeatureCollection.geoJsonIOUrl: Any
 
 val Geometry.geoJsonIOUrl get() = this.asFeatureCollection.geoJsonIOUrl
 
-fun String.urlEncode(): String {
-    val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9') + listOf('-', '.', '_', '~')
-    return buildString {
-        this@urlEncode.forEach { char ->
-            if (char in allowedChars) {
-                append(char)
-            } else {
-                append(char.code.toByte().toInt().let {
-                    "%${it.shr(4).and(0xF).toString(16)}${it.and(0xF).toString(16)}"
-                }.uppercase())
-            }
+private const val HEX = "0123456789ABCDEF"
+/** Percent-encode according to RFC 3986 (UTF-8) */
+fun String.urlEncode(): String = buildString {
+    for (byte in encodeToByteArray()) {          // UTF-8 bytes
+        val b = byte.toInt() and 0xFF            // 0-255, no sign
+        val c = b.toChar()
+        if (c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+            "abcdefghijklmnopqrstuvwxyz0123456789-._~"
+        ) {                   // keep unreserved
+            append(c)
+        } else {                                 // escape everything else
+            append('%')
+            append(HEX[b ushr 4])
+            append(HEX[b and 0x0F])
         }
     }
 }
