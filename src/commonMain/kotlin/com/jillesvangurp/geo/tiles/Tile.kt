@@ -1,17 +1,13 @@
 package com.jillesvangurp.geo.tiles
 
-import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.tiles.Tile.Companion.MAX_ZOOM
 import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
 import com.jillesvangurp.geojson.BoundingBox
-import com.jillesvangurp.geojson.Geometry
 import com.jillesvangurp.geojson.PointCoordinates
-import com.jillesvangurp.geojson.bottomLeft
 import com.jillesvangurp.geojson.bottomRight
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.topLeft
-import com.jillesvangurp.geojson.topRight
 import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.cos
