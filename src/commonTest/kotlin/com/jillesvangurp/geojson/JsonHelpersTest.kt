@@ -30,7 +30,9 @@ class JsonHelpersTest {
             "path/part"   to "path%2Fpart",
 
             // tilde is unreserved
-            "~tilde"      to "~tilde"
+            "~tilde"      to "~tilde",
+            // colons and poop emoji
+            "::\uD83D\uDCA9" to "%3A%3A%F0%9F%92%A9",
         )
 
         cases.forEach { (raw, expected) ->

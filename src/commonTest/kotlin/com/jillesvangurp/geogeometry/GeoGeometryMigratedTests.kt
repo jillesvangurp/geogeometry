@@ -25,8 +25,10 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
 import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geojson.geoJsonIOUrl
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geojson.polygonGeometry
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
@@ -340,8 +342,22 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldExpandPolygon() {
-        val expandPolygon = expandPolygon(2000, samplePolygon)
+        val expandPolygon = expandPolygon(2000.0, samplePolygon)
         contains(expandPolygon,samplePolygon) shouldBe true
+    }
+
+    @Test
+    fun shouldExpandCircle() {
+        val circle = GeoGeometry.circle2polygon(40, rosenthalerPlatz.latitude,rosenthalerPlatz.longitude,5.0)
+
+        val expandPolygon = expandPolygon(0.5, circle)
+
+        println("""
+            ${circle.polygonGeometry().geoJsonIOUrl}
+            ${expandPolygon.polygonGeometry().geoJsonIOUrl}
+        """.trimIndent())
+
+        contains(expandPolygon[0],circle[0]) shouldBe true
     }
 
     @Test

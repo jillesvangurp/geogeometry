@@ -963,24 +963,24 @@ class GeoGeometry {
          * @param points linestring polygon
          * @return a new linearRing that fully contains the old polygon and is roughly the specified meters wider.
          */
-        fun expandPolygon(meters: Int, points: LinearRingCoordinates): LinearRingCoordinates {
+        fun expandPolygon(meters: Double, points: LinearRingCoordinates): LinearRingCoordinates {
             val expanded = Array(points.size * 8) { DoubleArray(0) }
             // generate eight variants of each point
             for (i in points.indices) {
                 val p = points[i]
-                val lonPos = translateLongitude(p[0], p[1], meters.toDouble())[0]
-                val lonNeg = translateLongitude(p[0], p[1], (-1 * meters).toDouble())[0]
-                val latPos = translateLatitude(p[0], p[1], meters.toDouble())[1]
-                val latNeg = translateLatitude(p[0], p[1], (-1 * meters).toDouble())[1]
+                val lonPos = translateLongitude(p.longitude, p.latitude, meters)[0]
+                val lonNeg = translateLongitude(p.longitude, p.latitude, (-1 * meters))[0]
+                val latPos = translateLatitude(p.longitude, p.latitude, meters)[1]
+                val latNeg = translateLatitude(p.longitude, p.latitude, (-1 * meters))[1]
                 expanded[i * 8] = doubleArrayOf(lonPos, latPos)
                 expanded[i * 8 + 1] = doubleArrayOf(lonPos, latNeg)
                 expanded[i * 8 + 2] = doubleArrayOf(lonNeg, latPos)
                 expanded[i * 8 + 3] = doubleArrayOf(lonNeg, latNeg)
 
-                expanded[i * 8 + 4] = doubleArrayOf(lonPos, p[1])
-                expanded[i * 8 + 5] = doubleArrayOf(lonNeg, p[1])
-                expanded[i * 8 + 6] = doubleArrayOf(p[0], latPos)
-                expanded[i * 8 + 7] = doubleArrayOf(p[1], latNeg)
+                expanded[i * 8 + 4] = doubleArrayOf(lonPos, p.latitude)
+                expanded[i * 8 + 5] = doubleArrayOf(lonNeg, p.latitude)
+                expanded[i * 8 + 6] = doubleArrayOf(p.longitude, latPos)
+                expanded[i * 8 + 7] = doubleArrayOf(p.longitude, latNeg)
             }
             // create a polygon that surrounds all the points
             return polygonForPoints(expanded)
@@ -997,7 +997,7 @@ class GeoGeometry {
          * @param points linestring polygon
          * @return a new polygon that fully contains the old polygon and is roughly the specified meters wider.
          */
-        fun expandPolygon(meters: Int, points: PolygonCoordinates): PolygonCoordinates {
+        fun expandPolygon(meters: Double, points: PolygonCoordinates): PolygonCoordinates {
             return arrayOf(expandPolygon(meters, points[0]))
         }
 
