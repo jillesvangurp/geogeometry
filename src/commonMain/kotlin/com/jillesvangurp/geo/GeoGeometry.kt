@@ -968,17 +968,17 @@ class GeoGeometry {
             // generate eight variants of each point
             for (i in points.indices) {
                 val p = points[i]
-                val lonPos = translateLongitude(p.longitude, p.latitude, meters)[0]
-                val lonNeg = translateLongitude(p.longitude, p.latitude, (-1 * meters))[0]
-                val latPos = translateLatitude(p.longitude, p.latitude, meters)[1]
-                val latNeg = translateLatitude(p.longitude, p.latitude, (-1 * meters))[1]
+                val lonPos = translateLongitude(p.latitude, p.longitude, meters)[0]
+                val lonNeg = translateLongitude(p.latitude, p.longitude, (-1 * meters))[0]
+                val latPos = translateLatitude(p.latitude, p.longitude, meters)[1]
+                val latNeg = translateLatitude(p.latitude, p.longitude, (-1 * meters))[1]
                 expanded[i * 8] = doubleArrayOf(lonPos, latPos)
                 expanded[i * 8 + 1] = doubleArrayOf(lonPos, latNeg)
+                expanded[i * 8 + 4] = doubleArrayOf(lonPos, p.latitude)
                 expanded[i * 8 + 2] = doubleArrayOf(lonNeg, latPos)
                 expanded[i * 8 + 3] = doubleArrayOf(lonNeg, latNeg)
-
-                expanded[i * 8 + 4] = doubleArrayOf(lonPos, p.latitude)
                 expanded[i * 8 + 5] = doubleArrayOf(lonNeg, p.latitude)
+
                 expanded[i * 8 + 6] = doubleArrayOf(p.longitude, latPos)
                 expanded[i * 8 + 7] = doubleArrayOf(p.longitude, latNeg)
             }
