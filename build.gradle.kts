@@ -45,29 +45,24 @@ kotlin {
     iosArm64()
     iosX64()
     iosSimulatorArm64()
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
         browser {
             testTask {
-                useMocha {
-                    timeout = "60s"
-                }
+                // FIXME ignored
+                timeout= Duration.ofSeconds(60)
             }
         }
         nodejs {
             testTask {
-                useMocha {
-                    timeout = "60s"
-                }
+                timeout= Duration.ofSeconds(60)
             }
         }
         d8 {
             testTask {
-                useMocha {
-                    timeout = "60s"
-                }
+                timeout= Duration.ofSeconds(60)
             }
         }
-
     }
     // no kotest support yet for this
 //    wasmWasi()
