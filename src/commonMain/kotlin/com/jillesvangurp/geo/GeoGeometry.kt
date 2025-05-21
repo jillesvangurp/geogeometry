@@ -24,6 +24,8 @@
 package com.jillesvangurp.geo
 
 import com.jillesvangurp.geojson.*
+import com.jillesvangurp.geojson.latitude
+import com.jillesvangurp.geojson.longitude
 import kotlin.math.*
 
 
@@ -220,6 +222,7 @@ class GeoGeometry {
             return polygonContains(latitude, longitude, *polygonCoordinatesPoints[0])
         }
 
+
         /**
          * Determine whether a point is contained in a polygon. Note, technically
          * the points that make up the polygon are not contained by it.
@@ -231,102 +234,50 @@ class GeoGeometry {
          * [longitude,latitude]
          * @return true if the polygon contains the coordinate
          */
-        fun polygonContains(latitude: Double, longitude: Double, vararg polygonPoints: PointCoordinates): Boolean {
-            validate(latitude, longitude, false)
-
-            if (polygonPoints.size <= 2) {
-                throw IllegalArgumentException("a polygon must have at least three points")
+        fun polygonContains(
+            latitude: Double,
+            longitude: Double,
+            vararg polygonPoints: PointCoordinates
+        ): Boolean {
+            fun wrapLongitude(diff: Double): Double = when {
+                diff > 180   -> diff - 360
+                diff < -180  -> diff + 360
+                else         -> diff
             }
-            @Suppress("UNCHECKED_CAST") val bbox = boundingBox(polygonPoints as Array<DoubleArray>)
-            if (!bboxContains(bbox, latitude, longitude)) {
-                // outside the containing bbox
+            validate(latitude, longitude, false)
+            require(polygonPoints.size >= 3) { "a polygon must have at least three points" }
+
+
+            // 1) Shift longitudes so test-point’s lon → 0, deals with antimeridian
+            val norm = polygonPoints.map {
+                doubleArrayOf(
+                    wrapLongitude(it[0] - longitude),
+                    it[1]
+                )
+            }.toTypedArray()
+
+            // 2) Quick bbox check around (0, latitude)
+            val bbox = boundingBox(norm)
+            if (!bboxContains(bbox, latitude, 0.0)) {
                 return false
             }
-
-            var hits = 0
-
-            var lastLatitude = polygonPoints[polygonPoints.size - 1][1]
-            var lastLongitude = polygonPoints[polygonPoints.size - 1][0]
-            var currentLatitude: Double
-            var currentLongitude: Double
-
-            // Walk the edges of the polygon
-            var i = 0
-            while (i < polygonPoints.size) {
-                currentLatitude = polygonPoints[i][1]
-                currentLongitude = polygonPoints[i][0]
-
-                if (currentLongitude == lastLongitude) {
-                    lastLatitude = currentLatitude
-                    lastLongitude = currentLongitude
-                    i++
-                    continue
-                }
-
-                val leftLatitude: Double
-                if (currentLatitude < lastLatitude) {
-                    if (latitude >= lastLatitude) {
-                        lastLatitude = currentLatitude
-                        lastLongitude = currentLongitude
-                        i++
-                        continue
-                    }
-                    leftLatitude = currentLatitude
-                } else {
-                    if (latitude >= currentLatitude) {
-                        lastLatitude = currentLatitude
-                        lastLongitude = currentLongitude
-                        i++
-                        continue
-                    }
-                    leftLatitude = lastLatitude
-                }
-
-                val test1: Double
-                val test2: Double
-                if (currentLongitude < lastLongitude) {
-                    if (longitude < currentLongitude || longitude >= lastLongitude) {
-                        lastLatitude = currentLatitude
-                        lastLongitude = currentLongitude
-                        i++
-                        continue
-                    }
-                    if (latitude < leftLatitude) {
-                        hits++
-                        lastLatitude = currentLatitude
-                        lastLongitude = currentLongitude
-                        i++
-                        continue
-                    }
-                    test1 = latitude - currentLatitude
-                    test2 = longitude - currentLongitude
-                } else {
-                    if (longitude < lastLongitude || longitude >= currentLongitude) {
-                        lastLatitude = currentLatitude
-                        lastLongitude = currentLongitude
-                        i++
-                        continue
-                    }
-                    if (latitude < leftLatitude) {
-                        hits++
-                        lastLatitude = currentLatitude
-                        lastLongitude = currentLongitude
-                        i++
-                        continue
-                    }
-                    test1 = latitude - lastLatitude
-                    test2 = longitude - lastLongitude
-                }
-
-                if (test1 < test2 / (lastLongitude - currentLongitude) * (lastLatitude - currentLatitude)) {
-                    hits++
-                }
-                lastLatitude = currentLatitude
-                lastLongitude = currentLongitude
-                i++
+            if(polygonPoints.firstOrNull() { it.latitude ==latitude && it.longitude==longitude } != null) {
+                // edge case for vertices
+                return true
             }
 
-            return hits % 2 == 1
+            // 3) Ray-cast from (0,latitude) eastward
+            var hits = 0
+            val y = latitude
+            for (i in norm.indices) {
+                val (x1, y1) = norm[i]
+                val (x2, y2) = norm[(i + 1) % norm.size]
+                if ((y1 > y) != (y2 > y)) {
+                    val xInt = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+                    if (xInt > 0) hits++
+                }
+            }
+            return hits and 1 == 1
         }
 
         /**

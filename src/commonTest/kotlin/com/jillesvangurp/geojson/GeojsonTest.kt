@@ -68,11 +68,11 @@ class GeojsonKtTest {
     @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun cbor() {
-        val p = Geometry.Point(coordinates = doubleArrayOf(1.0,1.0))
+        val p = Geometry.Point(coordinates = doubleArrayOf(1.0, 1.0))
         val cb = Cbor {
             encodeDefaults = true
         }
-        val bytes = cb.encodeToByteArray(Geometry.serializer(),p)
+        val bytes = cb.encodeToByteArray(Geometry.serializer(), p)
         println(bytes.decodeToString())
         println(bytes.toHex())
         val decoded = cb.decodeFromByteArray(Geometry.serializer(), bytes)
@@ -123,4 +123,229 @@ class GeojsonKtTest {
         Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldBe Geometry.Point(doubleArrayOf(0.1, 0.1))
     }
 
+    @Test
+    fun pointInsidePolygonShouldIntersect() {
+        val point = Geometry.Point(doubleArrayOf(13.3889, 52.5170)) // Somewhere in Berlin
+        val polygon = Geometry.Polygon(
+            coordinates = arrayOf(
+                arrayOf(
+                    doubleArrayOf(13.387, 52.516),
+                    doubleArrayOf(13.390, 52.516),
+                    doubleArrayOf(13.390, 52.518),
+                    doubleArrayOf(13.387, 52.518),
+                    doubleArrayOf(13.387, 52.516)
+                )
+            )
+        )
+        point.intersects(polygon) shouldBe true
+        polygon.intersects(point) shouldBe true
+    }
+
+    @Test
+    fun disjointGeometriesShouldNotIntersect() {
+        val point = Geometry.Point(doubleArrayOf(10.0, 10.0))
+        val polygon = Geometry.Polygon(
+            coordinates = arrayOf(
+                arrayOf(
+                    doubleArrayOf(0.0, 0.0),
+                    doubleArrayOf(1.0, 0.0),
+                    doubleArrayOf(1.0, 1.0),
+                    doubleArrayOf(0.0, 1.0),
+                    doubleArrayOf(0.0, 0.0)
+                )
+            )
+        )
+        point.intersects(polygon) shouldBe false
+        polygon.intersects(point) shouldBe false
+    }
+
+    @Test
+    fun touchingEdgesShouldIntersect() {
+        val line1 = Geometry.LineString(
+            coordinates = arrayOf(
+                doubleArrayOf(0.0, 0.0),
+                doubleArrayOf(1.0, 1.0)
+            )
+        )
+        val line2 = Geometry.LineString(
+            coordinates = arrayOf(
+                doubleArrayOf(1.0, 1.0),
+                doubleArrayOf(2.0, 2.0)
+            )
+        )
+        line1.intersects(line2) shouldBe true
+    }
+
+    @Test
+    fun overlappingLineSegmentsShouldIntersect() {
+        val line1 = Geometry.LineString(
+            coordinates = arrayOf(
+                doubleArrayOf(0.0, 0.0),
+                doubleArrayOf(2.0, 2.0)
+            )
+        )
+        val line2 = Geometry.LineString(
+            coordinates = arrayOf(
+                doubleArrayOf(1.0, 1.0),
+                doubleArrayOf(3.0, 3.0)
+            )
+        )
+        line1.intersects(line2) shouldBe true
+    }
+
+    @Test
+    fun antimeridianCrossingPolygonShouldIntersect() {
+        // a simple 1°×1° box crossing the antimeridian between lon 179 and –179
+        val polygon = Geometry.Polygon(
+            coordinates = arrayOf(
+                arrayOf(
+                    doubleArrayOf(179.0, 0.0),
+                    doubleArrayOf(-179.0, 0.0),
+                    doubleArrayOf(-179.0, 1.0),
+                    doubleArrayOf(179.0, 1.0),
+                    doubleArrayOf(179.0, 0.0)
+                )
+            )
+        )
+        // points just inside on either side of the antimeridian
+        val insideEast = Geometry.Point(doubleArrayOf(179.5, 0.5))
+        val insideWest = Geometry.Point(doubleArrayOf(-179.5, 0.5))
+        insideEast.intersects(polygon) shouldBe true
+        insideWest.intersects(polygon) shouldBe true
+
+        // a point well outside the crossing region
+        val outside = Geometry.Point(doubleArrayOf(178.0, 0.5))
+        outside.intersects(polygon) shouldBe false
+    }
+
+    @Test
+    fun pointOnEdgeOrVertexShouldIntersect() {
+        val square = Geometry.Polygon(
+            arrayOf(
+                arrayOf(
+                    doubleArrayOf(0.0, 0.0),
+                    doubleArrayOf(1.0, 0.0),
+                    doubleArrayOf(1.0, 1.0),
+                    doubleArrayOf(0.0, 1.0),
+                    doubleArrayOf(0.0, 0.0)
+                )
+            )
+        )
+        val onEdge = Geometry.Point(doubleArrayOf(0.5, 0.0))
+        val onVertex = Geometry.Point(doubleArrayOf(1.0, 1.0))
+        onEdge.intersects(square) shouldBe true
+        onVertex.intersects(square) shouldBe true
+    }
+
+    @Test
+    fun polygonsTouchingAtVertexShouldIntersect() {
+        val p1 = Geometry.Polygon(
+            arrayOf(
+                arrayOf(
+                    doubleArrayOf(0.0, 0.0),
+                    doubleArrayOf(1.0, 0.0),
+                    doubleArrayOf(1.0, 1.0),
+                    doubleArrayOf(0.0, 1.0),
+                    doubleArrayOf(0.0, 0.0)
+                )
+            )
+        )
+        val p2 = Geometry.Polygon(
+            arrayOf(
+                arrayOf(
+                    doubleArrayOf(1.0, 1.0),
+                    doubleArrayOf(2.0, 1.0),
+                    doubleArrayOf(2.0, 2.0),
+                    doubleArrayOf(1.0, 2.0),
+                    doubleArrayOf(1.0, 1.0)
+                )
+            )
+        )
+        p1.intersects(p2) shouldBe true
+    }
+
+    @Test
+    fun zeroLengthLineShouldBehaveLikePoint() {
+        val pt = Geometry.Point(doubleArrayOf(5.0, 5.0))
+        val zeroLine = Geometry.LineString(arrayOf(doubleArrayOf(5.0, 5.0), doubleArrayOf(5.0, 5.0)))
+        zeroLine.intersects(pt) shouldBe true
+        zeroLine.intersects(
+            Geometry.Polygon(
+                arrayOf(
+                    arrayOf(
+                        doubleArrayOf(0.0, 0.0),
+                        doubleArrayOf(10.0, 0.0),
+                        doubleArrayOf(10.0, 10.0),
+                        doubleArrayOf(0.0, 10.0),
+                        doubleArrayOf(0.0, 0.0)
+                    )
+                )
+            )
+        ) shouldBe true
+    }
+
+    @Test
+    fun multiGeometriesIntersectIfAnyMemberDoes() {
+        val multiPts = Geometry.MultiPoint(
+            arrayOf(
+                doubleArrayOf(0.0, 0.0),
+                doubleArrayOf(2.0, 2.0)
+            )
+        )
+        val tri = Geometry.Polygon(
+            arrayOf(
+                arrayOf(
+                    doubleArrayOf(1.0, 1.0),
+                    doubleArrayOf(3.0, 1.0),
+                    doubleArrayOf(2.0, 3.0),
+                    doubleArrayOf(1.0, 1.0)
+                )
+            )
+        )
+        multiPts.intersects(tri) shouldBe true  // because (2,2) is inside
+    }
+
+    @Test
+    fun geometryCollectionRespectsAnyIntersect() {
+        val coll = Geometry.GeometryCollection(
+            arrayOf(
+                Geometry.Point(doubleArrayOf(10.0, 10.0)),
+                Geometry.LineString(arrayOf(doubleArrayOf(0.0, 0.0), doubleArrayOf(1.0, 1.0)))
+            )
+        )
+        val bigPoly = Geometry.Polygon(
+            arrayOf(
+                arrayOf(
+                    doubleArrayOf(-1.0, -1.0),
+                    doubleArrayOf(2.0, -1.0),
+                    doubleArrayOf(2.0, 2.0),
+                    doubleArrayOf(-1.0, 2.0),
+                    doubleArrayOf(-1.0, -1.0)
+                )
+            )
+        )
+        coll.intersects(bigPoly) shouldBe true
+    }
+
+    @Test
+    fun antimeridianLineCrossingShouldIntersectMultiPolygon() {
+        val mp = Geometry.MultiPolygon(
+            arrayOf(
+                arrayOf(
+                    arrayOf(
+                        doubleArrayOf(179.0, 0.0), doubleArrayOf(-179.0, 0.0),
+                        doubleArrayOf(-179.0, 1.0), doubleArrayOf(179.0, 1.0),
+                        doubleArrayOf(179.0, 0.0)
+                    )
+                )
+            )
+        )
+        val line = Geometry.LineString(
+            arrayOf(
+                doubleArrayOf(178.0, 0.5),
+                doubleArrayOf(-178.0, 0.5)
+            )
+        )
+        line.intersects(mp) shouldBe true
+    }
 }
