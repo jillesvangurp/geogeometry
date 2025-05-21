@@ -2,16 +2,16 @@
 
 # Introduction
 
-Geogeometry is a collection of geospatial algorithms and utilities in Kotlin. This library is what we use at FORMATION, which is the startup that I'm the CTO of. Mostly, whenever I do something that looks like it could be open sourced and is vaguely geo related, I put it in this library. A lot of this stuff is available in third party libraries for (mainly) Java. However, those libraries have two limitations that this library addresses: 
+Geogeometry is a collection of geospatial geometry algorithms and utilities in Kotlin. This library is what we use at FORMATION, which is a company that I'm the CTO of that deals with a lot of geospatial data. Mostly, whenever I do something that looks like it could be open sourced and is vaguely geo related, I put it in this library. A lot of this stuff is available in third party libraries for (mainly) Java. However, those libraries have two limitations that this library addresses: 
 
-- They are Java centric and generally have a terrible developer experience for Kotlin developers. This library is very Kotlin centric and uses things like extension functions, type aliases, etc. to make life easy for Kotlin developers.
-- They only work on the JVM. This library a multi platform library and works on all Kotlin platforms. We use it heavily with kotlin-js and the jvm. It should work fine on native IOS, Linux, Windows, etc. and WASM. I.e. basically everywhere. This is probably the **#1 multiplatform library for geospatial** stuff on Kotlin currently.
+- They are Java centric and generally have a terrible developer experience for Kotlin developers (or anyone really). This library is very Kotlin centric and uses things like extension functions, type aliases, etc. to make life easy for Kotlin developers. I'm not bragging when I say that this is orders of magnitude nicer to use than most of what is out there. And if you find something nicer, please file an issue and I might fix it.
+- They only work on the JVM. This library a kotlin multi-platform library and works on all Kotlin platforms. We use it heavily with kotlin-js and the jvm. It should work fine on native IOS, Linux, Windows, etc. and WASM. I.e. basically everywhere. This is probably the **#1 multiplatform library for geospatial** stuff on Kotlin currently.
 
 # History
 
-GeoGeometry started out as a simple side project while I was building a startup in 2012. The key feature I needed at time was a list of geohashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, geo-referencing coordinates from various location providers, etc.
+GeoGeometry started out as a simple side project while I was building my first startup in 2012. The key feature I needed at time was a list of geohashes that cover a particular geo shape. This is a nice thing to be able to do if you want to build search engine functionality and want to implement geospatial search. Over time, I added algorithms to solve various geometric problems. Mostly these are well known & documented algorithms of course. But it is nice to have some simple library of implementations for these things. I still maintain this library; especially since I became CTO of [FORMATION](https://tryformation.com) where we use it with our indoor maps for things like geofences, geo-referencing coordinates from various location providers, etc.
 
-I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for years, I ported the entire code base to **Kotlin**. 
+I initially used Java for this and over time added several implementations of common geometry algorithms. In 2019, after not touching this project for some years, I ported the entire code base to **Kotlin**. And soon after I discovered Kotlin multiplatform and got rid of all Java dependencies.
 
 # Get It
 
@@ -43,11 +43,12 @@ You can find the latest version in the [releases section](https://github.com/jil
   - Currently there are several build targets. More may be added later. I could use some help with mobile targets.
   - No runtime dependencies other than the kotlin stdlib
   - Adding more targets should 'just work' but has not been tested.
+- Extensive support for Geojson style data. Comes with it a kotlinx.serialization ready sealed class for handling geojson. And lots of extension functions for doing geometric things with your geojson geometries. 
 
-For a few of the algorithms in this code base, I've adapted / been inspired by code from others. This work would not be possible without that and I try to credit any such sources in the code 
-base.
+For a few of the algorithms in this code base, I've adapted / been inspired by code from others. This work would not be possible without that and I try to credit any such sources in the code base. And of course with all the AI craze, more than a few algorithms and tests have been enhanced with the sometimes helpful suggestions of various LLMs.
 
 ## GeoGeometry class
+
 GeoGeometry class with lots of functions that allow you to:
 - **Calculate distance** between two coordinates using the **Haversine** or **Vicenty** algorithm
 - Calculate perpendicular distance of a point to a line. lineString, and polygon
@@ -73,28 +74,25 @@ GeoHashUtils class with methods that allow you to:
 - get the **32 sub geo hashes** for a geohash, or the north/south halves, or the NE, NW, SE, SW quarters.
 - **cover shapes** like lines, paths, polygons, or circles with geo hashes for indexing purposes.
 
-## Extensive GeoJson support
+## GeoJson support
 
 Geojson classes are provided that allow you to easily work with GeoJson, which just like this library uses arrays of doubles as the core primitive. We use **kotlinx.serialization** for parsing and serializing this so this works across all Kotlin platforms.
   
 - sealed class hierarchy to represent the various geometries
 - uses type aliases to distinguish the different coordinate arrays
 - translate, scaleX, scaleY, and rotate to transform any Geojson Geometry
+- contains / intersects / distance algorithms
 - calculate a centroid for a shape
 - lots of extension functions to make working with geometries easy
-- convenient `geojsonIoUrl` extension function that allows you to check a geometry or feature collection on Mapboxes' https://geojson.io tool.
+- convenient `geojsonIoUrl` extension function that allows you to check a geometry or feature collection on Mapboxes' https://geojson.io tool. 
 
 ## Coordinate conversions
 
 Convert between WGS 84 coordinates and UTM, UPS, MGRS, and USNG style coordinates.
 
-I put quite a bit of effort in doing code archeology to combine bits and pieces of various
-old Java implementations for this. Lots of edge cases and "you just have to know why" bits
-of code. As a consequence, I have some nice robust tests around this and all seems to work.
+I put quite a bit of effort in doing code archeology to combine bits and pieces of various old Java implementations for this. Lots of edge cases and "you just have to know why" bits of code. As a consequence, I have some nice robust tests around this and all seems to work. 
 
-I used this amazing [Coordinates converter](https://coordinates-converter.com) to verify my 
-converters. Also, I use lots of randomized points to ensure round trip conversions end up being 
-close to where they should be and squashed lots of edge cases in the process. Feedback and pull requests to improve this further are welcome
+I also used this [Coordinates converter](https://coordinates-converter.com) to verify my converters produce the same results. Also, I use lots of randomized points to ensure round trip conversions end up being close to where they should be and squashed lots of edge cases in the process. Feedback and pull requests to improve this further are welcome
 
   - extension functions to convert to and from [UTM coordinates](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)  and [UPS coordinates](https://en.wikipedia.org/wiki/Universal_polar_stereographic_coordinate_system).
   - Conversion to and from [MGRS](https://en.wikipedia.org/wiki/Military_Grid_Reference_System) / [USNG](https://en.wikipedia.org/wiki/United_States_National_Grid) format
@@ -116,16 +114,21 @@ Here's a [simple example of the hashes for a concave polygon of Berlin](http://g
 
 # Limitations
 
-- Some of the algorithms used have limitations with respect to where you can use them. Generally things should be fine around the date line (if not report bugs). However, the poles are tricky and some of the algorithms get inaccurate or simply fail to exit. Because most data sets lack data for the poles, this should not be a big issue for most. Some of the algorithms now throw an exception if you try this. I'm not currently planning a fix but would appreciate pull requests for this.
-- Some of the algorithms have quadratic or exponential complexity and you can easily trigger situations where execution time is going to be substantial and/or you run out of memory. For example covering a circle with a radius of a few hundred kilometers with geohashes of length 10 is probably not a great idea. If you are unsure, use getSuitableHashLength() and add 1 or 2 to get good enough granularity.
-- Beware of the `[longitude,latitude]` order in geojson arrays vs. the latitude, longitude order when not using arrays. This is based on the (unfortunate) geojson convention of specifying longitude before latitude in arrays. When not using arrays, I use latitude followed by longitude, just like everyone else.
-- I try to be good about adding tests but test coverage is not perfect and some of the algorithms have 'interesting' edge-cases. Better algorithms may be available. This is merely a best effort from my side and it works well enough for me. I welcome pull requests to improve things
+I've been maintaining and using this library for many years now. So that means I'm both mildy confident in what it does and humbled by the experience of finding and fixing lots of bugs. So, I'm not going to claim that it is all perfect. I regularly find and fix more bugs.
+
+When in doubt, add tests. That's what I do. With geospatial geometry algorithms there are lots of edge cases. Math around the poles gets funny. There's the antimeridian. Etc. Mostly I try to cover the antimeridian with tests but some of the algorithms are known to not work near the poles.
+
+Bearing that in mind:
+
+- I have validation for things like coordinates but it's not used everywhere. Validation has a price and it's not always worth it. Things work better if you don't send latitudes and longitudes that are clearly out of range.
+- Some algorithms are not quadratic or exponential in complexity and won't terminate if you call them with the wrong level of ambition. Don't do that. 
+- The order of latitude and longitude (alphabetical) or longitude and latitude is a problem. The library uses a lot of Geojson inspired data structures where the order is definitely `[longitude, latitude]`. In functions where these are separated out, I use `latitude, longitude`. Beware of this when mixing and use named arguments and the friendly `.latitude` and `.longitude` extension properties I have for `Point` which is a typealias for `doubleArray`.
 
 # Building from source
 
 It's a gradle project. So, checking it out and doing a `gradle build` should do the trick.
 
-Note. this is a kotlin multi-platform build, and currently it produces a JavaScript build as well as a jvm jar.  Adding IOS native and other platforms should be straightforward as well. The project has no run time dependencies beyond the standard kotlin library.
+Currently most kotlin platforms are supported. Not all of them are tested properly because of test tooling issues. And because I hate waiting for all the tests to run. It's all simple math that hopefully works the same on each platform.
 
 # License
 
