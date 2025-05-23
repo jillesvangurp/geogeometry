@@ -74,7 +74,11 @@ private fun intersectsLine(line: LineStringCoordinates, other: Geometry): Boolea
                 } || GeoGeometry.polygonContains(start.latitude, start.longitude, poly)
             } == true
             is Geometry.GeometryCollection -> other.geometries.any { intersectsLine(line, it) }
-            else -> false
+            is Geometry.MultiPoint -> {
+                other.coordinates?.any {
+                    it.onLineSegment(start,end)
+                } == true
+            }
         }
     }
 }
@@ -86,7 +90,43 @@ private fun intersectsPolygon(polygon: PolygonCoordinates, other: Geometry): Boo
     } || when (other) {
         is Geometry.Point -> other.coordinates?.let { GeoGeometry.polygonContains(it.latitude, it.longitude, polygon) } ?: false
         is Geometry.MultiPoint -> other.coordinates?.any { GeoGeometry.polygonContains(it.latitude, it.longitude, polygon) } == true
-        else -> false
+        // any member geometry intersects this polygon
+        is Geometry.GeometryCollection ->
+            other.geometries.any { intersectsPolygon(polygon, it) }
+
+        // a line (or any vertex of it) wholly inside the polygon
+        is Geometry.LineString ->
+            other.coordinates?.any {
+                GeoGeometry.polygonContains(it.latitude, it.longitude, polygon)
+            } == true
+
+        // the same, but for many lines
+        is Geometry.MultiLineString ->
+            other.coordinates?.any { line ->
+                line.any { GeoGeometry.polygonContains(it.latitude, it.longitude, polygon) }
+            } == true
+
+        // polygon-vs-polygon – either contains a vertex of the other
+        is Geometry.Polygon -> {
+            val oCoords = other.coordinates ?: return false
+            GeoGeometry.polygonContains(other.outerCoordinates.first().latitude,
+                other.outerCoordinates.first().longitude,
+                polygon) ||
+                    GeoGeometry.polygonContains(outer.first().latitude,
+                        outer.first().longitude,
+                        oCoords)
+        }
+
+        // any constituent polygon intersects or is contained
+        is Geometry.MultiPolygon ->
+            other.coordinates?.any { oPoly ->
+                GeoGeometry.polygonContains(oPoly.first().first().latitude,
+                    oPoly.first().first().longitude,
+                    polygon) ||
+                        GeoGeometry.polygonContains(outer.first().latitude,
+                            outer.first().longitude,
+                            oPoly)
+            } == true
     }
 }
 

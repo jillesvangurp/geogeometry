@@ -348,4 +348,13 @@ class GeojsonKtTest {
         )
         line.intersects(mp) shouldBe true
     }
+
+    @Test
+    fun nestedCircleShouldIntersect() {
+        val c1 = GeoGeometry.circle2polygon(50,52.0,13.0,10.0).asGeometry
+        val c2 = GeoGeometry.circle2polygon(50,52.0,13.0,5.0).asGeometry
+
+        c1.intersects(c2) shouldBe true
+        c2.intersects(c1) shouldBe true
+    }
 }

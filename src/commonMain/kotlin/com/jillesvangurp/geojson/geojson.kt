@@ -63,6 +63,8 @@ fun BoundingBox.contains(point: PointCoordinates): Boolean {
     return withinLongitude && withinLatitude
 }
 
+val PolygonCoordinates.asGeometry get() = Polygon(this)
+
 fun PolygonCoordinates.contains(point: PointCoordinates): Boolean =
     GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = this)
 
