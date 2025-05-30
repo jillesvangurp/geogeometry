@@ -4,14 +4,16 @@ import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geogeometry.bergstr16Berlin
 import com.jillesvangurp.serializationext.DEFAULT_JSON
+import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldInclude
+import kotlin.test.Test
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
-import kotlin.test.Test
 
 class GeojsonKtTest {
 
@@ -351,10 +353,33 @@ class GeojsonKtTest {
 
     @Test
     fun nestedCircleShouldIntersect() {
-        val c1 = GeoGeometry.circle2polygon(50,52.0,13.0,10.0).asGeometry
-        val c2 = GeoGeometry.circle2polygon(50,52.0,13.0,5.0).asGeometry
+        val c1 = GeoGeometry.circle2polygon(50, 52.0, 13.0, 10.0).asGeometry
+        val c2 = GeoGeometry.circle2polygon(50, 52.0, 13.0, 5.0).asGeometry
 
         c1.intersects(c2) shouldBe true
         c2.intersects(c1) shouldBe true
+    }
+
+    @Test
+    fun testPolygonContainmentRespectHoles() {
+        val outer = GeoGeometry.circle2polygon(50, 52.0, 13.0, 10.0)[0]
+        val inner = GeoGeometry.circle2polygon(50, 52.0, 13.0, 5.0)[0]
+        val poly = arrayOf(outer, inner).asGeometry
+        assertSoftly {
+            poly.randomPoints().take(2000).forEach {
+                withClue("outer should contain ${it.latitude} ${it.longitude}") {
+                    GeoGeometry.polygonContains(it, outer) shouldBe true
+                }
+                withClue("inner should not contain ${it.latitude} ${it.longitude}") {
+                    GeoGeometry.polygonContains(it, inner) shouldBe false
+                }
+                withClue("geometry should contain ${it.latitude} ${it.longitude}") {
+                    poly.contains(it) shouldBe true
+                }
+                withClue("inner geometry should not contain ${it.latitude} ${it.longitude}") {
+                    arrayOf(inner).polygonGeometry().contains(it) shouldBe false
+                }
+            }
+        }
     }
 }

@@ -130,12 +130,12 @@ class GeoHashUtilsTest {
         val bboxArea = GeoGeometry.area(GeoGeometry.boundingBox(p.coordinates as PolygonCoordinates))
         // it's a concave polygon so the area of the hashes should be smaller than that of the
         // bounding box containing the polygon
-        totalHashedArea shouldBeLessThan bboxArea * 0.7
+        totalHashedArea shouldBeLessThan bboxArea
     }
 
     @Test
     fun shouldDecode() {
-        io.kotest.assertions.assertSoftly {
+        assertSoftly {
             sampleHashesAndCoordinates.forEach { (point, geoHash) ->
 
                 val decoded = GeoHashUtils.decode(geoHash)

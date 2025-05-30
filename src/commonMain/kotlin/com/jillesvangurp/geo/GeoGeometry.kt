@@ -248,7 +248,7 @@ class GeoGeometry {
             require(polygonPoints.size >= 3) { "a polygon must have at least three points" }
 
 
-            // 1) Shift longitudes so test-point’s lon → 0, deals with antimeridian
+            // Shift longitudes so test-point’s lon → 0, deals with antimeridian
             val norm = polygonPoints.map {
                 doubleArrayOf(
                     wrapLongitude(it[0] - longitude),
@@ -256,7 +256,7 @@ class GeoGeometry {
                 )
             }.toTypedArray()
 
-            // 2) Quick bbox check around (0, latitude)
+            // Quick bbox check around (0, latitude)
             val bbox = boundingBox(norm)
             if (!bboxContains(bbox, latitude, 0.0)) {
                 return false
@@ -266,7 +266,18 @@ class GeoGeometry {
                 return true
             }
 
-            // 3) Ray-cast from (0,latitude) eastward
+            // Check if the point lies exactly on any of the polygon's edges
+            for (i in norm.indices) {
+                val (x1, y1) = norm[i]
+                val (x2, y2) = norm[(i + 1) % norm.size]
+                val x = 0.0
+                val y = latitude
+                val onSegment = onSegment(x, y, x1, y1, x2, y2)
+                if (onSegment) {
+                    return true
+                }
+            }
+            // Ray-cast from (0,latitude) eastward
             var hits = 0
             val y = latitude
             for (i in norm.indices) {

@@ -683,10 +683,10 @@ data class FeatureCollection(
     }
 }
 
-fun Geometry.randomPoint(): Sequence<PointCoordinates> = sequence {
+fun Geometry.randomPoints(): Sequence<PointCoordinates> = sequence {
     fun randomBetween(min: Double, max: Double) = min + kotlin.random.Random.nextDouble() * (max - min)
 
-    when (val geo = this@randomPoint) {
+    when (val geo = this@randomPoints) {
         is Geometry.Point -> geo.coordinates?.let { yield(it) }
 
         is Geometry.MultiPoint -> geo.coordinates?.forEach { yield(it) }
@@ -734,13 +734,13 @@ fun Geometry.randomPoint(): Sequence<PointCoordinates> = sequence {
         is Geometry.MultiPolygon -> {
             val polygons = geo.coordinates ?: return@sequence
             for (poly in polygons) {
-                for (p in Geometry.Polygon(poly).randomPoint()) yield(p)
+                for (p in Geometry.Polygon(poly).randomPoints()) yield(p)
             }
         }
 
         is Geometry.GeometryCollection -> {
             for (g in geo.geometries) {
-                for (p in g.randomPoint()) yield(p)
+                for (p in g.randomPoints()) yield(p)
             }
         }
 
