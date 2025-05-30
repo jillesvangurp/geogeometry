@@ -240,55 +240,58 @@ class GeoGeometry {
             vararg polygonPoints: PointCoordinates
         ): Boolean {
             fun wrapLongitude(diff: Double): Double = when {
-                diff > 180   -> diff - 360
-                diff < -180  -> diff + 360
-                else         -> diff
+                diff > 180 -> diff - 360
+                diff < -180 -> diff + 360
+                else -> diff
             }
+
             validate(latitude, longitude, false)
             require(polygonPoints.size >= 3) { "a polygon must have at least three points" }
 
+            // used for rounding errors
+            val epsilon = 1e-9
 
-            // Shift longitudes so test-point’s lon → 0, deals with antimeridian
+            // Normalize longitudes around test point
             val norm = polygonPoints.map {
-                doubleArrayOf(
-                    wrapLongitude(it[0] - longitude),
-                    it[1]
-                )
+                doubleArrayOf(wrapLongitude(it[0] - longitude), it[1])
             }.toTypedArray()
 
-            // Quick bbox check around (0, latitude)
-            val bbox = boundingBox(norm)
-            if (!bboxContains(bbox, latitude, 0.0)) {
-                return false
-            }
-            if(polygonPoints.firstOrNull() { it.latitude ==latitude && it.longitude==longitude } != null) {
-                // edge case for vertices
+            // Early-out bbox check
+            if (!bboxContains(boundingBox(norm), latitude, 0.0)) return false
+
+            // Direct vertex match
+            if (polygonPoints.any { abs(it.latitude - latitude) < epsilon && abs(it.longitude - longitude) < epsilon }) {
                 return true
             }
 
-            // Check if the point lies exactly on any of the polygon's edges
+            // Edge match
             for (i in norm.indices) {
                 val (x1, y1) = norm[i]
                 val (x2, y2) = norm[(i + 1) % norm.size]
-                val x = 0.0
-                val y = latitude
-                val onSegment = onSegment(x, y, x1, y1, x2, y2)
-                if (onSegment) {
+                if ((x1 != x2 || y1 != y2) && onSegment(0.0, latitude, x1, y1, x2, y2)) {
                     return true
                 }
             }
-            // Ray-cast from (0,latitude) eastward
+
+            // Ray-cast eastward from (0, latitude)
             var hits = 0
-            val y = latitude
             for (i in norm.indices) {
                 val (x1, y1) = norm[i]
                 val (x2, y2) = norm[(i + 1) % norm.size]
-                if ((y1 > y) != (y2 > y)) {
-                    val xInt = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+
+                // Ignore horizontal segments
+                if (abs(y1 - y2) < epsilon) continue
+
+                // Handle crossing the horizontal ray
+                val lower = if (y1 < y2) y1 else y2
+                val upper = if (y1 < y2) y2 else y1
+                if (latitude > lower && latitude <= upper) {
+                    val xInt = x1 + (latitude - y1) * (x2 - x1) / (y2 - y1)
                     if (xInt > 0) hits++
                 }
             }
-            return hits and 1 == 1
+
+            return hits % 2 == 1
         }
 
         /**
