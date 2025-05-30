@@ -8,9 +8,11 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
 import com.jillesvangurp.geo.GeoGeometry.Companion.circle2polygon
 import com.jillesvangurp.geo.GeoGeometry.Companion.contains
 import com.jillesvangurp.geo.GeoGeometry.Companion.distance
+import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToLine
 import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToLineString
 import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToMultiPolygon
 import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToPolygon
+import com.jillesvangurp.geo.GeoGeometry.Companion.equirectangularDistance
 import com.jillesvangurp.geo.GeoGeometry.Companion.expandPolygon
 import com.jillesvangurp.geo.GeoGeometry.Companion.filterNoiseFromPointCloud
 import com.jillesvangurp.geo.GeoGeometry.Companion.linesCross
@@ -70,6 +72,15 @@ class GeoGeometryMigratedTests {
         doubleArrayOf(-1.0, -1.0),
         doubleArrayOf(-1.0, 1.0)
     )
+
+    @Test
+    fun shouldCalculateDistances() {
+        val d1 = distance(senefelderPlatz, rosenthalerPlatz)
+        val d2 = vicentyDistance(senefelderPlatz, rosenthalerPlatz)
+        val d3 = equirectangularDistance(senefelderPlatz, rosenthalerPlatz)
+        abs(d1-d2) shouldBeLessThan 3.0 // vicenty is the most correct, havesine and quirectangular have similar bias
+        abs(d1-d3) shouldBeLessThan 1.0
+    }
 
     @Test
     fun shouldCheckThatLinesCross() {
@@ -527,7 +538,7 @@ class GeoGeometryMigratedTests {
 
             val distance = distance(x1, y1, x2, y2, px, py)
             val distance2 =
-                distance(doubleArrayOf(y1, x1), doubleArrayOf(y2, x2), doubleArrayOf(py, px))
+                distanceToLine(doubleArrayOf(y1, x1), doubleArrayOf(y2, x2), doubleArrayOf(py, px))
             distance shouldBe distance2
             round(distance) shouldBe expectedDistance
 

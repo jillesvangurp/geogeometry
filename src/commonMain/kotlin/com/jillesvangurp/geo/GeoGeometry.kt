@@ -299,7 +299,7 @@ class GeoGeometry {
          * double.
          *
          * @param d a double
-         * @param decimals the number of desired decimals after the .
+         * @param decimals the number of desired decimals after the dot
          * @return d rounded to the specified precision
          */
         fun roundToDecimals(d: Double, decimals: Int): Double {
@@ -590,6 +590,23 @@ class GeoGeometry {
         }
 
         /**
+         * Cheap but not very precise over larger distances
+         */
+        fun equirectangularDistance(
+            lat1: Double,
+            lon1: Double,
+            lat2: Double,
+            lon2: Double
+        ): Double {
+            val x = toRadians(lon2 - lon1) * cos(toRadians((lat1 + lat2) / 2))
+            val y = toRadians(lat2 - lat1)
+            return sqrt(x * x + y * y) * EARTH_RADIUS_METERS
+        }
+
+        fun equirectangularDistance(p1: PointCoordinates, p2: PointCoordinates): Double =
+            equirectangularDistance(p1[1], p1[0], p2[1], p2[0])
+
+        /**
          * Calculate distance in meters using the Vicenty algorithm.
          *
          * This provides better accuracy than Haversine as it takes into account the flattening of the earth.
@@ -675,7 +692,7 @@ class GeoGeometry {
          * @param p point
          * @return the distance of the point to the line
          */
-        fun distance(l1: PointCoordinates, l2: PointCoordinates, p: PointCoordinates): Double {
+        fun distanceToLine(l1: PointCoordinates, l2: PointCoordinates, p: PointCoordinates): Double {
             return distance(l1[1], l1[0], l2[1], l2[0], p[1], p[0])
         }
 
@@ -695,7 +712,7 @@ class GeoGeometry {
             var last = lineStringCoordinates[0]
             for (i in 1 until lineStringCoordinates.size) {
                 val current = lineStringCoordinates[i]
-                val distance = distance(last, current, pointCoordinates)
+                val distance = distanceToLine(last, current, pointCoordinates)
                 minDistance = min(minDistance, distance)
                 last = current
             }
@@ -1356,11 +1373,11 @@ class GeoGeometry {
             var dmax = 0.0
             var index = 0
             if (points.size == 3) {
-                dmax = distance(points[0], points[points.size - 1], points[1]) // edge case
+                dmax = distanceToLine(points[0], points[points.size - 1], points[1]) // edge case
             }
 
             for (i in 2 until points.size - 1) {
-                val d = distance(points[0], points[points.size - 1], points[i])
+                val d = distanceToLine(points[0], points[points.size - 1], points[i])
                 if (d > dmax) {
                     index = i
                     dmax = d
