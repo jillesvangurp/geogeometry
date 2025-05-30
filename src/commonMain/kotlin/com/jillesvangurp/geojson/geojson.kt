@@ -90,8 +90,11 @@ fun Geometry.contains(point: PointCoordinates): Boolean {
             }
         } ?: false
 
-        is Polygon -> this.coordinates?.let {
-            GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = it)
+        is Polygon -> this.coordinates?.let { coords ->
+            val outer = coords.firstOrNull() ?: return@let false
+            val holes = coords.drop(1)
+            GeoGeometry.polygonContains(point.latitude, point.longitude, arrayOf(outer)) &&
+                    holes.none { hole -> GeoGeometry.polygonContains(point.latitude, point.longitude, arrayOf(hole)) }
         } ?: false
 
         is Geometry.MultiPolygon -> this.coordinates?.any { polygon ->
@@ -677,6 +680,107 @@ data class FeatureCollection(
             FeatureCollection(hashes.map { GeoHashUtils.decodeBbox(it).polygon() }.toList().map { it.asFeature() })
 
         fun of(vararg features: Feature) = FeatureCollection(features.toList())
+    }
+}
+
+fun Geometry.randomPoint(): Sequence<PointCoordinates> = sequence {
+    fun randomBetween(min: Double, max: Double) = min + kotlin.random.Random.nextDouble() * (max - min)
+
+    when (val geo = this@randomPoint) {
+        is Geometry.Point -> geo.coordinates?.let { yield(it) }
+
+        is Geometry.MultiPoint -> geo.coordinates?.forEach { yield(it) }
+
+        is Geometry.LineString -> {
+            val coords = geo.coordinates ?: return@sequence
+            for (i in 0 until coords.size - 1) {
+                val a = coords[i]
+                val b = coords[i + 1]
+                yield(a)
+                yield(b)
+                repeat(5) {
+                    val t = kotlin.random.Random.nextDouble()
+                    yield(
+                        doubleArrayOf(
+                            a.longitude + t * (b.longitude - a.longitude),
+                            a.latitude + t * (b.latitude - a.latitude)
+                        )
+                    )
+                }
+            }
+        }
+
+        is Geometry.MultiLineString -> {
+            val lines = geo.coordinates ?: return@sequence
+            for (line in lines) {
+                for (i in 0 until line.size - 1) {
+                    val a = line[i]
+                    val b = line[i + 1]
+                    yield(a)
+                    yield(b)
+                    repeat(5) {
+                        val t = kotlin.random.Random.nextDouble()
+                        yield(
+                            doubleArrayOf(
+                                a.longitude + t * (b.longitude - a.longitude),
+                                a.latitude + t * (b.latitude - a.latitude)
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        is Geometry.MultiPolygon -> {
+            val polygons = geo.coordinates ?: return@sequence
+            for (poly in polygons) {
+                for (p in Geometry.Polygon(poly).randomPoint()) yield(p)
+            }
+        }
+
+        is Geometry.GeometryCollection -> {
+            for (g in geo.geometries) {
+                for (p in g.randomPoint()) yield(p)
+            }
+        }
+
+        is Polygon -> {
+            val rings = geo.coordinates ?: return@sequence
+
+            val outer = rings.firstOrNull() ?: return@sequence
+            val holes = rings.drop(1)
+
+            // Yield outer ring points in random order
+            yieldAll(outer.toList().shuffled())
+
+            // Interpolated points on edges in random order
+            val edgeIndices = (0 until outer.size - 1).shuffled()
+            for (i in edgeIndices) {
+                val a = outer[i]
+                val b = outer[i + 1]
+                repeat(3) {
+                    val t = kotlin.random.Random.nextDouble()
+                    yield(
+                        doubleArrayOf(
+                            a.longitude + t * (b.longitude - a.longitude),
+                            a.latitude + t * (b.latitude - a.latitude)
+                        )
+                    )
+                }
+            }
+
+            // Sample random points in bounding box, excluding holes
+            val bbox = geo.boundingBox()
+            while (true) {
+                val p = doubleArrayOf(
+                    randomBetween(bbox.westLongitude, bbox.eastLongitude),
+                    randomBetween(bbox.southLatitude, bbox.northLatitude)
+                )
+                if (geo.contains(p) && holes.none { h -> GeoGeometry.polygonContains(p[1], p[0], arrayOf(h)) }) {
+                    yield(p)
+                }
+            }
+        }
     }
 }
 
