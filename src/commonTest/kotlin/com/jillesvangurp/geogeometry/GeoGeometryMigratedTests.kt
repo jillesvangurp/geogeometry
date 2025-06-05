@@ -31,6 +31,7 @@ import com.jillesvangurp.geojson.geoJsonIOUrl
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.polygonGeometry
+import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
@@ -238,7 +239,16 @@ class GeoGeometryMigratedTests {
         buf.deleteAt(buf.length - 1)
         buf.append("]")
 
-        // FIXME complete test
+        // verify resulting polygon
+        polygon.size shouldBeGreaterThan 2
+
+        // buf should contain valid JSON representing the polygon
+        DEFAULT_JSON.parseToJsonElement(buf.toString()).jsonArray.size shouldBe polygon.size
+
+        // a point inside should be contained and an external point should not
+        val center = polygonCenter(*polygon)
+        polygonContains(center.latitude, center.longitude, *polygon) shouldBe true
+        polygonContains(0.0, 0.0, *polygon) shouldBe false
     }
 
     @Test
