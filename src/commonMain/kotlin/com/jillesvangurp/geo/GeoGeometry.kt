@@ -467,19 +467,19 @@ class GeoGeometry {
          *
          * @param latitude latitude
          * @param longitude longitude
-         * @param latitudalMeters distance in meters that the point should be translated along the latitude
-         * @param longitudalMeters distance in meters that the point should be translated along the longitude
+         * @param latitudinalMeters distance in meters that the point should be translated along the latitude
+         * @param longitudinalMeters distance in meters that the point should be translated along the longitude
          * @return the translated coordinate.
          */
         fun translate(
             latitude: Double,
             longitude: Double,
-            latitudalMeters: Double,
-            longitudalMeters: Double
+            latitudinalMeters: Double,
+            longitudinalMeters: Double
         ): DoubleArray {
             validate(latitude, longitude, false)
-            val longitudal = translateLongitude(latitude, longitude, longitudalMeters)
-            return translateLatitude(longitudal.latitude, longitudal.longitude, latitudalMeters)
+            val longitudal = translateLongitude(latitude, longitude, longitudinalMeters)
+            return translateLatitude(longitudal.latitude, longitudal.longitude, latitudinalMeters)
         }
 
         fun translate(
@@ -490,18 +490,18 @@ class GeoGeometry {
 
 
             /**
-         * Calculate a bounding box of the specified longitudal and latitudal meters with the latitude/longitude as the center.
+         * Calculate a bounding box of the specified longitudinal and latitudinal meters with the latitude/longitude as the center.
          * @param latitude latitude
          * @param longitude longitude
-         * @param latitudalMeters distance in meters that the point should be translated along the latitude
-         * @param longitudalMeters distance in meters that the point should be translated along the longitude
+         * @param latitudinalMeters distance in meters that the point should be translated along the latitude
+         * @param longitudinalMeters distance in meters that the point should be translated along the longitude
          * @return [maxlat,minlat,maxlon,minlon]
          */
-        fun bbox(latitude: Double, longitude: Double, latitudalMeters: Double, longitudalMeters: Double): DoubleArray {
+        fun bbox(latitude: Double, longitude: Double, latitudinalMeters: Double, longitudinalMeters: Double): DoubleArray {
             validate(latitude, longitude, false)
 
-            val topRight = translate(latitude, longitude, latitudalMeters / 2, longitudalMeters / 2)
-            val bottomLeft = translate(latitude, longitude, -latitudalMeters / 2, -longitudalMeters / 2)
+            val topRight = translate(latitude, longitude, latitudinalMeters / 2, longitudinalMeters / 2)
+            val bottomLeft = translate(latitude, longitude, -latitudinalMeters / 2, -longitudinalMeters / 2)
 
             val southLat = bottomLeft[1]
             val northLat = topRight[1]
