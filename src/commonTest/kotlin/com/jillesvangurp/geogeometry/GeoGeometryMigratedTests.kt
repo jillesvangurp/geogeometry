@@ -32,6 +32,7 @@ import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.polygonGeometry
 import com.jillesvangurp.serializationext.DEFAULT_JSON
+import kotlinx.serialization.json.jsonArray
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
