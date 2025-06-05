@@ -29,7 +29,7 @@ typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
 
 /**
  * Lowest axes followed by highest axes
- * BoundingBox = [westLongitude,southLatitude,eastLongitude,westLatitude]
+ * BoundingBox = [westLongitude,southLatitude,eastLongitude,northLatitude]
  */
 typealias BoundingBox = DoubleArray
 
