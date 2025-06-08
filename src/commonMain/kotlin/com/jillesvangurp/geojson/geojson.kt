@@ -18,8 +18,11 @@ import kotlin.math.*
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
  */
 typealias PointCoordinates = DoubleArray
-// should be array with 2 points
-typealias LineSegment = Array<PointCoordinates>
+/**
+ * Lowest axes followed by highest axes
+ * BoundingBox = [westLongitude,southLatitude,eastLongitude,northLatitude]
+ */
+typealias BoundingBox = DoubleArray
 typealias MultiPointCoordinates = Array<PointCoordinates>
 typealias LineStringCoordinates = Array<PointCoordinates>
 typealias LinearRingCoordinates = Array<PointCoordinates>
@@ -27,11 +30,97 @@ typealias MultiLineStringCoordinates = Array<LineStringCoordinates> // Outer pol
 typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + holes
 typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
 
-/**
- * Lowest axes followed by highest axes
- * BoundingBox = [westLongitude,southLatitude,eastLongitude,northLatitude]
- */
-typealias BoundingBox = DoubleArray
+
+fun PointCoordinates.isValid(): Boolean {
+    return (latitude in -90.0..90.0) && (longitude in -180.0..180.0)
+}
+
+fun BoundingBox.isValidBbox(): Boolean {
+    // Validate longitude and latitude ranges
+    if (westLongitude !in -180.0..180.0 || eastLongitude !in -180.0..180.0) return false
+    if (southLatitude !in -90.0..90.0 || northLatitude !in -90.0..90.0) return false
+
+    // Allow bboxes across antimeridian
+    return westLongitude != eastLongitude && southLatitude <= northLatitude
+}
+
+fun latLon(latitude: Double, longitude: Double): PointCoordinates {
+    return doubleArrayOf(longitude, latitude).also {
+        require(it.isValid())
+    }
+}
+
+fun lonLat(longitude: Double, latitude: Double): PointCoordinates = latLon(latitude, longitude)
+
+fun boundingBox(
+    westLongitude: Double,
+    southLatitude: Double,
+    eastLongitude: Double,
+    northLatitude: Double
+): BoundingBox {
+    val bbox = doubleArrayOf(westLongitude, southLatitude, eastLongitude, northLatitude)
+    require(bbox.isValidBbox()) { "Invalid bounding box coordinates" }
+    return bbox
+}
+
+fun boundingBoxFromTopLeftBottomRight(
+    topLeft: PointCoordinates,
+    bottomRight: PointCoordinates
+): BoundingBox = boundingBox(
+    westLongitude = topLeft.longitude,
+    southLatitude = bottomRight.latitude,
+    eastLongitude = bottomRight.longitude,
+    northLatitude = topLeft.latitude
+)
+
+fun boundingBoxFromBottomLeftTopRight(
+    bottomLeft: PointCoordinates,
+    topRight: PointCoordinates
+): BoundingBox = boundingBox(
+    westLongitude = bottomLeft.longitude,
+    southLatitude = bottomLeft.latitude,
+    eastLongitude = topRight.longitude,
+    northLatitude = topRight.latitude
+)
+
+fun lineString(vararg pointCoordinates: PointCoordinates): LineStringCoordinates {
+    require(pointCoordinates.all { it.size >= 2 }) { "Each point must have at least [lon, lat]" }
+    return pointCoordinates as LineStringCoordinates
+}
+
+fun validateLinearRing(ring: LinearRingCoordinates) {
+    require(ring.size >= 4) { "LinearRing must have at least 4 coordinates (first == last)" }
+    require(ring.first().contentEquals(ring.last())) { "LinearRing must be closed (first == last)" }
+}
+
+fun linearRingCoordinates(vararg pointCoordinates: PointCoordinates): LinearRingCoordinates {
+    val ring = lineString(*if (pointCoordinates.first().contentEquals(pointCoordinates.last()))
+        pointCoordinates else (pointCoordinates.toList() + pointCoordinates.first()).toTypedArray())
+    validateLinearRing(ring)
+    return ring
+}
+
+fun multiPoint(vararg points: PointCoordinates): MultiPointCoordinates {
+    require(points.all { it.size >= 2 }) { "Each point must have at least [lon, lat]" }
+    return points as MultiPointCoordinates
+}
+
+fun multiLineString(vararg lineStrings: LineStringCoordinates): MultiLineStringCoordinates {
+    lineStrings.forEach { validateLinearRing(it) }
+    return lineStrings as MultiLineStringCoordinates
+}
+
+fun polygon(vararg outer: PointCoordinates, holes: Array<out LinearRingCoordinates> = emptyArray()): PolygonCoordinates {
+    val outerRing = linearRingCoordinates(*outer)
+    holes.forEach(::validateLinearRing)
+    return arrayOf(outerRing, *holes)
+}
+
+fun multiPolygon(vararg polygons: PolygonCoordinates): MultiPolygonCoordinates {
+    require(polygons.all { it.isNotEmpty() }) { "Each polygon must have at least one LinearRing" }
+    return polygons as MultiPolygonCoordinates
+}
+
 
 fun BoundingBox.toGeometry(): Polygon {
     val coordinates = arrayOf(
@@ -214,11 +303,6 @@ fun Geometry.boundingBox(): BoundingBox =
         is Geometry.Point -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
         is Polygon -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
     }
-
-@Deprecated("does not handle bounding boxes that span the dateline")
-fun BoundingBox.isValid(): Boolean {
-    return this.westLongitude <= this.eastLongitude && this.southLatitude <= this.northLatitude
-}
 
 val PointCoordinates.latitude: Double
     get() = this[1]
@@ -798,3 +882,4 @@ enum class GeometryType {
     MultiPolygon,
     GeometryCollection;
 }
+
