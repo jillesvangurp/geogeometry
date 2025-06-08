@@ -10,6 +10,8 @@ import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import kotlin.test.Test
 import kotlinx.serialization.json.JsonPrimitive
+import com.jillesvangurp.geojson.lonLat
+import com.jillesvangurp.geojson.latLon
 import kotlinx.serialization.json.buildJsonObject
 
 
@@ -23,23 +25,23 @@ class MapAlignmentTest {
 
     val referencePoints = mapOf(
         "Ahoy Berlin NW Building Corner in Berlin" to mapOf(
-            MapProviders.Osm to doubleArrayOf(52.54150, 13.38982).roundAndReverse(),
-            MapProviders.Google to doubleArrayOf(52.541510535244676, 13.38980753280997).roundAndReverse(),
+            MapProviders.Osm to latLon(52.54150, 13.38982),
+            MapProviders.Google to latLon(52.541510535244676, 13.38980753280997),
 //            MapProviders.Here to doubleArrayOf(52.54131,13.38965).roundAndReverse(),
-            MapProviders.Here to doubleArrayOf(52.54150630324809, 13.389818199084072).roundAndReverse(),
-            MapProviders.Apple to doubleArrayOf(52.541497, 13.389822).roundAndReverse()
+            MapProviders.Here to latLon(52.54150630324809, 13.389818199084072),
+            MapProviders.Apple to latLon(52.541497, 13.389822)
         ),
         "Siege Säule Centroid" to mapOf(
-            MapProviders.Osm to doubleArrayOf(52.51450, 13.35012).roundAndReverse(),
-            MapProviders.Google to doubleArrayOf(52.51451224763399, 13.35010044553336).roundAndReverse(),
-            MapProviders.Here to doubleArrayOf(52.514514513886496, 13.35009726850834).roundAndReverse(),
-            MapProviders.Apple to doubleArrayOf(52.514524, 13.350096).roundAndReverse(),
+            MapProviders.Osm to latLon(52.51450, 13.35012),
+            MapProviders.Google to latLon(52.51451224763399, 13.35010044553336),
+            MapProviders.Here to latLon(52.514514513886496, 13.35009726850834),
+            MapProviders.Apple to latLon(52.514524, 13.350096),
         ),
         "Galeria Kaufhof SW corner" to mapOf(
-            MapProviders.Osm to doubleArrayOf(52.52185,13.41171).roundAndReverse(),
-            MapProviders.Google to doubleArrayOf(52.52184966204656, 13.411722336815041).roundAndReverse(),
-            MapProviders.Here to doubleArrayOf(52.52184025422203, 13.411664047844162).roundAndReverse(),
-            MapProviders.Apple to doubleArrayOf(52.521853, 13.411718).roundAndReverse(),
+            MapProviders.Osm to latLon(52.52185, 13.41171),
+            MapProviders.Google to latLon(52.52184966204656, 13.411722336815041),
+            MapProviders.Here to latLon(52.52184025422203, 13.411664047844162),
+            MapProviders.Apple to latLon(52.521853, 13.411718),
         )
     )
 

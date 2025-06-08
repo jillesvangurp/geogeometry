@@ -10,6 +10,7 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import com.jillesvangurp.geojson.lonLat
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.test.Test
@@ -29,12 +30,12 @@ val testCasses = listOf(
     // convenient but not clear what implementation they use or how that has been validated
     TestCase(
         name = "Svalbard Museum",
-        point = doubleArrayOf(15.652313, 78.222378),
+        point = lonLat(15.652313, 78.222378),
         utmString = "33X 514863.281 8683270.114",
     ),
     TestCase(
         "Oslo, City Hall",
-        doubleArrayOf(10.733866394995035, 59.912415229244004),
+        lonLat(10.733866394995035, 59.912415229244004),
         "32V 596959.207 6642926.686"
     ),
     TestCase(
@@ -44,7 +45,7 @@ val testCasses = listOf(
     ),
     TestCase(
         name = "North Cape",
-        doubleArrayOf(25.783432, 71.169817),
+        lonLat(25.783432, 71.169817),
         "35W 456177.242 7896776.959"
     )
 )
@@ -122,10 +123,10 @@ class UTMTest {
     @Test
     fun edgeCases() {
         val testCoordinates = listOf(
-            doubleArrayOf(0.0, 0.0), // Null Island
-            doubleArrayOf(-0.0014, 51.4778), // Greenwich Observatory
-            doubleArrayOf(0.0, 84.0), // max supported north lat
-            doubleArrayOf(0.0, -80.0), // max supported south lat
+            lonLat(0.0, 0.0), // Null Island
+            lonLat(-0.0014, 51.4778), // Greenwich Observatory
+            lonLat(0.0, 84.0), // max supported north lat
+            lonLat(0.0, -80.0), // max supported south lat
             // Add more test coordinates as needed
         )
         val marginOfError = 1.0 // meters, adjust as per the precision requirement
@@ -149,7 +150,7 @@ class UTMTest {
         // important test that verifies that we can convert our own utm coordinates back consistently
         // it might still be wrong but at least we're being consistent :-)
         fun Random.supportedUtmCoordinate(): DoubleArray {
-            return doubleArrayOf(
+            return lonLat(
                 nextDouble(-180.0, 180.0).roundDecimals(4),
                 nextDouble(-80.0, 84.0).roundDecimals(4)
             )
@@ -191,7 +192,7 @@ class UTMTest {
         // important test that verifies that we can convert our own utm coordinates back consistently
         // it might still be wrong but at least we're being consistent :-)
         fun Random.supportedUpsCoordinate(): DoubleArray {
-            return doubleArrayOf(
+            return lonLat(
                 nextDouble(-180.0, 180.0).roundDecimals(4),
                 if (nextBoolean()) nextDouble(-90.0, -80.001).roundDecimals(4) else nextDouble(
                     84.001,
@@ -222,7 +223,7 @@ class UTMTest {
     fun testLotsOfCoordinates() {
         // double check we are consistent across the utm and ups coordinate systems
         fun Random.supportedUpsCoordinate(): DoubleArray {
-            return doubleArrayOf(
+            return lonLat(
                 nextDouble(-180.0, 180.0).roundDecimals(4),
                 nextDouble(-90.0, 90.0).roundDecimals(4)
             )
@@ -248,10 +249,10 @@ class UTMTest {
     @Test
     fun unSupportedCoordinates() {
         val testCoordinates = listOf(
-            doubleArrayOf(0.0, 90.0), // North Pole
-            doubleArrayOf(0.0, -90.0), // South Pole
-            doubleArrayOf(10.0, -80.01), // outside supported range
-            doubleArrayOf(10.0, 84.01), // outside supported range
+            lonLat(0.0, 90.0), // North Pole
+            lonLat(0.0, -90.0), // South Pole
+            lonLat(10.0, -80.01), // outside supported range
+            lonLat(10.0, 84.01), // outside supported range
         )
 
         assertSoftly {

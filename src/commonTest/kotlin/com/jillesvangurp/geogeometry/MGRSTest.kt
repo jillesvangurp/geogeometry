@@ -13,13 +13,14 @@ import io.kotest.matchers.shouldBe
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
+import com.jillesvangurp.geojson.lonLat
 
 class MGRSTest {
     @Test
     fun shouldCalculateMgrsForBrandenburgerTor() {
         assertSoftly {
             testMgrsConversion(brandenBurgerGate)
-            val skagen = doubleArrayOf(10.591979, 57.724205)
+            val skagen = lonLat(10.591979, 57.724205)
             testMgrsConversion(skagen)
             testMgrsConversion(rioFootballStadium)
             testMgrsConversion(sydneyOpera)

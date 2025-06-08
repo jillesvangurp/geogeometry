@@ -18,12 +18,13 @@ import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
+import com.jillesvangurp.geojson.lonLat
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.test.Test
 
 fun randomTileCoordinate() =
-    doubleArrayOf(Random.nextDouble(-180.0, 180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
+    lonLat(Random.nextDouble(-180.0, 180.0), Random.nextDouble(Tile.MIN_LATITUDE, Tile.MAX_LATITUDE))
 
 fun randomTile(minZoom:Int=0): Tile {
     val zl = (minZoom..22).random()
@@ -191,7 +192,7 @@ class TileTest {
     @Test
     fun shouldGenerateTileWithPointInside() {
         val zoom = 8
-        val point = doubleArrayOf(-10.6202579166835, 40.113983580628)
+        val point = lonLat(-10.6202579166835, 40.113983580628)
         val tile = Tile.coordinateToTile(point.latitude, point.longitude, zoom)
         tile.bbox.toGeometry().contains(point) shouldBe true
     }
@@ -205,7 +206,7 @@ class TileTest {
                         tile.topLeft.longitude shouldBeLessThan tile.bottomRight.longitude
                         tile.topLeft.latitude shouldBeGreaterThan tile.bottomRight.latitude
                         tile.bbox.toGeometry().contains(
-                            doubleArrayOf(
+                            lonLat(
                                 (tile.topLeft.longitude + tile.bottomRight.longitude) / 2,
                                 (tile.topLeft.latitude + tile.bottomRight.latitude) / 2,
                             ),

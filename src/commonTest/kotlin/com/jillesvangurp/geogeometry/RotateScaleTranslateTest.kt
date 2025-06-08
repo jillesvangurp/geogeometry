@@ -11,6 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.math.*
 import kotlin.test.Test
+import com.jillesvangurp.geojson.lonLat
 
 class RotationTest {
 
@@ -147,7 +148,7 @@ class RotationTest {
     fun shouldTranslateCorrectly() {
         val translated = GeoGeometry.translate(52.530564, 13.394964, 1000.0, 3000.0)
         val pythagorasDistance = sqrt(1000.0.pow(2.0) + 3000.0.pow(2.0))
-        val distance = GeoGeometry.distance(doubleArrayOf(13.394964, 52.530564), translated)
+        val distance = GeoGeometry.distance(lonLat(13.394964, 52.530564), translated)
         withClue("distance should be correct for translated coordinate") {
             abs(distance - pythagorasDistance) shouldBeLessThan 1.0
         }

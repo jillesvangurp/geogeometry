@@ -14,6 +14,7 @@ import kotlin.test.Test
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
+import com.jillesvangurp.geojson.lonLat
 
 class GeojsonKtTest {
 
@@ -70,7 +71,7 @@ class GeojsonKtTest {
     @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun cbor() {
-        val p = Geometry.Point(coordinates = doubleArrayOf(1.0, 1.0))
+        val p = Geometry.Point(coordinates = lonLat(1.0, 1.0))
         val cb = Cbor {
             encodeDefaults = true
         }
@@ -119,23 +120,23 @@ class GeojsonKtTest {
         berlin.copy(coordinates = reversed) shouldNotBe berlin
 
         Geometry.Point(null) shouldBe Geometry.Point(null)
-        Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldNotBe Geometry.Point(null)
-        Geometry.Point(null) shouldNotBe Geometry.Point(doubleArrayOf(0.1, 0.1))
-        Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldNotBe Geometry.Point(doubleArrayOf(0.9, 0.9))
-        Geometry.Point(doubleArrayOf(0.1, 0.1)) shouldBe Geometry.Point(doubleArrayOf(0.1, 0.1))
+        Geometry.Point(lonLat(0.1, 0.1)) shouldNotBe Geometry.Point(null)
+        Geometry.Point(null) shouldNotBe Geometry.Point(lonLat(0.1, 0.1))
+        Geometry.Point(lonLat(0.1, 0.1)) shouldNotBe Geometry.Point(lonLat(0.9, 0.9))
+        Geometry.Point(lonLat(0.1, 0.1)) shouldBe Geometry.Point(lonLat(0.1, 0.1))
     }
 
     @Test
     fun pointInsidePolygonShouldIntersect() {
-        val point = Geometry.Point(doubleArrayOf(13.3889, 52.5170)) // Somewhere in Berlin
+        val point = Geometry.Point(lonLat(13.3889, 52.5170)) // Somewhere in Berlin
         val polygon = Geometry.Polygon(
             coordinates = arrayOf(
                 arrayOf(
-                    doubleArrayOf(13.387, 52.516),
-                    doubleArrayOf(13.390, 52.516),
-                    doubleArrayOf(13.390, 52.518),
-                    doubleArrayOf(13.387, 52.518),
-                    doubleArrayOf(13.387, 52.516)
+                    lonLat(13.387, 52.516),
+                    lonLat(13.390, 52.516),
+                    lonLat(13.390, 52.518),
+                    lonLat(13.387, 52.518),
+                    lonLat(13.387, 52.516)
                 )
             )
         )
@@ -145,15 +146,15 @@ class GeojsonKtTest {
 
     @Test
     fun disjointGeometriesShouldNotIntersect() {
-        val point = Geometry.Point(doubleArrayOf(10.0, 10.0))
+        val point = Geometry.Point(lonLat(10.0, 10.0))
         val polygon = Geometry.Polygon(
             coordinates = arrayOf(
                 arrayOf(
-                    doubleArrayOf(0.0, 0.0),
-                    doubleArrayOf(1.0, 0.0),
-                    doubleArrayOf(1.0, 1.0),
-                    doubleArrayOf(0.0, 1.0),
-                    doubleArrayOf(0.0, 0.0)
+                    lonLat(0.0, 0.0),
+                    lonLat(1.0, 0.0),
+                    lonLat(1.0, 1.0),
+                    lonLat(0.0, 1.0),
+                    lonLat(0.0, 0.0)
                 )
             )
         )
@@ -165,14 +166,14 @@ class GeojsonKtTest {
     fun touchingEdgesShouldIntersect() {
         val line1 = Geometry.LineString(
             coordinates = arrayOf(
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(1.0, 1.0)
+                lonLat(0.0, 0.0),
+                lonLat(1.0, 1.0)
             )
         )
         val line2 = Geometry.LineString(
             coordinates = arrayOf(
-                doubleArrayOf(1.0, 1.0),
-                doubleArrayOf(2.0, 2.0)
+                lonLat(1.0, 1.0),
+                lonLat(2.0, 2.0)
             )
         )
         line1.intersects(line2) shouldBe true
@@ -182,14 +183,14 @@ class GeojsonKtTest {
     fun overlappingLineSegmentsShouldIntersect() {
         val line1 = Geometry.LineString(
             coordinates = arrayOf(
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(2.0, 2.0)
+                lonLat(0.0, 0.0),
+                lonLat(2.0, 2.0)
             )
         )
         val line2 = Geometry.LineString(
             coordinates = arrayOf(
-                doubleArrayOf(1.0, 1.0),
-                doubleArrayOf(3.0, 3.0)
+                lonLat(1.0, 1.0),
+                lonLat(3.0, 3.0)
             )
         )
         line1.intersects(line2) shouldBe true
@@ -201,22 +202,22 @@ class GeojsonKtTest {
         val polygon = Geometry.Polygon(
             coordinates = arrayOf(
                 arrayOf(
-                    doubleArrayOf(179.0, 0.0),
-                    doubleArrayOf(-179.0, 0.0),
-                    doubleArrayOf(-179.0, 1.0),
-                    doubleArrayOf(179.0, 1.0),
-                    doubleArrayOf(179.0, 0.0)
+                    lonLat(179.0, 0.0),
+                    lonLat(-179.0, 0.0),
+                    lonLat(-179.0, 1.0),
+                    lonLat(179.0, 1.0),
+                    lonLat(179.0, 0.0)
                 )
             )
         )
         // points just inside on either side of the antimeridian
-        val insideEast = Geometry.Point(doubleArrayOf(179.5, 0.5))
-        val insideWest = Geometry.Point(doubleArrayOf(-179.5, 0.5))
+        val insideEast = Geometry.Point(lonLat(179.5, 0.5))
+        val insideWest = Geometry.Point(lonLat(-179.5, 0.5))
         insideEast.intersects(polygon) shouldBe true
         insideWest.intersects(polygon) shouldBe true
 
         // a point well outside the crossing region
-        val outside = Geometry.Point(doubleArrayOf(178.0, 0.5))
+        val outside = Geometry.Point(lonLat(178.0, 0.5))
         outside.intersects(polygon) shouldBe false
     }
 
@@ -225,16 +226,16 @@ class GeojsonKtTest {
         val square = Geometry.Polygon(
             arrayOf(
                 arrayOf(
-                    doubleArrayOf(0.0, 0.0),
-                    doubleArrayOf(1.0, 0.0),
-                    doubleArrayOf(1.0, 1.0),
-                    doubleArrayOf(0.0, 1.0),
-                    doubleArrayOf(0.0, 0.0)
+                    lonLat(0.0, 0.0),
+                    lonLat(1.0, 0.0),
+                    lonLat(1.0, 1.0),
+                    lonLat(0.0, 1.0),
+                    lonLat(0.0, 0.0)
                 )
             )
         )
-        val onEdge = Geometry.Point(doubleArrayOf(0.5, 0.0))
-        val onVertex = Geometry.Point(doubleArrayOf(1.0, 1.0))
+        val onEdge = Geometry.Point(lonLat(0.5, 0.0))
+        val onVertex = Geometry.Point(lonLat(1.0, 1.0))
         onEdge.intersects(square) shouldBe true
         onVertex.intersects(square) shouldBe true
     }
@@ -244,22 +245,22 @@ class GeojsonKtTest {
         val p1 = Geometry.Polygon(
             arrayOf(
                 arrayOf(
-                    doubleArrayOf(0.0, 0.0),
-                    doubleArrayOf(1.0, 0.0),
-                    doubleArrayOf(1.0, 1.0),
-                    doubleArrayOf(0.0, 1.0),
-                    doubleArrayOf(0.0, 0.0)
+                    lonLat(0.0, 0.0),
+                    lonLat(1.0, 0.0),
+                    lonLat(1.0, 1.0),
+                    lonLat(0.0, 1.0),
+                    lonLat(0.0, 0.0)
                 )
             )
         )
         val p2 = Geometry.Polygon(
             arrayOf(
                 arrayOf(
-                    doubleArrayOf(1.0, 1.0),
-                    doubleArrayOf(2.0, 1.0),
-                    doubleArrayOf(2.0, 2.0),
-                    doubleArrayOf(1.0, 2.0),
-                    doubleArrayOf(1.0, 1.0)
+                    lonLat(1.0, 1.0),
+                    lonLat(2.0, 1.0),
+                    lonLat(2.0, 2.0),
+                    lonLat(1.0, 2.0),
+                    lonLat(1.0, 1.0)
                 )
             )
         )
@@ -268,18 +269,18 @@ class GeojsonKtTest {
 
     @Test
     fun zeroLengthLineShouldBehaveLikePoint() {
-        val pt = Geometry.Point(doubleArrayOf(5.0, 5.0))
-        val zeroLine = Geometry.LineString(arrayOf(doubleArrayOf(5.0, 5.0), doubleArrayOf(5.0, 5.0)))
+        val pt = Geometry.Point(lonLat(5.0, 5.0))
+        val zeroLine = Geometry.LineString(arrayOf(lonLat(5.0, 5.0), lonLat(5.0, 5.0)))
         zeroLine.intersects(pt) shouldBe true
         zeroLine.intersects(
             Geometry.Polygon(
                 arrayOf(
                     arrayOf(
-                        doubleArrayOf(0.0, 0.0),
-                        doubleArrayOf(10.0, 0.0),
-                        doubleArrayOf(10.0, 10.0),
-                        doubleArrayOf(0.0, 10.0),
-                        doubleArrayOf(0.0, 0.0)
+                        lonLat(0.0, 0.0),
+                        lonLat(10.0, 0.0),
+                        lonLat(10.0, 10.0),
+                        lonLat(0.0, 10.0),
+                        lonLat(0.0, 0.0)
                     )
                 )
             )
@@ -290,17 +291,17 @@ class GeojsonKtTest {
     fun multiGeometriesIntersectIfAnyMemberDoes() {
         val multiPts = Geometry.MultiPoint(
             arrayOf(
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(2.0, 2.0)
+                lonLat(0.0, 0.0),
+                lonLat(2.0, 2.0)
             )
         )
         val tri = Geometry.Polygon(
             arrayOf(
                 arrayOf(
-                    doubleArrayOf(1.0, 1.0),
-                    doubleArrayOf(3.0, 1.0),
-                    doubleArrayOf(2.0, 3.0),
-                    doubleArrayOf(1.0, 1.0)
+                    lonLat(1.0, 1.0),
+                    lonLat(3.0, 1.0),
+                    lonLat(2.0, 3.0),
+                    lonLat(1.0, 1.0)
                 )
             )
         )
@@ -311,18 +312,18 @@ class GeojsonKtTest {
     fun geometryCollectionRespectsAnyIntersect() {
         val coll = Geometry.GeometryCollection(
             arrayOf(
-                Geometry.Point(doubleArrayOf(10.0, 10.0)),
-                Geometry.LineString(arrayOf(doubleArrayOf(0.0, 0.0), doubleArrayOf(1.0, 1.0)))
+                Geometry.Point(lonLat(10.0, 10.0)),
+                Geometry.LineString(arrayOf(lonLat(0.0, 0.0), lonLat(1.0, 1.0)))
             )
         )
         val bigPoly = Geometry.Polygon(
             arrayOf(
                 arrayOf(
-                    doubleArrayOf(-1.0, -1.0),
-                    doubleArrayOf(2.0, -1.0),
-                    doubleArrayOf(2.0, 2.0),
-                    doubleArrayOf(-1.0, 2.0),
-                    doubleArrayOf(-1.0, -1.0)
+                    lonLat(-1.0, -1.0),
+                    lonLat(2.0, -1.0),
+                    lonLat(2.0, 2.0),
+                    lonLat(-1.0, 2.0),
+                    lonLat(-1.0, -1.0)
                 )
             )
         )
@@ -335,17 +336,17 @@ class GeojsonKtTest {
             arrayOf(
                 arrayOf(
                     arrayOf(
-                        doubleArrayOf(179.0, 0.0), doubleArrayOf(-179.0, 0.0),
-                        doubleArrayOf(-179.0, 1.0), doubleArrayOf(179.0, 1.0),
-                        doubleArrayOf(179.0, 0.0)
+                        lonLat(179.0, 0.0), lonLat(-179.0, 0.0),
+                        lonLat(-179.0, 1.0), lonLat(179.0, 1.0),
+                        lonLat(179.0, 0.0)
                     )
                 )
             )
         )
         val line = Geometry.LineString(
             arrayOf(
-                doubleArrayOf(178.0, 0.5),
-                doubleArrayOf(-178.0, 0.5)
+                lonLat(178.0, 0.5),
+                lonLat(-178.0, 0.5)
             )
         )
         line.intersects(mp) shouldBe true
