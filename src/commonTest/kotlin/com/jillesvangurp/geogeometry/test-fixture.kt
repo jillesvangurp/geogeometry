@@ -1,5 +1,6 @@
 package com.jillesvangurp.geogeometry
 import com.jillesvangurp.geojson.lonLat
+import com.jillesvangurp.geojson.linearRingCoordinates
 
 val bergstr16Berlin = lonLat(13.3941763, 52.5298311)
 val brandenBurgerGate = lonLat(13.377157, 52.516279)
@@ -10,8 +11,8 @@ val naturkundeMuseum = lonLat(13.381921, 52.531188)
 val rosenthalerPlatz = lonLat(13.401361, 52.529948)
 val oranienburgerTor = lonLat(13.38707, 52.525339)
 
-val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
-val smallRing = arrayOf(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin, rosenthalerPlatz)
+val bigRing = linearRingCoordinates(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz)
+val smallRing = linearRingCoordinates(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin)
 
 val concavePoly = """
 {
