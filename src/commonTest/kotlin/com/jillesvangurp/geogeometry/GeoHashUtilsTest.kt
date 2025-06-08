@@ -23,12 +23,13 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlin.math.abs
+import com.jillesvangurp.geojson.lonLat
 import kotlin.math.min
 import kotlin.test.Test
 
 val sampleHashesAndCoordinates = listOf(
-    doubleArrayOf(-0.1, 0.1) to "ebpbtdpntc6e",
-    doubleArrayOf(13.394904, 52.530888) to "u33dbfcyegk2"
+    lonLat(-0.1, 0.1) to "ebpbtdpntc6e",
+    lonLat(13.394904, 52.530888) to "u33dbfcyegk2"
 )
 
 class GeoHashUtilsTest {
@@ -50,7 +51,7 @@ class GeoHashUtilsTest {
     fun shouldEncodeHashes() {
         forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
             GeoHashUtils.encode(lat, lon) shouldBe geoHash
-            GeoHashUtils.encode(doubleArrayOf(lon, lat)) shouldBe geoHash
+            GeoHashUtils.encode(lonLat(lon, lat)) shouldBe geoHash
         }
     }
 
@@ -373,10 +374,10 @@ class GeoHashUtilsTest {
     @Test
     fun shouldCalculateHashesForPolygon() {
         val polygon = arrayOf(
-            doubleArrayOf(-1.0, 1.0),
-            doubleArrayOf(2.0, 2.0),
-            doubleArrayOf(3.0, -1.0),
-            doubleArrayOf(-2.0, -4.0)
+            lonLat(-1.0, 1.0),
+            lonLat(2.0, 2.0),
+            lonLat(3.0, -1.0),
+            lonLat(-2.0, -4.0)
         )
         var min = 10
         val geoHashesForPolygon = GeoHashUtils.geoHashesForLinearRing(
@@ -397,7 +398,7 @@ class GeoHashUtilsTest {
             GeoHashUtils.geoHashesForCircle(6, 52.0, 13.0, 200.0)
         for (hash in hashesForCircle) {
             val point = GeoHashUtils.decode(hash)
-            val distance = GeoGeometry.distance(point, doubleArrayOf(13.0, 52.0))
+            val distance = GeoGeometry.distance(point, lonLat(13.0, 52.0))
             distance shouldBeLessThan 200.0
         }
     }
@@ -461,7 +462,7 @@ class GeoHashUtilsTest {
                 GeoHashUtils.decode(
                     hash
                 ),
-                doubleArrayOf(longitude, latitude)
+                lonLat(longitude, latitude)
             ) shouldBeLessThan radius.toDouble() * 1.3
         }
     }
@@ -469,22 +470,22 @@ class GeoHashUtilsTest {
     @Test
     fun shouldOverlap() {
         val polygon = arrayOf(
-            doubleArrayOf(50.0, 15.0),
-            doubleArrayOf(53.0, 15.0),
-            doubleArrayOf(53.0, 11.0),
-            doubleArrayOf(50.0, 11.0)
+            lonLat(50.0, 15.0),
+            lonLat(53.0, 15.0),
+            lonLat(53.0, 11.0),
+            lonLat(50.0, 11.0)
         )
         val p2overlapping = arrayOf(
-            doubleArrayOf(51.0, 16.0),
-            doubleArrayOf(52.0, 16.0),
-            doubleArrayOf(52.0, 10.0),
-            doubleArrayOf(51.0, 10.0)
+            lonLat(51.0, 16.0),
+            lonLat(52.0, 16.0),
+            lonLat(52.0, 10.0),
+            lonLat(51.0, 10.0)
         )
         val p4inside = arrayOf(
-            doubleArrayOf(51.0, 14.0),
-            doubleArrayOf(52.0, 14.0),
-            doubleArrayOf(52.0, 12.0),
-            doubleArrayOf(51.0, 12.0)
+            lonLat(51.0, 14.0),
+            lonLat(52.0, 14.0),
+            lonLat(52.0, 12.0),
+            lonLat(51.0, 12.0)
         )
         GeoGeometry.overlap(polygon, polygon) shouldBe true
         GeoGeometry.overlap(polygon, p2overlapping) shouldBe true
