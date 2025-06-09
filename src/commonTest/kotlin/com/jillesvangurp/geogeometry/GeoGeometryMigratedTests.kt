@@ -31,6 +31,8 @@ import com.jillesvangurp.geojson.geoJsonIOUrl
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.polygonGeometry
+import com.jillesvangurp.geojson.linearRingCoordinates
+import com.jillesvangurp.geojson.lineString
 import com.jillesvangurp.serializationext.DEFAULT_JSON
 import kotlinx.serialization.json.jsonArray
 import io.kotest.assertions.assertSoftly
@@ -68,7 +70,7 @@ class GeoGeometryMigratedTests {
     val rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
     val oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
 
-    val samplePolygon = arrayOf(
+    val samplePolygon = linearRingCoordinates(
         doubleArrayOf(1.0, 1.0),
         doubleArrayOf(1.0, -1.0),
         doubleArrayOf(-1.0, -1.0),
@@ -343,14 +345,14 @@ class GeoGeometryMigratedTests {
     }
 
     val overlappingPolygons = listOf(
-        arrayOf(
+        linearRingCoordinates(
             berlin,
             amsterdam,
             newyork
-        ) to arrayOf(london, potsDammerPlatz, moritzPlatz),
+        ) to linearRingCoordinates(london, potsDammerPlatz, moritzPlatz),
 
-        arrayOf(rosenthalerPlatz, moritzPlatz, brandenBurgerGate) to
-            arrayOf(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
+        linearRingCoordinates(rosenthalerPlatz, moritzPlatz, brandenBurgerGate) to
+            linearRingCoordinates(oranienburgerTor, potsDammerPlatz, senefelderPlatz)
 
     )
 
@@ -562,14 +564,14 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldCalculateDistanceToLineString() {
-        val ls = arrayOf(
+        val ls = lineString(
             doubleArrayOf(13.414654, 52.520316),
             doubleArrayOf(13.423709, 52.528149),
             doubleArrayOf(13.425724, 52.524992)
         )
         var d = round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls))
         d shouldBe 416
-        val ls2 = arrayOf(
+        val ls2 = lineString(
             doubleArrayOf(13.425724, 52.524992),
             doubleArrayOf(13.414654, 52.520316),
             doubleArrayOf(13.423709, 52.528149)
@@ -580,19 +582,17 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldCalculateDistanceToPolygon() {
-        val polygon = arrayOf(
-            doubleArrayOf(13.414654, 52.520316),
-            doubleArrayOf(13.423709, 52.528149),
-            doubleArrayOf(13.425724, 52.524992),
-            doubleArrayOf(13.414654, 52.520316)
-        )
-        var d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon))
-        d shouldBe 416
-        val polygon2 = arrayOf(
-            doubleArrayOf(13.425724, 52.524992),
+        val polygon = linearRingCoordinates(
             doubleArrayOf(13.414654, 52.520316),
             doubleArrayOf(13.423709, 52.528149),
             doubleArrayOf(13.425724, 52.524992)
+        )
+        var d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon))
+        d shouldBe 416
+        val polygon2 = linearRingCoordinates(
+            doubleArrayOf(13.425724, 52.524992),
+            doubleArrayOf(13.414654, 52.520316),
+            doubleArrayOf(13.423709, 52.528149)
         )
         d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon2))
         d shouldBe 416
@@ -610,32 +610,29 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldCalculateDistanceToMultiPolygon() {
-        val polygon = arrayOf(
+        val polygon = linearRingCoordinates(
             doubleArrayOf(13.414654, 52.520316),
             doubleArrayOf(13.423709, 52.528149),
-            doubleArrayOf(13.425724, 52.524992),
-            doubleArrayOf(13.414654, 52.520316)
+            doubleArrayOf(13.425724, 52.524992)
         )
         val multiPolygon =
             arrayOf(
                 arrayOf(polygon),
                 arrayOf(
-                    arrayOf(
+                    linearRingCoordinates(
                         doubleArrayOf(1.0, 1.0),
                         doubleArrayOf(1.0, 2.0),
-                        doubleArrayOf(2.0, 2.0),
-                        doubleArrayOf(1.0, 1.0)
+                        doubleArrayOf(2.0, 2.0)
                     )
                 )
             )
         val multiPolygon2 =
             arrayOf(
                 arrayOf(
-                    arrayOf(
+                    linearRingCoordinates(
                         doubleArrayOf(1.0, 1.0),
                         doubleArrayOf(1.0, 2.0),
-                        doubleArrayOf(2.0, 2.0),
-                        doubleArrayOf(1.0, 1.0)
+                        doubleArrayOf(2.0, 2.0)
                     )
                 ),
                 arrayOf(polygon)
@@ -702,42 +699,39 @@ class GeoGeometryMigratedTests {
     }
 
     val straightLines = arrayOf(
-        arrayOf(
-            doubleArrayOf(
-                0.0,
-                1.0
-            ),
+        lineString(
+            doubleArrayOf(0.0, 1.0),
             doubleArrayOf(1.0, 1.0),
             doubleArrayOf(2.0, 1.0),
             doubleArrayOf(3.0, 1.0),
             doubleArrayOf(4.0, 1.0)
         ),
-        arrayOf(
+        lineString(
             doubleArrayOf(1.0, 0.0),
             doubleArrayOf(1.0, 1.0),
             doubleArrayOf(1.0, 2.0),
             doubleArrayOf(1.0, 3.0),
             doubleArrayOf(1.0, 4.0)
         ),
-        arrayOf(
+        lineString(
             doubleArrayOf(0.0, 0.0),
             doubleArrayOf(1.0, 1.0),
             doubleArrayOf(2.0, 2.0),
             doubleArrayOf(3.0, 3.0),
             doubleArrayOf(4.0, 4.0)
         ),
-        arrayOf(
+        lineString(
             doubleArrayOf(0.0, 0.0),
             doubleArrayOf(1.0, 1.0),
             doubleArrayOf(2.0, 2.0),
             doubleArrayOf(4.0, 4.0)
         ),
-        arrayOf(
+        lineString(
             doubleArrayOf(0.0, 0.0),
             doubleArrayOf(1.0, 1.0),
             doubleArrayOf(4.0, 4.0)
         ),
-        arrayOf(doubleArrayOf(0.0, 0.0), doubleArrayOf(1.0, 1.0))
+        lineString(doubleArrayOf(0.0, 0.0), doubleArrayOf(1.0, 1.0))
     )
 
     @Test
@@ -785,11 +779,8 @@ class GeoGeometryMigratedTests {
     @Test
     fun issue5PolygonContainsDoesNotWorkCorrectly() {
         val polygon = arrayOf(
-            arrayOf(
-                doubleArrayOf(
-                    42.503320312499994,
-                    1.7060546875
-                ),
+            linearRingCoordinates(
+                doubleArrayOf(42.503320312499994, 1.7060546875),
                 doubleArrayOf(42.4966796875, 1.678515625000017),
                 doubleArrayOf(42.455957031249994, 1.58642578125),
                 doubleArrayOf(42.441699218749996, 1.534082031250023),
@@ -806,8 +797,7 @@ class GeoGeometryMigratedTests {
                 doubleArrayOf(42.604443359375, 1.709863281250023),
                 doubleArrayOf(42.575927734375, 1.739453125000011),
                 doubleArrayOf(42.55673828125, 1.740234375),
-                doubleArrayOf(42.525634765625, 1.713964843750006),
-                doubleArrayOf(42.503320312499994, 1.7060546875)
+                doubleArrayOf(42.525634765625, 1.713964843750006)
             )
         )
         val point = doubleArrayOf(42.503615, 1.641881)
