@@ -3,8 +3,8 @@ package com.jillesvangurp.geojson
 import com.jillesvangurp.geo.GeoGeometry
 
 fun Geometry.intersects(other: Geometry): Boolean {
-    val bbox1 = this.boundingBox()
-    val bbox2 = other.boundingBox()
+    val bbox1 = this.bbox()
+    val bbox2 = other.bbox()
     if (!bboxesIntersect(bbox1, bbox2)) return false
 
     return when (this) {

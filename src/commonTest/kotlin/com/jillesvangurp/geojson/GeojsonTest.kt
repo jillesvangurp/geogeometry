@@ -14,7 +14,6 @@ import kotlin.test.Test
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
-import com.jillesvangurp.geojson.lonLat
 
 class GeojsonKtTest {
 
@@ -22,13 +21,13 @@ class GeojsonKtTest {
     fun shouldCalculateZoomLevel() {
         val meters = 75.0
 
-        val zl1 = GeoGeometry.bbox(
+        val zl1 = GeoGeometry.rectangleAroundCentroid(
             bergstr16Berlin.latitude, bergstr16Berlin.longitude,
             meters,
             meters
         ).zoomLevel()
 
-        val zl2 = GeoGeometry.bbox(
+        val zl2 = GeoGeometry.rectangleAroundCentroid(
             bergstr16Berlin.latitude, bergstr16Berlin.longitude,
             meters * 16,
             meters * 16
@@ -46,7 +45,7 @@ class GeojsonKtTest {
     @Test
     fun shouldTile() {
 
-        val bbox = GeoGeometry.bbox(
+        val bbox = GeoGeometry.rectangleAroundCentroid(
             bergstr16Berlin.latitude, bergstr16Berlin.longitude,
             100.0 * 16,
             100.0 * 16

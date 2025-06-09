@@ -11,6 +11,8 @@ import com.jillesvangurp.geojson.degree
 import com.jillesvangurp.geojson.eastOrWest
 import com.jillesvangurp.geojson.ensureFollowsRightHandSideRule
 import com.jillesvangurp.geojson.humanReadable
+import com.jillesvangurp.geojson.latLon
+import com.jillesvangurp.geojson.lonLat
 import com.jillesvangurp.geojson.minutes
 import com.jillesvangurp.geojson.seconds
 import com.jillesvangurp.serializationext.DEFAULT_JSON
@@ -26,8 +28,8 @@ import kotlinx.serialization.json.JsonObject
 //    val bigRing = arrayOf(potsDammerPlatz, brandenBurgerGate, naturkundeMuseum, senefelderPlatz, moritzPlatz, potsDammerPlatz)
 //    val smallRing = arrayOf(rosenthalerPlatz, oranienburgerTor, bergstr16Berlin, rosenthalerPlatz)
 
-val sydneyOpera = doubleArrayOf(151.213108, -33.8567844)
-val rioFootballStadium = doubleArrayOf(-43.2216922, -22.910643)
+val sydneyOpera = lonLat(151.213108, -33.8567844)
+val rioFootballStadium = lonLat(-43.2216922, -22.910643)
 
 class GeoGeometryTest {
 
@@ -103,32 +105,32 @@ class GeoGeometryTest {
     @Test
     fun headingFromTwoPoints() {
         GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(13.0, 52.0),
-            doubleArrayOf(14.0, 53.0)
+            lonLat(13.0, 52.0),
+            lonLat(14.0, 53.0)
         ).roundToLong() shouldBe 31
         GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(14.0, 53.0),
-            doubleArrayOf(13.0, 52.0)
+            lonLat(14.0, 53.0),
+            lonLat(13.0, 52.0)
         ).roundToLong() shouldBe 212
     }
 
     @Test
     fun headingFromTwoPointsShouldBeBetweenZeroAnd360() {
         GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(13.0, 52.0),
-            doubleArrayOf(13.0, 52.0001)
+            lonLat(13.0, 52.0),
+            lonLat(13.0, 52.0001)
         ).roundToLong() shouldBe 0
         GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(12.999, 52.0),
-            doubleArrayOf(13.0, 52.0)
+            lonLat(12.999, 52.0),
+            lonLat(13.0, 52.0)
         ).roundToLong() shouldBe 90
         GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(13.0, 52.0001),
-            doubleArrayOf(13.0, 52.0)
+            lonLat(13.0, 52.0001),
+            lonLat(13.0, 52.0)
         ).roundToLong() shouldBe 180
         GeoGeometry.headingFromTwoPoints(
-            doubleArrayOf(13.0, 52.0),
-            doubleArrayOf(12.999, 52.0)
+            lonLat(13.0, 52.0),
+            lonLat(12.999, 52.0)
         ).roundToLong() shouldBe 270
     }
 
@@ -137,24 +139,24 @@ class GeoGeometryTest {
         assertSoftly {
             mapOf(
                 // Valid cases with variations in spacing
-                "40.7128, -74.0060" to doubleArrayOf(40.7128, -74.0060).apply { reverse() },
-                "  40.7128, -74.0060   " to doubleArrayOf(40.7128, -74.0060).apply { reverse() },
-                "40.7128,-74.0060" to doubleArrayOf(40.7128, -74.0060).apply { reverse() },
-                "40.7128 , -74.0060" to doubleArrayOf(40.7128, -74.0060).apply { reverse() },
-                "40.7128  ,   -74.0060" to doubleArrayOf(40.7128, -74.0060).apply { reverse() },
-                "48.8566, 2.3522" to doubleArrayOf(48.8566, 2.3522).apply { reverse() },
-                "0, 0" to doubleArrayOf(0.0, 0.0).apply { reverse() },
-                "-90, -180" to doubleArrayOf(-90.0, -180.0).apply { reverse() },
-                "90, 180" to doubleArrayOf(90.0, 180.0).apply { reverse() },
-                "-90.0, -180.0" to doubleArrayOf(-90.0, -180.0).apply { reverse() },
-                "90.0, 180.0" to doubleArrayOf(90.0, 180.0).apply { reverse() },
+                "40.7128, -74.0060" to latLon(40.7128, -74.0060),
+                "  40.7128, -74.0060   " to latLon(40.7128, -74.0060),
+                "40.7128,-74.0060" to latLon(40.7128, -74.0060),
+                "40.7128 , -74.0060" to latLon(40.7128, -74.0060),
+                "40.7128  ,   -74.0060" to latLon(40.7128, -74.0060),
+                "48.8566, 2.3522" to latLon(48.8566, 2.3522),
+                "0, 0" to latLon(0.0, 0.0),
+                "-90, -180" to latLon(-90.0, -180.0),
+                "90, 180" to latLon(90.0, 180.0),
+                "-90.0, -180.0" to latLon(-90.0, -180.0),
+                "90.0, 180.0" to latLon(90.0, 180.0),
 
                 // Edge bounds
-                "90, 180" to doubleArrayOf(90.0, 180.0).apply { reverse() },
-                "-90.0, -180.0" to doubleArrayOf(-90.0, -180.0).apply { reverse() },
+                "90, 180" to latLon(90.0, 180.0),
+                "-90.0, -180.0" to latLon(-90.0, -180.0),
 
                 // Whitespace trimming
-                "   40.7128  ,  -74.0060 " to doubleArrayOf(40.7128, -74.0060).apply { reverse() },
+                "   40.7128  ,  -74.0060 " to latLon(40.7128, -74.0060),
 
                 // Invalid cases: out-of-bounds
                 "91, 0" to null,
@@ -204,10 +206,10 @@ class GeoGeometryTest {
         """.trimIndent()
 
         GeoGeometry.findAllCoordinates(textWithValidAndInvalid) shouldContainExactly listOf(
-            doubleArrayOf(-74.0060, 40.7128),
-            doubleArrayOf(2.3522, 48.8566),
-            doubleArrayOf(0.0, 0.0),
-            doubleArrayOf(13.0,52.0)
+            lonLat(-74.0060, 40.7128),
+            lonLat(2.3522, 48.8566),
+            lonLat(0.0, 0.0),
+            lonLat(13.0,52.0)
         )
 
         // Only invalid
