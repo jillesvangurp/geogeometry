@@ -2,7 +2,7 @@
 
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geogeometry.core.PointCoordinates
 import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.matchers.doubles.shouldBeLessThan
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -10,8 +10,10 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlin.math.abs
 
+import com.jillesvangurp.geogeometry.geometry.*
+
 infix fun PointCoordinates.shouldBeNear(expected: PointCoordinates) {
-    val distance = com.jillesvangurp.geo.GeoGeometry.distance(this,expected)
+    val distance = distance(this,expected)
     distance shouldBeLessThan 1.0
 }
 

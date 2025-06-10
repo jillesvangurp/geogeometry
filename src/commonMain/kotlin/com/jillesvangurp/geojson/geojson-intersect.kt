@@ -1,6 +1,6 @@
 package com.jillesvangurp.geojson
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 
 fun Geometry.intersects(other: Geometry): Boolean {
     val bbox1 = this.boundingBox()
@@ -58,20 +58,20 @@ private fun intersectsLine(line: LineStringCoordinates, other: Geometry): Boolea
         when (other) {
             is Geometry.Point -> other.coordinates?.onLineSegment(start, end) ?: false
             is Geometry.LineString -> other.coordinates?.zipWithNextCompat()?.any { (oStart, oEnd) ->
-                GeoGeometry.linesCross(start, end, oStart, oEnd)
+                linesCross(start, end, oStart, oEnd)
             } == true
             is Geometry.MultiLineString -> other.coordinates?.any { oLine ->
                 oLine.zipWithNextCompat().any { (oStart, oEnd) ->
-                    GeoGeometry.linesCross(start, end, oStart, oEnd)
+                    linesCross(start, end, oStart, oEnd)
                 }
             } == true
             is Geometry.Polygon -> other.outerCoordinates.zipWithNextCompat().any { (oStart, oEnd) ->
-                GeoGeometry.linesCross(start, end, oStart, oEnd)
+                linesCross(start, end, oStart, oEnd)
             } || other.contains(start)
             is Geometry.MultiPolygon -> other.coordinates?.any { poly ->
                 poly.first().zipWithNextCompat().any { (oStart, oEnd) ->
-                    GeoGeometry.linesCross(start, end, oStart, oEnd)
-                } || GeoGeometry.polygonContains(start.latitude, start.longitude, poly)
+                    linesCross(start, end, oStart, oEnd)
+                } || polygonContains(start.latitude, start.longitude, poly)
             } == true
             is Geometry.GeometryCollection -> other.geometries.any { intersectsLine(line, it) }
             is Geometry.MultiPoint -> {
@@ -88,8 +88,8 @@ private fun intersectsPolygon(polygon: PolygonCoordinates, other: Geometry): Boo
     return outer.zipWithNextCompat().any { (start, end) ->
         intersectsLine(arrayOf(start, end), other)
     } || when (other) {
-        is Geometry.Point -> other.coordinates?.let { GeoGeometry.polygonContains(it.latitude, it.longitude, polygon) } ?: false
-        is Geometry.MultiPoint -> other.coordinates?.any { GeoGeometry.polygonContains(it.latitude, it.longitude, polygon) } == true
+        is Geometry.Point -> other.coordinates?.let { polygonContains(it.latitude, it.longitude, polygon) } ?: false
+        is Geometry.MultiPoint -> other.coordinates?.any { polygonContains(it.latitude, it.longitude, polygon) } == true
         // any member geometry intersects this polygon
         is Geometry.GeometryCollection ->
             other.geometries.any { intersectsPolygon(polygon, it) }
@@ -97,22 +97,22 @@ private fun intersectsPolygon(polygon: PolygonCoordinates, other: Geometry): Boo
         // a line (or any vertex of it) wholly inside the polygon
         is Geometry.LineString ->
             other.coordinates?.any {
-                GeoGeometry.polygonContains(it.latitude, it.longitude, polygon)
+                polygonContains(it.latitude, it.longitude, polygon)
             } == true
 
         // the same, but for many lines
         is Geometry.MultiLineString ->
             other.coordinates?.any { line ->
-                line.any { GeoGeometry.polygonContains(it.latitude, it.longitude, polygon) }
+                line.any { polygonContains(it.latitude, it.longitude, polygon) }
             } == true
 
         // polygon-vs-polygon – either contains a vertex of the other
         is Geometry.Polygon -> {
             val oCoords = other.coordinates ?: return false
-            GeoGeometry.polygonContains(other.outerCoordinates.first().latitude,
+            polygonContains(other.outerCoordinates.first().latitude,
                 other.outerCoordinates.first().longitude,
                 polygon) ||
-                    GeoGeometry.polygonContains(outer.first().latitude,
+                    polygonContains(outer.first().latitude,
                         outer.first().longitude,
                         oCoords)
         }
@@ -120,10 +120,10 @@ private fun intersectsPolygon(polygon: PolygonCoordinates, other: Geometry): Boo
         // any constituent polygon intersects or is contained
         is Geometry.MultiPolygon ->
             other.coordinates?.any { oPoly ->
-                GeoGeometry.polygonContains(oPoly.first().first().latitude,
+                polygonContains(oPoly.first().first().latitude,
                     oPoly.first().first().longitude,
                     polygon) ||
-                        GeoGeometry.polygonContains(outer.first().latitude,
+                        polygonContains(outer.first().latitude,
                             outer.first().longitude,
                             oPoly)
             } == true

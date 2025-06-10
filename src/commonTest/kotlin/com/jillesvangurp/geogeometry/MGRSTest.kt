@@ -1,7 +1,7 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.*
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundDecimals
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geojson.distanceTo
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude

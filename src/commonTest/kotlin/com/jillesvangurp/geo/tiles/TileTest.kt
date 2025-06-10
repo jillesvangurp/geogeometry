@@ -1,6 +1,6 @@
 package com.jillesvangurp.geo.tiles
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
 import com.jillesvangurp.geogeometry.brandenBurgerGate
 import com.jillesvangurp.geogeometry.rosenthalerPlatz
@@ -283,7 +283,7 @@ class TileTest {
 
     @Test
     fun bboxShouldHaveCorrectTiles() {
-        val bbox = GeoGeometry.boundingBox(
+        val bbox = boundingBox(
             arrayOf(
                 rosenthalerPlatz,
                 brandenBurgerGate,

@@ -12,10 +12,8 @@ package com.jillesvangurp.geo
  * Permission to use, copy, modify, and distribute this software is
  * freely granted, provided that this notice is preserved.
  */
-import com.jillesvangurp.geo.GeoGeometry.Companion.fromRadians
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundDecimals
-import com.jillesvangurp.geo.GeoGeometry.Companion.toRadians
-import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geogeometry.geometry.*
+import com.jillesvangurp.geogeometry.core.PointCoordinates
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.normalize

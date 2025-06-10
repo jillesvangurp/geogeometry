@@ -1,6 +1,6 @@
 package com.jillesvangurp.geojson
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geogeometry.bergstr16Berlin
 import com.jillesvangurp.serializationext.DEFAULT_JSON
@@ -22,13 +22,13 @@ class GeojsonKtTest {
     fun shouldCalculateZoomLevel() {
         val meters = 75.0
 
-        val zl1 = GeoGeometry.bbox(
+        val zl1 = bbox(
             bergstr16Berlin.latitude, bergstr16Berlin.longitude,
             meters,
             meters
         ).zoomLevel()
 
-        val zl2 = GeoGeometry.bbox(
+        val zl2 = bbox(
             bergstr16Berlin.latitude, bergstr16Berlin.longitude,
             meters * 16,
             meters * 16
@@ -46,12 +46,12 @@ class GeojsonKtTest {
     @Test
     fun shouldTile() {
 
-        val bbox = GeoGeometry.bbox(
+        val bbox = bbox(
             bergstr16Berlin.latitude, bergstr16Berlin.longitude,
             100.0 * 16,
             100.0 * 16
         )
-        val cells = GeoGeometry.calculateTileBboxesForBoundingBox(bbox)
+        val cells = calculateTileBboxesForBoundingBox(bbox)
         val collection =
             FeatureCollection(cells.map { it.polygon() }.map { it.asFeature() } + listOf(bbox.polygon().asFeature()))
         val json = collection.toString()
@@ -354,8 +354,8 @@ class GeojsonKtTest {
 
     @Test
     fun nestedCircleShouldIntersect() {
-        val c1 = GeoGeometry.circle2polygon(50, 52.0, 13.0, 10.0).asGeometry
-        val c2 = GeoGeometry.circle2polygon(50, 52.0, 13.0, 5.0).asGeometry
+        val c1 = circle2polygon(50, 52.0, 13.0, 10.0).asGeometry
+        val c2 = circle2polygon(50, 52.0, 13.0, 5.0).asGeometry
 
         c1.intersects(c2) shouldBe true
         c2.intersects(c1) shouldBe true
@@ -363,16 +363,16 @@ class GeojsonKtTest {
 
     @Test
     fun testPolygonContainmentRespectHoles() {
-        val outer = GeoGeometry.circle2polygon(50, 52.0, 13.0, 10.0)[0]
-        val inner = GeoGeometry.circle2polygon(50, 52.0, 13.0, 5.0)[0]
+        val outer = circle2polygon(50, 52.0, 13.0, 10.0)[0]
+        val inner = circle2polygon(50, 52.0, 13.0, 5.0)[0]
         val poly = arrayOf(outer, inner).asGeometry
         assertSoftly {
             poly.randomPoints().take(2000).forEach {
                 withClue("outer should contain ${it.latitude} ${it.longitude}") {
-                    GeoGeometry.polygonContains(it, outer) shouldBe true
+                    polygonContains(it, outer) shouldBe true
                 }
                 withClue("inner should not contain ${it.latitude} ${it.longitude}") {
-                    GeoGeometry.polygonContains(it, inner) shouldBe false
+                    polygonContains(it, inner) shouldBe false
                 }
                 withClue("geometry should contain ${it.latitude} ${it.longitude}") {
                     poly.contains(it) shouldBe true

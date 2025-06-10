@@ -1,7 +1,6 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.GeoGeometry
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundDecimals
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geojson.FeatureCollection
 import com.jillesvangurp.geojson.Geometry
 import com.jillesvangurp.geojson.asFeature
@@ -70,7 +69,7 @@ class MapAlignmentTest {
                         if (!seen.contains(providerPair)) {
                             println(
                                 "| $refProvider | ${refPoint.latitude}, ${refPoint.longitude} | $otherProvider | ${otherPoint.latitude}, ${otherPoint.longitude} | ${
-                                    GeoGeometry.distance(
+                                    distance(
                                         refPoint,
                                         otherPoint
                                     ).roundDecimals(2)

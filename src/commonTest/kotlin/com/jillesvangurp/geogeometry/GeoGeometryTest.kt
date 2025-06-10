@@ -1,11 +1,6 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.GeoGeometry
-import com.jillesvangurp.geo.GeoGeometry.Companion.changeOrder
-import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
-import com.jillesvangurp.geo.GeoGeometry.Companion.hasSameStartAndEnd
-import com.jillesvangurp.geo.GeoGeometry.Companion.isValid
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geojson.Geometry
 import com.jillesvangurp.geojson.degree
 import com.jillesvangurp.geojson.eastOrWest
@@ -52,7 +47,7 @@ class GeoGeometryTest {
             decimalDegrees.minutes shouldBe minutes
             roundToDecimals(decimalDegrees.seconds, 2) shouldBe seconds
 
-            val decimalDegree = GeoGeometry.toDecimalDegree(direction, degrees, minutes, seconds)
+            val decimalDegree = toDecimalDegree(direction, degrees, minutes, seconds)
             abs(decimalDegree - decimalDegrees) shouldBeLessThan 0.00001
         }
     }
@@ -102,11 +97,11 @@ class GeoGeometryTest {
 
     @Test
     fun headingFromTwoPoints() {
-        GeoGeometry.headingFromTwoPoints(
+        headingFromTwoPoints(
             doubleArrayOf(13.0, 52.0),
             doubleArrayOf(14.0, 53.0)
         ).roundToLong() shouldBe 31
-        GeoGeometry.headingFromTwoPoints(
+        headingFromTwoPoints(
             doubleArrayOf(14.0, 53.0),
             doubleArrayOf(13.0, 52.0)
         ).roundToLong() shouldBe 212
@@ -114,19 +109,19 @@ class GeoGeometryTest {
 
     @Test
     fun headingFromTwoPointsShouldBeBetweenZeroAnd360() {
-        GeoGeometry.headingFromTwoPoints(
+        headingFromTwoPoints(
             doubleArrayOf(13.0, 52.0),
             doubleArrayOf(13.0, 52.0001)
         ).roundToLong() shouldBe 0
-        GeoGeometry.headingFromTwoPoints(
+        headingFromTwoPoints(
             doubleArrayOf(12.999, 52.0),
             doubleArrayOf(13.0, 52.0)
         ).roundToLong() shouldBe 90
-        GeoGeometry.headingFromTwoPoints(
+        headingFromTwoPoints(
             doubleArrayOf(13.0, 52.0001),
             doubleArrayOf(13.0, 52.0)
         ).roundToLong() shouldBe 180
-        GeoGeometry.headingFromTwoPoints(
+        headingFromTwoPoints(
             doubleArrayOf(13.0, 52.0),
             doubleArrayOf(12.999, 52.0)
         ).roundToLong() shouldBe 270
@@ -186,9 +181,9 @@ class GeoGeometryTest {
                 "40.7128,, -74.0060" to null,
                 "40.7128, -74.0060," to null,
             ).forEach { (input, expected) ->
-                val parsed = GeoGeometry.parseCoordinate(input)
+                val parsed = parseCoordinate(input)
                 parsed shouldBe expected
-                GeoGeometry.isValidCoordinate(input) shouldBe (parsed != null)
+                isValidCoordinate(input) shouldBe (parsed != null)
             }
         }
     }
@@ -203,7 +198,7 @@ class GeoGeometryTest {
             185,13
         """.trimIndent()
 
-        GeoGeometry.findAllCoordinates(textWithValidAndInvalid) shouldContainExactly listOf(
+        findAllCoordinates(textWithValidAndInvalid) shouldContainExactly listOf(
             doubleArrayOf(-74.0060, 40.7128),
             doubleArrayOf(2.3522, 48.8566),
             doubleArrayOf(0.0, 0.0),
@@ -211,10 +206,10 @@ class GeoGeometryTest {
         )
 
         // Only invalid
-        GeoGeometry.findAllCoordinates("junk 91,0; 1000,1000 text") shouldBe emptyList()
+        findAllCoordinates("junk 91,0; 1000,1000 text") shouldBe emptyList()
 
         // Empty input
-        GeoGeometry.findAllCoordinates("") shouldBe emptyList()
+        findAllCoordinates("") shouldBe emptyList()
     }
 }
 

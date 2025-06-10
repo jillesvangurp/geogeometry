@@ -1,10 +1,10 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geojson.FeatureCollection
 import com.jillesvangurp.geojson.Geometry
-import com.jillesvangurp.geojson.PolygonCoordinates
+import com.jillesvangurp.geogeometry.core.PolygonCoordinates
 import com.jillesvangurp.geojson.eastLongitude
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
@@ -127,8 +127,8 @@ class GeoHashUtilsTest {
         println(hashes.size)
         println(DEFAULT_JSON.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
 
-        val totalHashedArea = hashes.map { GeoHashUtils.decodeBbox(it) }.sumOf { GeoGeometry.area(it) }
-        val bboxArea = GeoGeometry.area(GeoGeometry.boundingBox(p.coordinates as PolygonCoordinates))
+        val totalHashedArea = hashes.map { GeoHashUtils.decodeBbox(it) }.sumOf { area(it) }
+        val bboxArea = area(boundingBox(p.coordinates as PolygonCoordinates))
         // it's a concave polygon so the area of the hashes should be smaller than that of the
         // bounding box containing the polygon
         totalHashedArea shouldBeLessThan bboxArea
@@ -344,7 +344,7 @@ class GeoHashUtilsTest {
                     val length = GeoHashUtils.suitableHashLength(granularity, latitude, longitude)
                     val hash = GeoHashUtils.encode(latitude = latitude, longitude = longitude, length = length)
                     val bbox = GeoHashUtils.decodeBbox(hash)
-                    val distance = GeoGeometry.distance(bbox[0], bbox[1], bbox[0], bbox[3])
+                    val distance = distance(bbox[0], bbox[1], bbox[0], bbox[3])
                     distance shouldBeLessThan granularity
                 }
             }
@@ -398,7 +398,7 @@ class GeoHashUtilsTest {
             GeoHashUtils.geoHashesForCircle(6, 52.0, 13.0, 200.0)
         for (hash in hashesForCircle) {
             val point = GeoHashUtils.decode(hash)
-            val distance = GeoGeometry.distance(point, lonLat(13.0, 52.0))
+            val distance = distance(point, lonLat(13.0, 52.0))
             distance shouldBeLessThan 200.0
         }
     }
@@ -458,7 +458,7 @@ class GeoHashUtilsTest {
         println(DEFAULT_JSON.encodeToString(FeatureCollection.serializer(), FeatureCollection.fromGeoHashes(hashes)))
         println(hashes.size)
         for (hash in hashes) {
-            GeoGeometry.distance(
+            distance(
                 GeoHashUtils.decode(
                     hash
                 ),
@@ -487,11 +487,11 @@ class GeoHashUtilsTest {
             lonLat(52.0, 12.0),
             lonLat(51.0, 12.0)
         )
-        GeoGeometry.overlap(polygon, polygon) shouldBe true
-        GeoGeometry.overlap(polygon, p2overlapping) shouldBe true
-        GeoGeometry.overlap(p2overlapping, polygon) shouldBe true
-        GeoGeometry.overlap(polygon, p4inside) shouldBe true
-        GeoGeometry.overlap(p4inside, polygon) shouldBe true
+        overlap(polygon, polygon) shouldBe true
+        overlap(polygon, p2overlapping) shouldBe true
+        overlap(p2overlapping, polygon) shouldBe true
+        overlap(polygon, p4inside) shouldBe true
+        overlap(p4inside, polygon) shouldBe true
     }
 
     @Test

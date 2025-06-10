@@ -2,9 +2,8 @@
 
 package com.jillesvangurp.geojson
 
-import com.jillesvangurp.geo.GeoGeometry
-import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRule
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
+import com.jillesvangurp.geogeometry.geometry.*
+import com.jillesvangurp.geogeometry.core.*
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geojson.Geometry.Polygon
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -17,20 +16,6 @@ import kotlin.math.*
 /**
  * Simple type aliases to have a bit more readable code. Based on https://tools.ietf.org/html/rfc7946#section-3.1.2
  */
-typealias PointCoordinates = DoubleArray
-/**
- * Lowest axes followed by highest axes
- * BoundingBox = [westLongitude,southLatitude,eastLongitude,northLatitude]
- */
-typealias BoundingBox = DoubleArray
-typealias MultiPointCoordinates = Array<PointCoordinates>
-typealias LineStringCoordinates = Array<PointCoordinates>
-typealias LinearRingCoordinates = Array<PointCoordinates>
-typealias MultiLineStringCoordinates = Array<LineStringCoordinates> // Outer polygon + holes
-typealias PolygonCoordinates = Array<LinearRingCoordinates> // Outer polygon + holes
-typealias MultiPolygonCoordinates = Array<PolygonCoordinates>
-
-
 fun PointCoordinates.isValid(): Boolean {
     return (latitude in -90.0..90.0) && (longitude in -180.0..180.0)
 }
@@ -155,7 +140,7 @@ fun BoundingBox.contains(point: PointCoordinates): Boolean {
 val PolygonCoordinates.asGeometry get() = Polygon(this)
 
 fun PolygonCoordinates.contains(point: PointCoordinates): Boolean =
-    GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = this)
+    polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = this)
 
 fun Geometry.contains(point: PointCoordinates): Boolean {
     return when (this) {
@@ -182,12 +167,12 @@ fun Geometry.contains(point: PointCoordinates): Boolean {
         is Polygon -> this.coordinates?.let { coords ->
             val outer = coords.firstOrNull() ?: return@let false
             val holes = coords.drop(1)
-            GeoGeometry.polygonContains(point.latitude, point.longitude, arrayOf(outer)) &&
-                    holes.none { hole -> GeoGeometry.polygonContains(point.latitude, point.longitude, arrayOf(hole)) }
+            polygonContains(point.latitude, point.longitude, arrayOf(outer)) &&
+                    holes.none { hole -> polygonContains(point.latitude, point.longitude, arrayOf(hole)) }
         } ?: false
 
         is Geometry.MultiPolygon -> this.coordinates?.any { polygon ->
-            GeoGeometry.polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = polygon)
+            polygonContains(point.latitude, point.longitude, polygonCoordinatesPoints = polygon)
         } ?: false
 
         is Geometry.GeometryCollection -> this.geometries.any { it.contains(point) }
@@ -296,12 +281,12 @@ fun Geometry.boundingBox(): BoundingBox =
             doubleArrayOf(minLongitude, minLatitude, maxLongitude, maxLatitude)
         }
 
-        is Geometry.LineString -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
-        is Geometry.MultiLineString -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
-        is Geometry.MultiPoint -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
-        is Geometry.MultiPolygon -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
-        is Geometry.Point -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
-        is Polygon -> GeoGeometry.boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.LineString -> boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.MultiLineString -> boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.MultiPoint -> boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.MultiPolygon -> boundingBox(coordinates ?: error("no coordinates"))
+        is Geometry.Point -> boundingBox(coordinates ?: error("no coordinates"))
+        is Polygon -> boundingBox(coordinates ?: error("no coordinates"))
     }
 
 val PointCoordinates.latitude: Double
@@ -408,7 +393,7 @@ fun BoundingBox.zoomLevel(height: Int = 512, width: Int = 512, minZoom: Double =
 
     fun zoom(mapPx: Int, worldPx: Int, fraction: Double) = floor(ln(mapPx / worldPx / fraction) / ln(2.0))
 
-    val latFraction = (GeoGeometry.toRadians(northEast.latitude) - GeoGeometry.toRadians(southWest.latitude)) / PI
+    val latFraction = (toRadians(northEast.latitude) - toRadians(southWest.latitude)) / PI
 
     val lngDiff = northEast.longitude - southWest.longitude
     val lngFraction = if (lngDiff < 0) {
@@ -860,7 +845,7 @@ fun Geometry.randomPoints(): Sequence<PointCoordinates> = sequence {
                     randomBetween(bbox.westLongitude, bbox.eastLongitude),
                     randomBetween(bbox.southLatitude, bbox.northLatitude)
                 )
-                if (geo.contains(p) && holes.none { h -> GeoGeometry.polygonContains(p[1], p[0], arrayOf(h)) }) {
+                if (geo.contains(p) && holes.none { h -> polygonContains(p[1], p[0], arrayOf(h)) }) {
                     yield(p)
                 }
             }

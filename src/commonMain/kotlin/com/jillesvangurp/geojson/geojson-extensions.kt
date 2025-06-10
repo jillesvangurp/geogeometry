@@ -1,6 +1,6 @@
 package com.jillesvangurp.geojson
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 
 fun LineStringCoordinates.centroid(): DoubleArray {
     var minLon = 180.0
@@ -25,30 +25,30 @@ fun MultiPolygonCoordinates.centroid() = this.map { it.centroid() }.toTypedArray
 fun Geometry.centroid(): PointCoordinates = centroidOrNull()
 
 fun Geometry.centroidOrNull(): PointCoordinates = when (this) {
-    is Geometry.Point -> this.coordinates ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.LineString -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.MultiLineString -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.Polygon -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.MultiPolygon -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
-    is Geometry.MultiPoint -> this.coordinates?.centroid() ?: GeoGeometry.polygonCenter(bbox!!)
+    is Geometry.Point -> this.coordinates ?: polygonCenter(bbox!!)
+    is Geometry.LineString -> this.coordinates?.centroid() ?: polygonCenter(bbox!!)
+    is Geometry.MultiLineString -> this.coordinates?.centroid() ?: polygonCenter(bbox!!)
+    is Geometry.Polygon -> this.coordinates?.centroid() ?: polygonCenter(bbox!!)
+    is Geometry.MultiPolygon -> this.coordinates?.centroid() ?: polygonCenter(bbox!!)
+    is Geometry.MultiPoint -> this.coordinates?.centroid() ?: polygonCenter(bbox!!)
     is Geometry.GeometryCollection -> {
         this.geometries.map { it.centroidOrNull() }.toTypedArray().centroid()
     }
 }
 
-fun PointCoordinates.translate(latDistance: Double, lonDistance: Double): PointCoordinates = GeoGeometry.translate(this.latitude, this.longitude, latDistance, lonDistance)
+fun PointCoordinates.translate(latDistance: Double, lonDistance: Double): PointCoordinates = translate(this.latitude, this.longitude, latDistance, lonDistance)
 fun Array<PointCoordinates>.translate(latDistance: Double, lonDistance: Double): Array<PointCoordinates> = this.map { it.translate(latDistance,lonDistance) }.toTypedArray()
 fun PolygonCoordinates.translate(latDistance: Double, lonDistance: Double): PolygonCoordinates = this.map { it.translate(latDistance,lonDistance) }.toTypedArray()
 fun MultiPolygonCoordinates.translate(latDistance: Double, lonDistance: Double): MultiPolygonCoordinates = this.map { it.translate(latDistance,lonDistance) }.toTypedArray()
 
 fun Geometry.translate(newCentroid: Geometry.Point): Geometry {
     val oldCentroid = centroid()
-    val compassDirection = GeoGeometry.headingFromTwoPoints(oldCentroid, newCentroid.coordinates!!)
+    val compassDirection = headingFromTwoPoints(oldCentroid, newCentroid.coordinates!!)
     // make sure we handle negative distances correctly
     val latFactor = if(compassDirection>90 && compassDirection<270) -1.0 else 1.0
     val lonFactor = if(compassDirection>180) -1.0 else 1.0
-    val latDistance = latFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(oldCentroid.longitude, newCentroid.coordinates.latitude))
-    val lonDistance = lonFactor * GeoGeometry.distance(oldCentroid, doubleArrayOf(newCentroid.coordinates.longitude, oldCentroid.latitude))
+    val latDistance = latFactor * distance(oldCentroid, doubleArrayOf(oldCentroid.longitude, newCentroid.coordinates.latitude))
+    val lonDistance = lonFactor * distance(oldCentroid, doubleArrayOf(newCentroid.coordinates.longitude, oldCentroid.latitude))
     return translate(latDistance, lonDistance)
 }
 
@@ -74,15 +74,15 @@ fun Geometry.translate(
     }
 }
 
-fun PointCoordinates.distanceTo(pointCoordinates: PointCoordinates) = GeoGeometry.distance(this,pointCoordinates)
-fun PointCoordinates.headingTo(pointCoordinates: PointCoordinates) = GeoGeometry.headingFromTwoPoints(this,pointCoordinates)
+fun PointCoordinates.distanceTo(pointCoordinates: PointCoordinates) = distance(this,pointCoordinates)
+fun PointCoordinates.headingTo(pointCoordinates: PointCoordinates) = headingFromTwoPoints(this,pointCoordinates)
 
 fun Geometry.area() = when(this) {
     is Geometry.Polygon -> {
-        GeoGeometry.area(this.coordinates!!)
+        area(this.coordinates!!)
     }
     is Geometry.MultiPolygon -> this.coordinates?.sumOf {
-        GeoGeometry.area(it)
+        area(it)
     } ?:0.0
     else -> 0.0
 }
@@ -205,7 +205,7 @@ fun PointCoordinates.rotate (degrees: Double, around: PointCoordinates?=null): P
     return if(around == null) {
         this
     } else {
-        GeoGeometry.rotateAround(around, this, degrees)
+        rotateAround(around, this, degrees)
     }
 }
 

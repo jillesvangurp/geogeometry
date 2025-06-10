@@ -1,6 +1,6 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geojson.*
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -17,17 +17,17 @@ class RotationTest {
 
     @Test
     fun shouldTranslateCircle() {
-        val circle = GeoGeometry.circle2polygon(20, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
+        val circle = circle2polygon(20, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
             .polygonGeometry()
 
         val moved = circle.translate(oranienburgerTor.geometry())
 
         // we'll allow a few meters deviation. Earth is not perfectly spherical
-        GeoGeometry.distance(oranienburgerTor, moved.centroid()) shouldBeLessThan 10.0
+        distance(oranienburgerTor, moved.centroid()) shouldBeLessThan 10.0
         moved as Geometry.Polygon
         moved.outerCoordinates.forEach {
             // radius of the circle should be similar, it will change a little
-            val radius = GeoGeometry.distance(moved.centroid(), it)
+            val radius = distance(moved.centroid(), it)
             radius shouldBeGreaterThan 19.0
             radius shouldBeLessThan 21.0
         }
@@ -37,16 +37,16 @@ class RotationTest {
     fun scaleXShouldScaleCorrectly() {
         val rectangle = rectangle(brandenBurgerGate, 70.0)
         var cs = rectangle.coordinates!!
-        GeoGeometry.distance(cs[0][0], cs[0][1]).roundToLong() shouldBe 70
-        GeoGeometry.distance(cs[0][1], cs[0][2]).roundToLong() shouldBe 70
+        distance(cs[0][0], cs[0][1]).roundToLong() shouldBe 70
+        distance(cs[0][1], cs[0][2]).roundToLong() shouldBe 70
         cs = rectangle.scaleX(30.0).coordinates!!
-        GeoGeometry.distance(cs[0][0], cs[0][1]).roundToLong() shouldBe (70.0 * 0.3).toLong()
+        distance(cs[0][0], cs[0][1]).roundToLong() shouldBe (70.0 * 0.3).toLong()
         cs = rectangle.scaleX(130.0).coordinates!!
-        GeoGeometry.distance(cs[0][0], cs[0][1]).roundToLong() shouldBe (70.0 * 1.3).toLong()
+        distance(cs[0][0], cs[0][1]).roundToLong() shouldBe (70.0 * 1.3).toLong()
         cs = rectangle.scaleY(30.0).coordinates!!
-        GeoGeometry.distance(cs[0][1], cs[0][2]).roundToLong() shouldBe (70.0 * 0.3).toLong()
+        distance(cs[0][1], cs[0][2]).roundToLong() shouldBe (70.0 * 0.3).toLong()
         cs = rectangle.scaleY(130.0).coordinates!!
-        GeoGeometry.distance(cs[0][1], cs[0][2]).roundToLong() shouldBe (70.0 * 1.3).toLong()
+        distance(cs[0][1], cs[0][2]).roundToLong() shouldBe (70.0 * 1.3).toLong()
     }
 
     @Test
@@ -97,15 +97,15 @@ class RotationTest {
     @Test
     fun shouldMoveInRightDirection() {
 
-        val circle = GeoGeometry.circle2polygon(20, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
+        val circle = circle2polygon(20, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
             .polygonGeometry()
         listOf(
-            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, 0.0, 50.0),
-            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, 50.0, 0.0),
-            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, -50.0, 0.0),
-            GeoGeometry.translate(circle.centroid().latitude, circle.centroid().longitude, 0.0, -50.0),
+            translate(circle.centroid().latitude, circle.centroid().longitude, 0.0, 50.0),
+            translate(circle.centroid().latitude, circle.centroid().longitude, 50.0, 0.0),
+            translate(circle.centroid().latitude, circle.centroid().longitude, -50.0, 0.0),
+            translate(circle.centroid().latitude, circle.centroid().longitude, 0.0, -50.0),
         ).forEach { point ->
-            GeoGeometry.distance(circle.translate(Geometry.Point(point)).centroid(), point) shouldBeLessThan 1.0
+            distance(circle.translate(Geometry.Point(point)).centroid(), point) shouldBeLessThan 1.0
         }
     }
 
@@ -113,13 +113,13 @@ class RotationTest {
     fun shouldRotate() {
         val anchor = bergstr16Berlin
         val point = oranienburgerTor
-        val d = GeoGeometry.distance(anchor, point)
+        val d = distance(anchor, point)
         val points = (0..240).step(10).map {
-            GeoGeometry.rotateAround(anchor, point, it.toDouble())
+            rotateAround(anchor, point, it.toDouble())
         }
             .also {
                 // all points should be the same distance
-                it.forEach { (GeoGeometry.distance(bergstr16Berlin, it) - d).absoluteValue shouldBeLessThan 0.1 }
+                it.forEach { (distance(bergstr16Berlin, it) - d).absoluteValue shouldBeLessThan 0.1 }
                 it.size shouldBe 25
                 it.distinct().size shouldBe 25
                 it.contains(bergstr16Berlin) shouldBe false
@@ -137,8 +137,8 @@ class RotationTest {
     fun rotateByZeroDegreesShouldBeSamePoint() {
         val anchor = bergstr16Berlin
         val point = oranienburgerTor
-        GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 0.0)) shouldBeLessThan 1.0
-        (GeoGeometry.distance(point, GeoGeometry.rotateAround(anchor, point, 180.0)) - 2 * GeoGeometry.distance(
+        distance(point, rotateAround(anchor, point, 0.0)) shouldBeLessThan 1.0
+        (distance(point, rotateAround(anchor, point, 180.0)) - 2 * distance(
             anchor,
             point
         )).absoluteValue shouldBeLessThan 1.0
@@ -146,9 +146,9 @@ class RotationTest {
 
     @Test
     fun shouldTranslateCorrectly() {
-        val translated = GeoGeometry.translate(52.530564, 13.394964, 1000.0, 3000.0)
+        val translated = translate(52.530564, 13.394964, 1000.0, 3000.0)
         val pythagorasDistance = sqrt(1000.0.pow(2.0) + 3000.0.pow(2.0))
-        val distance = GeoGeometry.distance(lonLat(13.394964, 52.530564), translated)
+        val distance = distance(lonLat(13.394964, 52.530564), translated)
         withClue("distance should be correct for translated coordinate") {
             abs(distance - pythagorasDistance) shouldBeLessThan 1.0
         }
@@ -157,7 +157,7 @@ class RotationTest {
     @Test
     fun shouldRotatePointAround() {
         val around = moritzPlatz
-        val distance = GeoGeometry.distance(around, rosenthalerPlatz)
+        val distance = distance(around, rosenthalerPlatz)
 
         val rotatedPoints = (0..36).map { d ->
             rosenthalerPlatz.rotate(d.toDouble() * 10, around).geometry().asFeatureWithProperties {
@@ -167,7 +167,7 @@ class RotationTest {
             }
         }
         rotatedPoints.forEach {
-            val actualDistance = GeoGeometry.distance(around, (it.geometry as Geometry.Point).coordinates!!)
+            val actualDistance = distance(around, (it.geometry as Geometry.Point).coordinates!!)
             withClue("$actualDistance is too different from expected $distance") {
                 abs(actualDistance - distance) shouldBeLessThan 1.0
             }
@@ -226,8 +226,8 @@ class RotationTest {
         }
         triangle.outerSegments.zip(rotated.outerSegments).forEach { (originalSegment, rotatedSegment) ->
             // verify segments have same length as the original even after rotating many times
-            val ogLength = GeoGeometry.distance(originalSegment[0], originalSegment[1])
-            val rotatedLength = GeoGeometry.distance(rotatedSegment[0], rotatedSegment[1])
+            val ogLength = distance(originalSegment[0], originalSegment[1])
+            val rotatedLength = distance(rotatedSegment[0], rotatedSegment[1])
             ogLength - rotatedLength shouldBeLessThan 1.0
         }
 
@@ -242,7 +242,7 @@ class RotationTest {
     @Test
     fun shouldMoveBackAndForth() {
         val moved = rosenthalerPlatz.translate(-1000.0,-2000.0).translate(1000.0,2000.0)
-        GeoGeometry.distance(rosenthalerPlatz,moved) shouldBeLessThan 1.0
+        distance(rosenthalerPlatz,moved) shouldBeLessThan 1.0
     }
 
 

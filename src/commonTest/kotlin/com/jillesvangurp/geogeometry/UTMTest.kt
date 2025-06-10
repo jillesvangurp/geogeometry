@@ -1,7 +1,7 @@
 package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.*
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundDecimals
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geojson.*
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrowAny
@@ -137,7 +137,7 @@ class UTMTest {
                     val utm = original.toUtmCoordinate()
                     val converted = utm.utmToPointCoordinates()
                     val distance =
-                        GeoGeometry.distance(original.latitude, original.longitude, converted[1], converted[0])
+                        distance(original.latitude, original.longitude, converted[1], converted[0])
 
                     distance shouldBeLessThanOrEqual marginOfError
                 }

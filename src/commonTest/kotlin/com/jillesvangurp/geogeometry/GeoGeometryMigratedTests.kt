@@ -1,32 +1,8 @@
 package com.jillesvangurp.geogeometry
 
-import com.jillesvangurp.geo.GeoGeometry
-import com.jillesvangurp.geo.GeoGeometry.Companion.area
-import com.jillesvangurp.geo.GeoGeometry.Companion.bbox
-import com.jillesvangurp.geo.GeoGeometry.Companion.bboxContains
-import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
-import com.jillesvangurp.geo.GeoGeometry.Companion.circle2polygon
-import com.jillesvangurp.geo.GeoGeometry.Companion.contains
-import com.jillesvangurp.geo.GeoGeometry.Companion.distance
-import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToLine
-import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToLineString
-import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToMultiPolygon
-import com.jillesvangurp.geo.GeoGeometry.Companion.distanceToPolygon
-import com.jillesvangurp.geo.GeoGeometry.Companion.equirectangularDistance
-import com.jillesvangurp.geo.GeoGeometry.Companion.expandPolygon
-import com.jillesvangurp.geo.GeoGeometry.Companion.filterNoiseFromPointCloud
-import com.jillesvangurp.geo.GeoGeometry.Companion.linesCross
-import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
-import com.jillesvangurp.geo.GeoGeometry.Companion.polygonCenter
-import com.jillesvangurp.geo.GeoGeometry.Companion.polygonContains
-import com.jillesvangurp.geo.GeoGeometry.Companion.polygonForPoints
-import com.jillesvangurp.geo.GeoGeometry.Companion.rightTurn
-import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
-import com.jillesvangurp.geo.GeoGeometry.Companion.simplifyLine
-import com.jillesvangurp.geo.GeoGeometry.Companion.validate
-import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
-import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geogeometry.core.PointCoordinates
 import com.jillesvangurp.geojson.geoJsonIOUrl
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
@@ -303,8 +279,8 @@ class GeoGeometryMigratedTests {
         val l2p1 = doubleArrayOf(-71.1884310515, 42.3221529806)
         val l2p2 = doubleArrayOf(-71.1884310517, 42.3222331303)
 
-        GeoGeometry.linesCross(l1p1, l1p2, l2p1, l2p2) shouldBe false
-        GeoGeometry.linesCross(l2p1, l2p2, l1p1, l1p2) shouldBe false
+        linesCross(l1p1, l1p2, l2p1, l2p2) shouldBe false
+        linesCross(l2p1, l2p2, l1p1, l1p2) shouldBe false
     }
 
     @Test
@@ -372,7 +348,7 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldExpandCircle() {
-        val circle = GeoGeometry.circle2polygon(40, rosenthalerPlatz.latitude,rosenthalerPlatz.longitude,5.0)
+        val circle = circle2polygon(40, rosenthalerPlatz.latitude,rosenthalerPlatz.longitude,5.0)
 
         val expandPolygon = expandPolygon(0.5, circle)
 
@@ -810,7 +786,7 @@ class GeoGeometryMigratedTests {
             repeat(1000000) {
                 val point = randomLatLonAwayFromPolesAndDateLine()
                 withClue("${point.latitude}, ${point.longitude}") {
-                    val poly = GeoGeometry.circle2polygon(40, point.latitude, point.longitude, 50.0)
+                    val poly = circle2polygon(40, point.latitude, point.longitude, 50.0)
 
                     polygonContains(point, poly) shouldBe true
                 }

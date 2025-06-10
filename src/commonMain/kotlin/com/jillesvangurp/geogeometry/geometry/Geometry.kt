@@ -21,8 +21,9 @@
  */
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package com.jillesvangurp.geo
+package com.jillesvangurp.geogeometry.geometry
 
+import com.jillesvangurp.geogeometry.core.*
 import com.jillesvangurp.geojson.*
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
@@ -50,22 +51,6 @@ import kotlin.math.*
  * It should also be noted that this class contains several methods that treat 2d arrays as polygons.
  */
 @Suppress("unused")
-class GeoGeometry {
-
-    companion object {
-        /**
-         * Earth's mean radius, in meters.
-         *
-         * see http://en.wikipedia.org/wiki/Earth%27s_radius#Mean_radii
-         */
-        // this value is approximated to account for the fact that the world is not a perfect sphere
-        const val EARTH_RADIUS_METERS = 6371000.0
-        const val WGS84_RADIUS = 6378137
-        const val EARTH_CIRCUMFERENCE_METERS = EARTH_RADIUS_METERS * PI * 2.0
-        const val DEGREE_LATITUDE_METERS = EARTH_RADIUS_METERS * PI / 180.0
-        const val DEGREES_TO_RADIANS =  PI / 180.0
-        const val RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
-
 
         /**
          * @param pointCoordinates point
@@ -1535,7 +1520,4 @@ class GeoGeometry {
                 }
                 .toList()
         }
-    }
-}
-
 

@@ -18,8 +18,7 @@
  */
 package com.jillesvangurp.geo
 
-import com.jillesvangurp.geo.GeoGeometry.Companion.overlap
-import com.jillesvangurp.geo.GeoGeometry.Companion.polygonContains
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geojson.*
 import kotlin.math.min
 
@@ -98,7 +97,7 @@ class GeoHashUtils {
             if (length < 1 || length > 12) {
                 throw IllegalArgumentException("length must be between 1 and 12")
             }
-            GeoGeometry.validate(latitude, longitude, false)
+            validate(latitude, longitude, false)
             val latInterval = doubleArrayOf(-90.0, 90.0)
             val lonInterval = doubleArrayOf(-180.0, 180.0)
 
@@ -197,7 +196,7 @@ class GeoHashUtils {
          * The original apache code attempted to round the returned coordinate. I have chosen to remove this 'feature' since
          * it is useful to know the center of the geo hash as exactly as possible, even for very short geo hashes.
          *
-         * Should you wish to apply some rounding, you can use the GeoGeometry.roundToDecimals method.
+         * Should you wish to apply some rounding, you can use the roundToDecimals method.
          *
          * @param geoHash valid geo hash
          * @return a coordinate representing the center of the geohash as a double array of [longitude,latitude]
@@ -287,7 +286,7 @@ class GeoHashUtils {
          */
 
         fun contains(geoHash: String, latitude: Double, longitude: Double): Boolean {
-            return GeoGeometry.bboxContains(decodeBbox(geoHash), latitude, longitude)
+            return bboxContains(decodeBbox(geoHash), latitude, longitude)
         }
 
         /**
@@ -506,7 +505,7 @@ class GeoHashUtils {
                     throw IllegalArgumentException("maxLength should be between 2 and $DEFAULT_GEO_HASH_LENGTH was $maxLength")
                 }
             }
-            val bbox = GeoGeometry.boundingBox(coordinates)
+            val bbox = boundingBox(coordinates)
             // first lets figure out an appropriate geohash length
 
             // if shit breaks, this is useful for wtf'ing in geojson.io
@@ -520,7 +519,7 @@ class GeoHashUtils {
             val westLon = bbox.westLongitude
             val eastLon = bbox.eastLongitude
 
-            val diagonal = GeoGeometry.distance(southLat, westLon, northLat, eastLon)
+            val diagonal = distance(southLat, westLon, northLat, eastLon)
             val hashLength = min(
                 maxLength ?: 12,
                 suitableHashLength(diagonal, southLat, westLon) + 1
@@ -823,7 +822,7 @@ class GeoHashUtils {
             includePartial: Boolean = false,
             segments: Int = 20
         ): Set<String> {
-            val circle2polygon = GeoGeometry.circle2polygon(segments, latitude, longitude, radius)
+            val circle2polygon = circle2polygon(segments, latitude, longitude, radius)
             return geoHashesForLinearRing(
                 maxLength = maxLength,
                 coordinates = circle2polygon[0],
@@ -846,7 +845,7 @@ class GeoHashUtils {
                 length = hash.length
                 val bbox = decodeBbox(hash)
                 width =
-                    GeoGeometry.distance(
+                    distance(
                         lat1 = bbox.northLatitude,
                         long1 = bbox.westLongitude,
                         lat2 = bbox.northLatitude,

@@ -1,8 +1,9 @@
 package com.jillesvangurp.geo
 
-import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geogeometry.core.PointCoordinates
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
+import com.jillesvangurp.geogeometry.geometry.*
 import kotlin.math.*
 
 /**
@@ -38,7 +39,7 @@ import kotlin.math.*
 //}
 
 private fun kNearestNeighbors(l: List<PointCoordinates>, q: PointCoordinates, k: Int): List<PointCoordinates> {
-    return l.map { o -> Pair(GeoGeometry.distance(q, o), o) }
+    return l.map { o -> Pair(distance(q, o), o) }
         .sortedBy { it.first }
         .take(k)
         .map { it.second }
@@ -153,7 +154,7 @@ tailrec fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int, recurseCoun
             var j = 2
             its = false
             while (!its && j < concaveHull.size - lastPoint) {
-                its = GeoGeometry.linesCross(
+                its = linesCross(
                     concaveHull[step - 2],
                     clockwisePoints[i],
                     concaveHull[step - 2 - j],
@@ -184,7 +185,7 @@ tailrec fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int, recurseCoun
     var i: Int = mutablePoints.size - 1
     while (insideCheck && i > 0) {
 //        insideCheck = pointInPolygon(mutablePoints[i], concaveHull)
-        insideCheck = GeoGeometry.polygonContains(mutablePoints[i], concaveHull.toTypedArray())
+        insideCheck = polygonContains(mutablePoints[i], concaveHull.toTypedArray())
         i--
     }
 

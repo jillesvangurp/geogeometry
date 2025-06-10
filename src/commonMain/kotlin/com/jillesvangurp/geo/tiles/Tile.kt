@@ -2,8 +2,8 @@ package com.jillesvangurp.geo.tiles
 
 import com.jillesvangurp.geo.tiles.Tile.Companion.MAX_ZOOM
 import com.jillesvangurp.geo.tiles.Tile.Companion.coordinateToTile
-import com.jillesvangurp.geojson.BoundingBox
-import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geogeometry.core.BoundingBox
+import com.jillesvangurp.geogeometry.core.PointCoordinates
 import com.jillesvangurp.geojson.bottomRight
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude

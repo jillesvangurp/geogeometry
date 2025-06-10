@@ -1,6 +1,6 @@
 package com.jillesvangurp.geojson
 
-import com.jillesvangurp.geo.GeoGeometry
+import com.jillesvangurp.geogeometry.geometry.*
 import com.jillesvangurp.geogeometry.oranienburgerTor
 import com.jillesvangurp.geogeometry.rosenthalerPlatz
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -14,7 +14,7 @@ class GeoJsonExtensionsTest {
 
     @Test
     fun shouldCreateTriangle() {
-        GeoGeometry.circle2polygon(3, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
+        circle2polygon(3, rosenthalerPlatz.latitude, rosenthalerPlatz.longitude, 20.0)
             .polygonGeometry().let {
                 println(it)
             }
