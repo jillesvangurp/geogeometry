@@ -2,8 +2,8 @@
 
 import java.time.Duration
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
     kotlin("multiplatform")
@@ -45,7 +45,6 @@ kotlin {
     iosArm64()
     iosX64()
     iosSimulatorArm64()
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
         browser {
             testTask {
@@ -125,8 +124,8 @@ kotlin {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
 //                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-                languageVersion = "1.9"
-                apiVersion = "1.9"
+                languageVersion = "2.0"
+                apiVersion = "2.0"
             }
         }
     }

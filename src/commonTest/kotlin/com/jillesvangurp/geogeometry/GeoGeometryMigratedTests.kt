@@ -320,10 +320,10 @@ class GeoGeometryMigratedTests {
             points[i] = lonLat(longitude + Random.nextDouble(), latitude + Random.nextDouble())
         }
         // insert a few 'bad' points
-        points[50] = lonLat(100.0, 100.0)
-        points[100] = lonLat(-100.0, 100.0)
-        points[150] = lonLat(100.0, -100.0)
-        points[200] = lonLat(-100.0, -100.0)
+        points[50] = doubleArrayOf(100.0, 100.0)
+        points[100] = doubleArrayOf(-100.0, 100.0)
+        points[150] = doubleArrayOf(100.0, -100.0)
+        points[200] = doubleArrayOf(-100.0, -100.0)
         val filtered = filterNoiseFromPointCloud(points, 0.005f)
         filtered.size shouldBe 996
         val bbox = boundingBox(filtered)
@@ -776,7 +776,7 @@ class GeoGeometryMigratedTests {
     @Test
     fun shouldValidate() {
         arrayOf(
-            amsterdam, berlin, lonLat(180.0000004999, 52.0), lonLat(180.0000004999, 90.0000004999)
+            amsterdam, berlin, doubleArrayOf(180.0000004999, 52.0), doubleArrayOf(180.0000004999, 90.0000004999)
         ).forEach { point ->
             // should throw no exceptions
             validate(point)
@@ -787,10 +787,10 @@ class GeoGeometryMigratedTests {
     fun shouldNotValidate() {
         assertSoftly {
             arrayOf(
-                lonLat(180.001, 0.0),
-                lonLat(-180.001, 0.0),
-                lonLat(0.0, 90.001),
-                lonLat(0.0, -90.001)
+                doubleArrayOf(180.001, 0.0),
+                doubleArrayOf(-180.001, 0.0),
+                doubleArrayOf(0.0, 90.001),
+                doubleArrayOf(0.0, -90.001)
             ).forEach {
                 shouldThrow<IllegalArgumentException> {
                     validate(it)
