@@ -1,4 +1,4 @@
-@file:Suppress("MemberVisibilityCanBePrivate", "unused")
+@file:Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 
 package com.jillesvangurp.geojson
 
@@ -52,7 +52,7 @@ fun latLon(latitude: Double, longitude: Double): PointCoordinates {
 
 fun lonLat(longitude: Double, latitude: Double): PointCoordinates = latLon(latitude, longitude)
 
-fun boundingBox(
+fun bbox(
     westLongitude: Double,
     southLatitude: Double,
     eastLongitude: Double,
@@ -66,7 +66,7 @@ fun boundingBox(
 fun boundingBoxFromTopLeftBottomRight(
     topLeft: PointCoordinates,
     bottomRight: PointCoordinates
-): BoundingBox = boundingBox(
+): BoundingBox = bbox(
     westLongitude = topLeft.longitude,
     southLatitude = bottomRight.latitude,
     eastLongitude = bottomRight.longitude,
@@ -76,7 +76,7 @@ fun boundingBoxFromTopLeftBottomRight(
 fun boundingBoxFromBottomLeftTopRight(
     bottomLeft: PointCoordinates,
     topRight: PointCoordinates
-): BoundingBox = boundingBox(
+): BoundingBox = bbox(
     westLongitude = bottomLeft.longitude,
     southLatitude = bottomLeft.latitude,
     eastLongitude = topRight.longitude,
@@ -282,10 +282,10 @@ fun Geometry.ensureHasAltitude(): Geometry = when (this) {
     }
 }
 
-fun Geometry.boundingBox(): BoundingBox =
+fun Geometry.bbox(): BoundingBox =
     when (this) {
         is Geometry.GeometryCollection -> {
-            val bboxes = geometries.map { it.boundingBox() }
+            val bboxes = geometries.map { it.bbox() }
             if (bboxes.isEmpty()) error("Cannot compute bounding box for an empty GeometryCollection")
 
             val minLongitude = bboxes.minOf { it.westLongitude }
@@ -464,15 +464,13 @@ fun Geometry.asFeatureWithProperties(
 private fun deepEquals(left: Array<*>?, right: Array<*>?): Boolean {
     // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
     // so hack around it with right?.let { false } ?: true, which is ugly
-    return left?.let { it.contentDeepEquals(right) } ?: right?.let { false } ?: true
+    return left?.contentDeepEquals(right) ?: right?.let { false } ?: true
 }
 
 private fun deepEquals(left: DoubleArray?, right: DoubleArray?): Boolean {
     // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
     // so hack around it with right?.let { false } ?: true, which is ugly
-    return left?.let {
-        it.contentEquals(right)
-    } ?: right?.let { false } ?: true
+    return left?.contentEquals(right) ?: right?.let { false } ?: true
 }
 
 infix fun Geometry.Point.line(other: Geometry.Point) = arrayOf(this.coordinates, other.coordinates)
@@ -854,7 +852,7 @@ fun Geometry.randomPoints(): Sequence<PointCoordinates> = sequence {
             }
 
             // Sample random points in bounding box, excluding holes
-            val bbox = geo.boundingBox()
+            val bbox = geo.bbox()
             while (true) {
                 val p = doubleArrayOf(
                     randomBetween(bbox.westLongitude, bbox.eastLongitude),

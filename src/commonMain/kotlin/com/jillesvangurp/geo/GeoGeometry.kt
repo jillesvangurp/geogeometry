@@ -489,7 +489,7 @@ class GeoGeometry {
         ): DoubleArray = translate(point.latitude,point.longitude, yMeters, xMeters)
 
 
-            /**
+        /**
          * Calculate a bounding box of the specified longitudinal and latitudinal meters with the latitude/longitude as the center.
          * @param latitude latitude
          * @param longitude longitude
@@ -497,7 +497,7 @@ class GeoGeometry {
          * @param longitudinalMeters distance in meters that the point should be translated along the longitude
          * @return [maxlat,minlat,maxlon,minlon]
          */
-        fun bbox(latitude: Double, longitude: Double, latitudinalMeters: Double, longitudinalMeters: Double): DoubleArray {
+        fun rectangleAroundCentroid(latitude: Double, longitude: Double, latitudinalMeters: Double, longitudinalMeters: Double): DoubleArray {
             validate(latitude, longitude, false)
 
             val topRight = translate(latitude, longitude, latitudinalMeters / 2, longitudinalMeters / 2)

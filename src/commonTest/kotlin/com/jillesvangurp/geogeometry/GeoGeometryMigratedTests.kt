@@ -2,7 +2,7 @@ package com.jillesvangurp.geogeometry
 
 import com.jillesvangurp.geo.GeoGeometry
 import com.jillesvangurp.geo.GeoGeometry.Companion.area
-import com.jillesvangurp.geo.GeoGeometry.Companion.bbox
+import com.jillesvangurp.geo.GeoGeometry.Companion.rectangleAroundCentroid
 import com.jillesvangurp.geo.GeoGeometry.Companion.bboxContains
 import com.jillesvangurp.geo.GeoGeometry.Companion.boundingBox
 import com.jillesvangurp.geo.GeoGeometry.Companion.circle2polygon
@@ -27,12 +27,14 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.validate
 import com.jillesvangurp.geo.GeoGeometry.Companion.vicentyDistance
 import com.jillesvangurp.geo.GeoHashUtils.Companion.isWest
 import com.jillesvangurp.geojson.PointCoordinates
+import com.jillesvangurp.geojson.bbox
 import com.jillesvangurp.geojson.geoJsonIOUrl
 import com.jillesvangurp.geojson.latitude
 import com.jillesvangurp.geojson.longitude
 import com.jillesvangurp.geojson.polygonGeometry
 import com.jillesvangurp.geojson.linearRingCoordinates
 import com.jillesvangurp.geojson.lineString
+import com.jillesvangurp.geojson.lonLat
 import com.jillesvangurp.serializationext.DEFAULT_JSON
 import kotlinx.serialization.json.jsonArray
 import io.kotest.assertions.assertSoftly
@@ -53,28 +55,28 @@ import kotlin.test.Test
 
 
 class GeoGeometryMigratedTests {
-    val bergstr16InvalidenBerlin = doubleArrayOf(13.393674, 52.5310059)
-    val bergstr16Berlin = doubleArrayOf(13.3941763, 52.5298311)
-    val berlin = doubleArrayOf(13.385721, 52.527109)
-    val sydney = doubleArrayOf(151.206146, -33.872796)
-    val buenosaires = doubleArrayOf(-58.380449, -34.602875)
-    val newyork = doubleArrayOf(-74.011237, 40.721119)
-    val amsterdam = doubleArrayOf(4.894252, 52.372103)
-    val london = doubleArrayOf(-0.123656, 51.51283)
+    val bergstr16InvalidenBerlin = lonLat(13.393674, 52.5310059)
+    val bergstr16Berlin = lonLat(13.3941763, 52.5298311)
+    val berlin = lonLat(13.385721, 52.527109)
+    val sydney = lonLat(151.206146, -33.872796)
+    val buenosaires = lonLat(-58.380449, -34.602875)
+    val newyork = lonLat(-74.011237, 40.721119)
+    val amsterdam = lonLat(4.894252, 52.372103)
+    val london = lonLat(-0.123656, 51.51283)
 
-    val brandenBurgerGate = doubleArrayOf(13.377157, 52.516279)
-    val potsDammerPlatz = doubleArrayOf(13.376599, 52.509515)
-    val moritzPlatz = doubleArrayOf(13.410717, 52.503663)
-    val senefelderPlatz = doubleArrayOf(13.412949, 52.532755)
-    val naturkundeMuseum = doubleArrayOf(13.381921, 52.531188)
-    val rosenthalerPlatz = doubleArrayOf(13.401361, 52.529948)
-    val oranienburgerTor = doubleArrayOf(13.38707, 52.525339)
+    val brandenBurgerGate = lonLat(13.377157, 52.516279)
+    val potsDammerPlatz = lonLat(13.376599, 52.509515)
+    val moritzPlatz = lonLat(13.410717, 52.503663)
+    val senefelderPlatz = lonLat(13.412949, 52.532755)
+    val naturkundeMuseum = lonLat(13.381921, 52.531188)
+    val rosenthalerPlatz = lonLat(13.401361, 52.529948)
+    val oranienburgerTor = lonLat(13.38707, 52.525339)
 
     val samplePolygon = linearRingCoordinates(
-        doubleArrayOf(1.0, 1.0),
-        doubleArrayOf(1.0, -1.0),
-        doubleArrayOf(-1.0, -1.0),
-        doubleArrayOf(-1.0, 1.0)
+        lonLat(1.0, 1.0),
+        lonLat(1.0, -1.0),
+        lonLat(-1.0, -1.0),
+        lonLat(-1.0, 1.0)
     )
 
     @Test
@@ -123,11 +125,12 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldBboxContainPoint() {
-        val southLatitude = -1.0
-        val northLatitude = 1.0
-        val westLongitude = -2.0
-        val eastLongitude = 2.0
-        val bbox = doubleArrayOf(westLongitude, southLatitude, eastLongitude, northLatitude)
+        val bbox = bbox(
+            westLongitude = -2.0,
+            southLatitude = -1.0,
+            eastLongitude = 2.0,
+            northLatitude = 1.0
+        )
 
         withClue("should be contained") { bboxContains(bbox, 0.0, 0.0) shouldBe true }
         withClue("should be contained") { bboxContains(bbox, 1.0, 2.0) shouldBe true }
@@ -186,7 +189,7 @@ class GeoGeometryMigratedTests {
                 d += distance(last, point)
             }
             val distance =
-                distance(doubleArrayOf(london[0], london[1]), point)
+                distance(lonLat(london[0], london[1]), point)
             val difference = abs(radius - distance)
             withClue(difference) {
                 difference shouldBeLessThan 100.0
@@ -218,17 +221,17 @@ class GeoGeometryMigratedTests {
          */
         // area around betahaus
         val polygonPoints = arrayOf(
-            doubleArrayOf(52.502286, 13.412372),
-            doubleArrayOf(52.49906, 13.418273),
-            doubleArrayOf(52.503618, 13.410741),
-            doubleArrayOf(52.498589, 13.404884),
-            doubleArrayOf(52.506178, 13.403854),
-            doubleArrayOf(52.502743, 13.424474),
-            doubleArrayOf(52.498354, 13.413166),
-            doubleArrayOf(52.502913, 13.407909),
-            doubleArrayOf(52.50011, 13.30723),
-            doubleArrayOf(52.49632, 13.32024),
-            doubleArrayOf(52.4957, 13.3033)
+            lonLat(52.502286, 13.412372),
+            lonLat(52.49906, 13.418273),
+            lonLat(52.503618, 13.410741),
+            lonLat(52.498589, 13.404884),
+            lonLat(52.506178, 13.403854),
+            lonLat(52.502743, 13.424474),
+            lonLat(52.498354, 13.413166),
+            lonLat(52.502913, 13.407909),
+            lonLat(52.50011, 13.30723),
+            lonLat(52.49632, 13.32024),
+            lonLat(52.4957, 13.3033)
         )
         // ,{52.49939,13.30523},{52.5004,13.312},{52.50011,13.30723},{52.49907,13.31225},{52.50019,13.30983},{52.49984,13.30646},{52.4968,13.3053},{52.5002,13.3103},{52.50083333333333,13.312777777777779},{52.5,13.307222222222222}};
         val polygon = polygonForPoints(polygonPoints)
@@ -298,10 +301,10 @@ class GeoGeometryMigratedTests {
         // line 1 is vertical
         // line 2 intersects in between the points of line 1
         // however, the intersection point is outside of the points of line2 (this was the bug)
-        val l1p1 = doubleArrayOf(-71.1884310511, 42.3219864254)
-        val l1p2 = doubleArrayOf(-71.1884310511, 42.321998793)
-        val l2p1 = doubleArrayOf(-71.1884310515, 42.3221529806)
-        val l2p2 = doubleArrayOf(-71.1884310517, 42.3222331303)
+        val l1p1 = lonLat(-71.1884310511, 42.3219864254)
+        val l1p2 = lonLat(-71.1884310511, 42.321998793)
+        val l2p1 = lonLat(-71.1884310515, 42.3221529806)
+        val l2p2 = lonLat(-71.1884310517, 42.3222331303)
 
         GeoGeometry.linesCross(l1p1, l1p2, l2p1, l2p2) shouldBe false
         GeoGeometry.linesCross(l2p1, l2p2, l1p1, l1p2) shouldBe false
@@ -314,7 +317,7 @@ class GeoGeometryMigratedTests {
         val points = Array(1000) { DoubleArray(2) }
 
         for (i in 0..999) {
-            points[i] = doubleArrayOf(longitude + Random.nextDouble(), latitude + Random.nextDouble())
+            points[i] = lonLat(longitude + Random.nextDouble(), latitude + Random.nextDouble())
         }
         // insert a few 'bad' points
         points[50] = doubleArrayOf(100.0, 100.0)
@@ -387,35 +390,35 @@ class GeoGeometryMigratedTests {
     @Test
     fun shouldBeRight() {
         withClue("should be right") {
-            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(2.0, 2.0), doubleArrayOf(1.0, 10.0)) shouldBe true
+            rightTurn(lonLat(1.0, 1.0), lonLat(2.0, 2.0), lonLat(1.0, 10.0)) shouldBe true
         }
         withClue("should be right") {
-            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(2.0, 2.0), doubleArrayOf(3.0, 4.0)) shouldBe true
+            rightTurn(lonLat(1.0, 1.0), lonLat(2.0, 2.0), lonLat(3.0, 4.0)) shouldBe true
         }
         withClue("should not be right") {
-            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(0.0, 2.0), doubleArrayOf(1.0, 10.0)) shouldBe false
+            rightTurn(lonLat(1.0, 1.0), lonLat(0.0, 2.0), lonLat(1.0, 10.0)) shouldBe false
         }
         withClue("should not be right") {
-            rightTurn(doubleArrayOf(1.0, 1.0), doubleArrayOf(1.0, 2.0), doubleArrayOf(1.0, 10.0)) shouldBe false
+            rightTurn(lonLat(1.0, 1.0), lonLat(1.0, 2.0), lonLat(1.0, 10.0)) shouldBe false
         }
     }
 
     val clouds =
         listOf(
             arrayOf(
-                doubleArrayOf(1.0, 1.0),
-                doubleArrayOf(2.0, 2.0),
-                doubleArrayOf(3.0, 3.0),
-                doubleArrayOf(3.0, 0.0),
-                doubleArrayOf(0.0, 3.0)
-            ) to arrayOf(doubleArrayOf(2.0, 2.0)),
+                lonLat(1.0, 1.0),
+                lonLat(2.0, 2.0),
+                lonLat(3.0, 3.0),
+                lonLat(3.0, 0.0),
+                lonLat(0.0, 3.0)
+            ) to arrayOf(lonLat(2.0, 2.0)),
             arrayOf(
-                doubleArrayOf(1.0, 1.0),
-                doubleArrayOf(-1.0, -1.0),
-                doubleArrayOf(-1.0, 1.0),
-                doubleArrayOf(1.0, -1.0),
-                doubleArrayOf(0.0, 0.0)
-            ) to arrayOf(doubleArrayOf(0.0, 0.0))
+                lonLat(1.0, 1.0),
+                lonLat(-1.0, -1.0),
+                lonLat(-1.0, 1.0),
+                lonLat(1.0, -1.0),
+                lonLat(0.0, 0.0)
+            ) to arrayOf(lonLat(0.0, 0.0))
 
         )
 
@@ -435,7 +438,7 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldCalculateCorrectBbox() {
-        val bbox = bbox(berlin[1], berlin[0], 1000.0, 1000.0)
+        val bbox = rectangleAroundCentroid(berlin[1], berlin[0], 1000.0, 1000.0)
         distance(
             bbox[1],
             berlin[0],
@@ -488,7 +491,7 @@ class GeoGeometryMigratedTests {
 
     @Test
     fun shouldCalculateBboxForPoint() {
-        val bbox = boundingBox(doubleArrayOf(13.0, 52.0))
+        val bbox = boundingBox(lonLat(13.0, 52.0))
         bbox[1] shouldBe 52.0
         bbox[3] shouldBe 52.0
         bbox[0] shouldBe 13.0
@@ -520,43 +523,63 @@ class GeoGeometryMigratedTests {
         )
     }
 
-    val linesNPoints = listOf(
-        doubleArrayOf(
-            52.520316,
-            13.414654,
-            52.528149,
-            13.423709,
-            52.52392,
-            13.412122,
-            416.0
-        ),
-        doubleArrayOf(52.521337, 13.403108, 52.517002, 13.409073, 52.519039, 13.408665, 138.0),
-        doubleArrayOf(52.471551, 13.385791, 52.478139, 13.385791, 52.476244, 13.384718, 73.0),
-        doubleArrayOf(52.476244, 13.384718, 52.476244, 14.0, 52.478139, 13.385062, 211.0),
-        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 2.1, 2.1, 0.0),
-        doubleArrayOf(1.0, 1.0, 3.0, 1.0, 2.0, 1.0, 0.0),
-        doubleArrayOf(1.0, 1.0, 1.0, 3.0, 1.0, 2.0, 0.0),
-        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 2.0, 2.1, 7860.0),
-        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 90.0, 90.0, round(distance(3.0, 3.0, 90.0, 90.0))),
-        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 0.0, 0.0, round(distance(1.0, 1.0, 0.0, 0.0)))
+    data class LinePointTestCase(
+        val x1: Double,
+        val y1: Double,
+        val x2: Double,
+        val y2: Double,
+        val px: Double,
+        val py: Double,
+        val expectedDistance: Double
     )
 
-    // Ugly ;-)
-    private operator fun DoubleArray.component6() = this[5]
-    private operator fun DoubleArray.component7() = this[6]
+    val linesNPoints = listOf(
+        LinePointTestCase(52.520316, 13.414654, 52.528149, 13.423709, 52.52392, 13.412122, 416.0),
+        LinePointTestCase(52.521337, 13.403108, 52.517002, 13.409073, 52.519039, 13.408665, 138.0),
+        LinePointTestCase(52.471551, 13.385791, 52.478139, 13.385791, 52.476244, 13.384718, 73.0),
+        LinePointTestCase(52.476244, 13.384718, 52.476244, 14.0, 52.478139, 13.385062, 211.0),
+        LinePointTestCase(1.0, 1.0, 3.0, 3.0, 2.1, 2.1, 0.0),
+        LinePointTestCase(1.0, 1.0, 3.0, 1.0, 2.0, 1.0, 0.0),
+        LinePointTestCase(1.0, 1.0, 1.0, 3.0, 1.0, 2.0, 0.0),
+        LinePointTestCase(1.0, 1.0, 3.0, 3.0, 2.0, 2.1, 7860.0),
+        LinePointTestCase(1.0, 1.0, 3.0, 3.0, 90.0, 90.0, round(distance(3.0, 3.0, 90.0, 90.0))),
+        LinePointTestCase(1.0, 1.0, 3.0, 3.0, 0.0, 0.0, round(distance(1.0, 1.0, 0.0, 0.0)))
+    )
+//    val linesNPoints = listOf(
+//        doubleArrayOf(
+//            52.520316,
+//            13.414654,
+//            52.528149,
+//            13.423709,
+//            52.52392,
+//            13.412122,
+//            416.0
+//        ),
+//        doubleArrayOf(52.521337, 13.403108, 52.517002, 13.409073, 52.519039, 13.408665, 138.0),
+//        doubleArrayOf(52.471551, 13.385791, 52.478139, 13.385791, 52.476244, 13.384718, 73.0),
+//        doubleArrayOf(52.476244, 13.384718, 52.476244, 14.0, 52.478139, 13.385062, 211.0),
+//        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 2.1, 2.1, 0.0),
+//        doubleArrayOf(1.0, 1.0, 3.0, 1.0, 2.0, 1.0, 0.0),
+//        doubleArrayOf(1.0, 1.0, 1.0, 3.0, 1.0, 2.0, 0.0),
+//        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 2.0, 2.1, 7860.0),
+//        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 90.0, 90.0, round(distance(3.0, 3.0, 90.0, 90.0))),
+//        doubleArrayOf(1.0, 1.0, 3.0, 3.0, 0.0, 0.0, round(distance(1.0, 1.0, 0.0, 0.0)))
+//    )
+//
+//    // Ugly ;-)
+//    private operator fun DoubleArray.component6() = this[5]
+//    private operator fun DoubleArray.component7() = this[6]
 
     @Test
     fun shouldCalculateDistanceToLine() {
         linesNPoints.forEach { (x1, y1, x2, y2, px, py, expectedDistance) ->
-
             val distance = distance(x1, y1, x2, y2, px, py)
-            val distance2 =
-                distanceToLine(doubleArrayOf(y1, x1), doubleArrayOf(y2, x2), doubleArrayOf(py, px))
+            val distance2 = distanceToLine(lonLat(y1, x1), lonLat(y2, x2), lonLat(py, px))
             distance shouldBe distance2
             round(distance) shouldBe expectedDistance
 
             val distToPoint1 = distance(x1, y1, px, py)
-            val distToPoint2 = distance(x1, y1, px, py)
+            val distToPoint2 = distance(x2, y2, px, py)
             distance shouldBeLessThanOrEqual distToPoint1
             distance shouldBeLessThanOrEqual distToPoint2
         }
@@ -565,40 +588,40 @@ class GeoGeometryMigratedTests {
     @Test
     fun shouldCalculateDistanceToLineString() {
         val ls = lineString(
-            doubleArrayOf(13.414654, 52.520316),
-            doubleArrayOf(13.423709, 52.528149),
-            doubleArrayOf(13.425724, 52.524992)
+            lonLat(13.414654, 52.520316),
+            lonLat(13.423709, 52.528149),
+            lonLat(13.425724, 52.524992)
         )
-        var d = round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls))
+        var d = round(distanceToLineString(lonLat(13.412122, 52.52392), ls))
         d shouldBe 416
         val ls2 = lineString(
-            doubleArrayOf(13.425724, 52.524992),
-            doubleArrayOf(13.414654, 52.520316),
-            doubleArrayOf(13.423709, 52.528149)
+            lonLat(13.425724, 52.524992),
+            lonLat(13.414654, 52.520316),
+            lonLat(13.423709, 52.528149)
         )
-        d = round(distanceToLineString(doubleArrayOf(13.412122, 52.52392), ls2))
+        d = round(distanceToLineString(lonLat(13.412122, 52.52392), ls2))
         d shouldBe 416
     }
 
     @Test
     fun shouldCalculateDistanceToPolygon() {
         val polygon = linearRingCoordinates(
-            doubleArrayOf(13.414654, 52.520316),
-            doubleArrayOf(13.423709, 52.528149),
-            doubleArrayOf(13.425724, 52.524992)
+            lonLat(13.414654, 52.520316),
+            lonLat(13.423709, 52.528149),
+            lonLat(13.425724, 52.524992)
         )
-        var d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon))
+        var d = round(distanceToPolygon(lonLat(13.412122, 52.52392), polygon))
         d shouldBe 416
         val polygon2 = linearRingCoordinates(
-            doubleArrayOf(13.425724, 52.524992),
-            doubleArrayOf(13.414654, 52.520316),
-            doubleArrayOf(13.423709, 52.528149)
+            lonLat(13.425724, 52.524992),
+            lonLat(13.414654, 52.520316),
+            lonLat(13.423709, 52.528149)
         )
-        d = round(distanceToPolygon(doubleArrayOf(13.412122, 52.52392), polygon2))
+        d = round(distanceToPolygon(lonLat(13.412122, 52.52392), polygon2))
         d shouldBe 416
         d = round(
             distanceToPolygon(
-                doubleArrayOf(13.412122, 52.52392),
+                lonLat(13.412122, 52.52392),
                 arrayOf(polygon2)
             )
         )
@@ -611,18 +634,18 @@ class GeoGeometryMigratedTests {
     @Test
     fun shouldCalculateDistanceToMultiPolygon() {
         val polygon = linearRingCoordinates(
-            doubleArrayOf(13.414654, 52.520316),
-            doubleArrayOf(13.423709, 52.528149),
-            doubleArrayOf(13.425724, 52.524992)
+            lonLat(13.414654, 52.520316),
+            lonLat(13.423709, 52.528149),
+            lonLat(13.425724, 52.524992)
         )
         val multiPolygon =
             arrayOf(
                 arrayOf(polygon),
                 arrayOf(
                     linearRingCoordinates(
-                        doubleArrayOf(1.0, 1.0),
-                        doubleArrayOf(1.0, 2.0),
-                        doubleArrayOf(2.0, 2.0)
+                        lonLat(1.0, 1.0),
+                        lonLat(1.0, 2.0),
+                        lonLat(2.0, 2.0)
                     )
                 )
             )
@@ -630,17 +653,17 @@ class GeoGeometryMigratedTests {
             arrayOf(
                 arrayOf(
                     linearRingCoordinates(
-                        doubleArrayOf(1.0, 1.0),
-                        doubleArrayOf(1.0, 2.0),
-                        doubleArrayOf(2.0, 2.0)
+                        lonLat(1.0, 1.0),
+                        lonLat(1.0, 2.0),
+                        lonLat(2.0, 2.0)
                     )
                 ),
                 arrayOf(polygon)
             )
         var d =
-            round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon))
+            round(distanceToMultiPolygon(lonLat(13.412122, 52.52392), multiPolygon))
         d shouldBe 416
-        d = round(distanceToMultiPolygon(doubleArrayOf(13.412122, 52.52392), multiPolygon2))
+        d = round(distanceToMultiPolygon(lonLat(13.412122, 52.52392), multiPolygon2))
         d shouldBe 416
     }
 
@@ -700,38 +723,38 @@ class GeoGeometryMigratedTests {
 
     val straightLines = arrayOf(
         lineString(
-            doubleArrayOf(0.0, 1.0),
-            doubleArrayOf(1.0, 1.0),
-            doubleArrayOf(2.0, 1.0),
-            doubleArrayOf(3.0, 1.0),
-            doubleArrayOf(4.0, 1.0)
+            lonLat(0.0, 1.0),
+            lonLat(1.0, 1.0),
+            lonLat(2.0, 1.0),
+            lonLat(3.0, 1.0),
+            lonLat(4.0, 1.0)
         ),
         lineString(
-            doubleArrayOf(1.0, 0.0),
-            doubleArrayOf(1.0, 1.0),
-            doubleArrayOf(1.0, 2.0),
-            doubleArrayOf(1.0, 3.0),
-            doubleArrayOf(1.0, 4.0)
+            lonLat(1.0, 0.0),
+            lonLat(1.0, 1.0),
+            lonLat(1.0, 2.0),
+            lonLat(1.0, 3.0),
+            lonLat(1.0, 4.0)
         ),
         lineString(
-            doubleArrayOf(0.0, 0.0),
-            doubleArrayOf(1.0, 1.0),
-            doubleArrayOf(2.0, 2.0),
-            doubleArrayOf(3.0, 3.0),
-            doubleArrayOf(4.0, 4.0)
+            lonLat(0.0, 0.0),
+            lonLat(1.0, 1.0),
+            lonLat(2.0, 2.0),
+            lonLat(3.0, 3.0),
+            lonLat(4.0, 4.0)
         ),
         lineString(
-            doubleArrayOf(0.0, 0.0),
-            doubleArrayOf(1.0, 1.0),
-            doubleArrayOf(2.0, 2.0),
-            doubleArrayOf(4.0, 4.0)
+            lonLat(0.0, 0.0),
+            lonLat(1.0, 1.0),
+            lonLat(2.0, 2.0),
+            lonLat(4.0, 4.0)
         ),
         lineString(
-            doubleArrayOf(0.0, 0.0),
-            doubleArrayOf(1.0, 1.0),
-            doubleArrayOf(4.0, 4.0)
+            lonLat(0.0, 0.0),
+            lonLat(1.0, 1.0),
+            lonLat(4.0, 4.0)
         ),
-        lineString(doubleArrayOf(0.0, 0.0), doubleArrayOf(1.0, 1.0))
+        lineString(lonLat(0.0, 0.0), lonLat(1.0, 1.0))
     )
 
     @Test
@@ -780,27 +803,27 @@ class GeoGeometryMigratedTests {
     fun issue5PolygonContainsDoesNotWorkCorrectly() {
         val polygon = arrayOf(
             linearRingCoordinates(
-                doubleArrayOf(42.503320312499994, 1.7060546875),
-                doubleArrayOf(42.4966796875, 1.678515625000017),
-                doubleArrayOf(42.455957031249994, 1.58642578125),
-                doubleArrayOf(42.441699218749996, 1.534082031250023),
-                doubleArrayOf(42.434472656249994, 1.486230468750023),
-                doubleArrayOf(42.437451171875, 1.448828125),
-                doubleArrayOf(42.46132812499999, 1.428125),
-                doubleArrayOf(42.497851562499996, 1.430273437500006),
-                doubleArrayOf(42.530810546874996, 1.421972656250006),
-                doubleArrayOf(42.548388671874996, 1.414843750000017),
-                doubleArrayOf(42.5958984375, 1.428320312500006),
-                doubleArrayOf(42.6216796875, 1.458886718750023),
-                doubleArrayOf(42.642724609374994, 1.501367187500023),
-                doubleArrayOf(42.635009765625, 1.568164062500017),
-                doubleArrayOf(42.604443359375, 1.709863281250023),
-                doubleArrayOf(42.575927734375, 1.739453125000011),
-                doubleArrayOf(42.55673828125, 1.740234375),
-                doubleArrayOf(42.525634765625, 1.713964843750006)
+                lonLat(42.503320312499994, 1.7060546875),
+                lonLat(42.4966796875, 1.678515625000017),
+                lonLat(42.455957031249994, 1.58642578125),
+                lonLat(42.441699218749996, 1.534082031250023),
+                lonLat(42.434472656249994, 1.486230468750023),
+                lonLat(42.437451171875, 1.448828125),
+                lonLat(42.46132812499999, 1.428125),
+                lonLat(42.497851562499996, 1.430273437500006),
+                lonLat(42.530810546874996, 1.421972656250006),
+                lonLat(42.548388671874996, 1.414843750000017),
+                lonLat(42.5958984375, 1.428320312500006),
+                lonLat(42.6216796875, 1.458886718750023),
+                lonLat(42.642724609374994, 1.501367187500023),
+                lonLat(42.635009765625, 1.568164062500017),
+                lonLat(42.604443359375, 1.709863281250023),
+                lonLat(42.575927734375, 1.739453125000011),
+                lonLat(42.55673828125, 1.740234375),
+                lonLat(42.525634765625, 1.713964843750006)
             )
         )
-        val point = doubleArrayOf(42.503615, 1.641881)
+        val point = lonLat(42.503615, 1.641881)
         polygonContains(point,polygon) shouldBe true
     }
 
@@ -822,5 +845,5 @@ class GeoGeometryMigratedTests {
 fun randomLatLonAwayFromPolesAndDateLine(): PointCoordinates {
     val lat = Random.nextDouble(-89.0, 89.0)
     val lon = Random.nextDouble(-179.0, 179.0)
-    return doubleArrayOf(lon, lat)
+    return lonLat(lon, lat)
 }

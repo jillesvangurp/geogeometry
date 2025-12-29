@@ -16,8 +16,6 @@ import com.jillesvangurp.geojson.westLongitude
 import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
-import io.kotest.data.blocking.forAll
-import io.kotest.data.row
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeLessThan
@@ -34,13 +32,13 @@ val sampleHashesAndCoordinates = listOf(
 
 class GeoHashUtilsTest {
     val coordinatesWithHashes = arrayOf(
-        row(0.1, -0.1, "ebpbtdpntc6e"),
-        row(52.530888, 13.394904, "u33dbfcyegk2")
+        Triple(0.1, -0.1, "ebpbtdpntc6e"),
+        Triple(52.530888, 13.394904, "u33dbfcyegk2")
     )
 
     @Test
     fun shouldDecodeHashes() {
-        forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
+        coordinatesWithHashes.forEach { (lat: Double, lon: Double, geoHash: String)->
             val decoded = GeoHashUtils.decode(geoHash)
             decoded.latitude shouldBeApproximately lat
             decoded.longitude shouldBeApproximately lon
@@ -49,7 +47,7 @@ class GeoHashUtilsTest {
 
     @Test
     fun shouldEncodeHashes() {
-        forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
+        coordinatesWithHashes.forEach { (lat, lon, geoHash) ->
             GeoHashUtils.encode(lat, lon) shouldBe geoHash
             GeoHashUtils.encode(lonLat(lon, lat)) shouldBe geoHash
         }
@@ -57,7 +55,7 @@ class GeoHashUtilsTest {
 
     @Test
     fun shouldContainCoordinateInBbox() {
-        forAll(*coordinatesWithHashes) { lat: Double, lon: Double, geoHash: String ->
+        coordinatesWithHashes.forEach { (lat, lon, geoHash) ->
             GeoHashUtils.contains(geoHash, lat, lon) shouldBe true
             GeoHashUtils.contains(geoHash, lon, lat) shouldBe false
         }
@@ -181,9 +179,10 @@ class GeoHashUtilsTest {
 
     @Test
     fun shouldDecodeBbox2() {
-        forAll(
-            row(0.1, -0.1, "ebpbtdpntc6e"), row(52.530888, 13.394904, "u33dbfcyegk2")
-        ) { lat: Double, lon: Double, geoHash: String ->
+        arrayOf(
+            Triple(0.1, -0.1, "ebpbtdpntc6e"),
+            Triple(52.530888, 13.394904, "u33dbfcyegk2")
+        ).forEach { (lat: Double, lon: Double, geoHash: String) ->
             val bbox = GeoHashUtils.decodeBbox(geoHash)
 
             abs((bbox.southLatitude + bbox.northLatitude) / 2 - lat) shouldBeApproximately 0.0

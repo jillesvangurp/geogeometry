@@ -103,7 +103,7 @@ fun vincenty(p1: PointCoordinates, p2: PointCoordinates): Vincenty {
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = atan2(sinSigma, cosSigma)
         val sinAlpha: Double = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = (1 - sinAlpha * sinAlpha).toDouble()
+        cosSqAlpha = (1 - sinAlpha * sinAlpha)
         cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
 
         cos2SigmaM.isNaN()
