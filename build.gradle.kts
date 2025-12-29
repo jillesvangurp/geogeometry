@@ -123,9 +123,9 @@ kotlin {
         all {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
-//                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-                languageVersion = "2.0"
-                apiVersion = "2.0"
+                // 2.0 and below is deprecated as of 2.3
+                languageVersion = "2.1"
+                apiVersion = "2.1"
             }
         }
     }

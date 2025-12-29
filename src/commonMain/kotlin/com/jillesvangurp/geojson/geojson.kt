@@ -1,4 +1,4 @@
-@file:Suppress("MemberVisibilityCanBePrivate", "unused")
+@file:Suppress("MemberVisibilityCanBePrivate", "unused", "UNCHECKED_CAST")
 
 package com.jillesvangurp.geojson
 
@@ -464,15 +464,13 @@ fun Geometry.asFeatureWithProperties(
 private fun deepEquals(left: Array<*>?, right: Array<*>?): Boolean {
     // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
     // so hack around it with right?.let { false } ?: true, which is ugly
-    return left?.let { it.contentDeepEquals(right) } ?: right?.let { false } ?: true
+    return left?.contentDeepEquals(right) ?: right?.let { false } ?: true
 }
 
 private fun deepEquals(left: DoubleArray?, right: DoubleArray?): Boolean {
     // for some reason the kotlin compiler freaks out over right == null and  insists there is no equals method
     // so hack around it with right?.let { false } ?: true, which is ugly
-    return left?.let {
-        it.contentEquals(right)
-    } ?: right?.let { false } ?: true
+    return left?.contentEquals(right) ?: right?.let { false } ?: true
 }
 
 infix fun Geometry.Point.line(other: Geometry.Point) = arrayOf(this.coordinates, other.coordinates)
