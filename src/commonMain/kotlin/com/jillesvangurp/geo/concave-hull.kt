@@ -278,7 +278,8 @@ private fun attemptConcaveHull(ps: List<PointCoordinates>, k: Int): HullAttempt 
     mutablePoints.remove(firstPoint)
     var previousAngle = 0.0
     var step = 2
-    while ((currentPoint !== firstPoint || step == 2) && mutablePoints.size > 0) {
+    val maxSteps = mutablePoints.size * 5
+    while ((currentPoint !== firstPoint || step == 2) && mutablePoints.size > 0 && step < maxSteps) {
 
         // after 3 steps add first point to dataset, otherwise hull cannot be closed
         if (step == 5) {
