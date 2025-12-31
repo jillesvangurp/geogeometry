@@ -108,6 +108,21 @@ class GeoGeometryMigratedTests {
     }
 
     @Test
+    fun shouldHandleReversedVerticalSegmentOverlap() {
+        linesCross(1.0, 10.0, 1.0, 1.0, 1.0, 4.0, 1.0, 3.0) shouldBe true
+    }
+
+    @Test
+    fun shouldHandleVerticalSegmentsTouchingAtEndpoint() {
+        linesCross(1.0, 1.0, 1.0, 5.0, 1.0, 5.0, 1.0, 8.0) shouldBe true
+    }
+
+    @Test
+    fun shouldNotCrossParallelVerticalSegmentsWithDifferentLongitude() {
+        linesCross(1.0, 1.0, 1.0, 5.0, 2.0, 2.0, 2.0, 6.0) shouldNotBe true
+    }
+
+    @Test
     fun shouldCheckContainmentForPolygonCorrectly() {
         // origin should be in there
         polygonContains(0.0, 0.0, *samplePolygon) shouldBe true
