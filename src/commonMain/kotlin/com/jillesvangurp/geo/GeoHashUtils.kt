@@ -444,12 +444,23 @@ class GeoHashUtils {
             maxLength: Int? = null,
             includePartial: Boolean = false
         ): Set<String> {
-            // TODO implement removal of hole hashes?
-            return geoHashesForLinearRing(
+            val outerHashes = geoHashesForLinearRing(
                 coordinates = coordinates[0],
                 maxLength = maxLength,
                 includePartial = includePartial
             )
+            if (coordinates.size == 1) return outerHashes
+
+            val holes = coordinates.drop(1)
+            val holeCenters = holes.map { GeoGeometry.polygonCenter(*it) }
+            return outerHashes.filterNot { hash ->
+                val bbox = decodeBbox(hash)
+                val centerLat = (bbox.southLatitude + bbox.northLatitude) / 2
+                val centerLon = (bbox.westLongitude + bbox.eastLongitude) / 2
+                holes.any { hole -> GeoGeometry.polygonContains(centerLat, centerLon, *hole) } ||
+                    holeCenters.any { center -> contains(hash, center.latitude, center.longitude) } ||
+                    holes.any { hole -> hole.any { point -> contains(hash, point.latitude, point.longitude) } }
+            }.toSet()
         }
 
         fun geoHashesForMultiPolygon(
