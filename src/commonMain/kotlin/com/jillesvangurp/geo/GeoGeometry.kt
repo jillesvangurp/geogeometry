@@ -361,7 +361,11 @@ class GeoGeometry {
                 line1Vertical && line2Vertical -> // x=a
                     if (x1 == u1) {
                         // lines are the same, check whether they overlap
-                        y1 <= v1 && v1 < y2 || y1 <= v2 && v2 < y2
+                        val l1Min = min(y1, y2)
+                        val l1Max = max(y1, y2)
+                        val l2Min = min(v1, v2)
+                        val l2Max = max(v1, v2)
+                        l1Min <= l2Max && l2Min <= l1Max
                     } else {
                         // parallel -> they don't intersect!
                         false
@@ -1537,5 +1541,4 @@ class GeoGeometry {
         }
     }
 }
-
 

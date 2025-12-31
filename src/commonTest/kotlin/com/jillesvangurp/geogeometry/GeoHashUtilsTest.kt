@@ -500,6 +500,65 @@ class GeoHashUtilsTest {
         subHashes.size shouldBe 32
     }
 
+    @Test
+    fun shouldRespectHolesWhenCoveringPolygon() {
+        val outer = arrayOf(
+            lonLat(0.0, 0.0),
+            lonLat(1.0, 0.0),
+            lonLat(1.0, 1.0),
+            lonLat(0.0, 1.0),
+            lonLat(0.0, 0.0)
+        )
+        val hole = arrayOf(
+            lonLat(0.25, 0.25),
+            lonLat(0.75, 0.25),
+            lonLat(0.75, 0.75),
+            lonLat(0.25, 0.75),
+            lonLat(0.25, 0.25)
+        )
+
+        val hashes = GeoHashUtils.geoHashesForPolygon(arrayOf(outer, hole))
+
+        hashes.any { GeoHashUtils.contains(it, 0.5, 0.5) } shouldBe false
+    }
+
+    @Test
+    fun shouldRespectMultipleHolesAndKeepOuterCoverage() {
+        val outer = arrayOf(
+            lonLat(0.0, 0.0),
+            lonLat(1.0, 0.0),
+            lonLat(1.0, 1.0),
+            lonLat(0.0, 1.0),
+            lonLat(0.0, 0.0)
+        )
+        val hole1 = arrayOf(
+            lonLat(0.2, 0.2),
+            lonLat(0.4, 0.2),
+            lonLat(0.4, 0.4),
+            lonLat(0.2, 0.4),
+            lonLat(0.2, 0.2)
+        )
+        val hole2 = arrayOf(
+            lonLat(0.6, 0.6),
+            lonLat(0.8, 0.6),
+            lonLat(0.8, 0.8),
+            lonLat(0.6, 0.8),
+            lonLat(0.6, 0.6)
+        )
+
+        val hashes = GeoHashUtils.geoHashesForPolygon(arrayOf(outer, hole1, hole2))
+
+        hashes.any { GeoHashUtils.contains(it, 0.3, 0.3) } shouldBe false
+        hashes.any { GeoHashUtils.contains(it, 0.7, 0.7) } shouldBe false
+        hashes shouldHaveAtLeastSize 1
+        hashes.forEach { hash ->
+            val center = GeoHashUtils.decode(hash)
+            GeoGeometry.polygonContains(center.latitude, center.longitude, *outer) shouldBe true
+            GeoGeometry.polygonContains(center.latitude, center.longitude, *hole1) shouldBe false
+            GeoGeometry.polygonContains(center.latitude, center.longitude, *hole2) shouldBe false
+        }
+    }
+
     private fun assertSimilar(d1: Double, d2: Double) {
         // allow for some margin of error
         // should be similar$d1 and $d2
