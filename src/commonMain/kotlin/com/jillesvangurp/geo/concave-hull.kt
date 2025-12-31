@@ -18,9 +18,10 @@ import kotlin.math.sqrt
  * by @author Udo Schlegel - Udo.3.Schlegel(at)uni-konstanz.de
  *
  * Code has been converted to Kotlin and refactored a little.
- *
- * Note. It currently  has issues with self intersecting. So, I don't recommend using
- * this in its current form.
+ * The original implementation was prone to self-intersection; this version projects
+ * coordinates into a local metric space, performs multiple retries with varying k values,
+ * and post-processes the hull to remove intersections before returning. It still remains
+ * a heuristic, so consumers should validate the output for their use case.
  */
 
 private data class MetricPoint(val point: PointCoordinates, val x: Double, val y: Double)
@@ -192,6 +193,7 @@ private fun removeSelfIntersections(hull: List<PointCoordinates>, maxIterations:
                 if (kotlin.math.abs(i - j) <= 1) continue
                 if (i == 0 && j == points.size - 2) continue
                 if (segmentsCrossRobust(points[i], points[i + 1], points[j], points[j + 1])) {
+                    // Reverse the sub-list between the crossing edges to untangle the ring.
                     points.subList(i + 1, j + 1).reverse()
                     swapped = true
                     break
@@ -216,6 +218,7 @@ private fun removeSelfIntersectionsGeo(hull: List<PointCoordinates>, maxIteratio
                 if (kotlin.math.abs(i - j) <= 1) continue
                 if (i == 0 && j == points.size - 2) continue
                 if (GeoGeometry.linesCross(points[i], points[i + 1], points[j], points[j + 1])) {
+                    // Reverse the sub-list between the crossing edges to untangle the ring.
                     points.subList(i + 1, j + 1).reverse()
                     swapped = true
                     break
@@ -344,7 +347,16 @@ private fun attemptConcaveHull(ps: List<PointCoordinates>, k: Int): HullAttempt 
 }
 
 /**
- * Note, algorithm has issues with self intersection
+ * Calculate a concave hull for the given point cloud.
+ *
+ * The algorithm:
+ * - projects the coordinates to a local metric space (so distance/angle work sensibly),
+ * - iteratively expands the neighbor search (k) while respecting a bounded attempt budget,
+ * - cleans the resulting ring by removing self-intersections and rotating to a consistent
+ *   start/end before returning.
+ *
+ * This is still a best-effort heuristic; if a valid hull cannot be produced within the
+ * budget it falls back to the last cleaned hull or the convex hull.
  */
 fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int, recurseCount: Int = 0, maxRecurse: Int = 10000): List<PointCoordinates> {
     var attempt = recurseCount
