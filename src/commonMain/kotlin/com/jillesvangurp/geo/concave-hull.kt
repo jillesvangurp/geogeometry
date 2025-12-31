@@ -352,7 +352,8 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int, recurseCount: Int =
     var lastHull: List<PointCoordinates> = emptyList()
     val convexHull = GeoGeometry.polygonForPoints(ps.toTypedArray())
     val convexArea = GeoGeometry.area(convexHull)
-    while (attempt < maxRecurse) {
+    val maxAttempts = min(maxRecurse, max(10, ps.size * 10))
+    while (attempt < maxAttempts) {
         val result = attemptConcaveHull(ps, kk)
         val initialHull = if (result.hull.isEmpty()) closeHull(ps) else result.hull
         var cleanedHull = removeSelfIntersections(initialHull, maxRecurse)
@@ -372,7 +373,7 @@ fun calculateConcaveHull(ps: List<PointCoordinates>, k: Int, recurseCount: Int =
         }
         attempt++
     }
-    return lastHull.ifEmpty { ps }
+    return lastHull.ifEmpty { convexHull.toList() }
 }
 
 private fun pointInPolygon(p: MetricPoint, pp: List<MetricPoint>): Boolean {

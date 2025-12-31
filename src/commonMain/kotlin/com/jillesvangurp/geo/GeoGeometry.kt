@@ -373,7 +373,7 @@ class GeoGeometry {
 
                     val yi = a2 + gradient2 * x1
 
-                    isBetween(y1, y2, yi) && isBetween(v1, v2, yi) && isBetween(u1, u2, x1)
+                    isBetween(y1, y2, yi) && isBetween(v1, v2, yi)
                 }
                 line2Vertical -> {
                     val gradient1 = (y2 - y1) / (x2 - x1)
@@ -381,7 +381,7 @@ class GeoGeometry {
 
                     val yi = a1 + gradient1 * u1
 
-                    isBetween(y1, y2, yi) && isBetween(v1, v2, yi) && isBetween(x1, x2, u1)
+                    isBetween(y1, y2, yi) && isBetween(v1, v2, yi)
                 }
                 else -> {
 
@@ -1537,4 +1537,3 @@ class GeoGeometry {
         }
     }
 }
-
