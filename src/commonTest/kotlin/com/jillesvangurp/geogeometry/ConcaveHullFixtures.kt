@@ -24,6 +24,9 @@ val concaveHullFixtures = listOf(
             fixturePoint(0.0, 0.021),
             fixturePoint(0.018, 0.015),
             fixturePoint(0.022, 0.006),
+            fixturePoint(0.012, 0.012),
+            fixturePoint(0.008, 0.0),
+            fixturePoint(0.012, -0.012),
             fixturePoint(0.022, -0.006),
             fixturePoint(0.018, -0.015),
             fixturePoint(0.0, -0.021),
@@ -32,7 +35,7 @@ val concaveHullFixtures = listOf(
             fixturePoint(-0.024, 0.0),
             fixturePoint(-0.023, 0.01)
         ),
-        k = 5
+        k = 4
     ),
     PolygonPointCloudFixture(
         name = "U-shape courtyard",

@@ -16,8 +16,8 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeGreaterThan as shouldBeGreaterThanInt
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertFalse
 
 class ConcaveHullFixtureTest {
 
@@ -92,13 +92,12 @@ class ConcaveHullFixtureTest {
             logFixtureGeoJson(fixture, convexRing, concaveRing)
 
             convexRing.size.shouldBeGreaterThanInt(3)
-            isSelfIntersecting(convexRing).shouldBeFalse()
+            assertFalse(isSelfIntersecting(convexRing), "Convex ring self-intersects for ${fixture.name}")
             GeoGeometry.area(convexRing).shouldBeGreaterThan(0.0)
         }
     }
 
     @Test
-    @Ignore("FIXME: concave hull currently produces self intersections and incorrect areas for some fixtures")
     fun concaveHullFixturesAreConcaveAndSmallerThanConvex() {
         concaveHullFixtures.forEach { fixture ->
             val convexRing = GeoGeometry.polygonForPoints(fixture.points.toTypedArray())
@@ -109,7 +108,7 @@ class ConcaveHullFixtureTest {
             val convexArea = GeoGeometry.area(convexRing)
             val concaveArea = GeoGeometry.area(concaveRing)
 
-            isSelfIntersecting(concaveRing).shouldBeFalse()
+            assertFalse(isSelfIntersecting(concaveRing), "Concave ring self-intersects for ${fixture.name}")
             concaveArea.shouldBeGreaterThan(0.0)
             concaveArea.shouldBeLessThan(convexArea)
         }
