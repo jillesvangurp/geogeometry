@@ -58,19 +58,19 @@ private fun intersectsLine(line: LineStringCoordinates, other: Geometry): Boolea
         when (other) {
             is Geometry.Point -> other.coordinates?.onLineSegment(start, end) ?: false
             is Geometry.LineString -> other.coordinates?.zipWithNextCompat()?.any { (oStart, oEnd) ->
-                GeoGeometry.linesCross(start, end, oStart, oEnd)
+                linesCrossAntimeridianAware(start, end, oStart, oEnd)
             } == true
             is Geometry.MultiLineString -> other.coordinates?.any { oLine ->
                 oLine.zipWithNextCompat().any { (oStart, oEnd) ->
-                    GeoGeometry.linesCross(start, end, oStart, oEnd)
+                    linesCrossAntimeridianAware(start, end, oStart, oEnd)
                 }
             } == true
             is Geometry.Polygon -> other.outerCoordinates.zipWithNextCompat().any { (oStart, oEnd) ->
-                GeoGeometry.linesCross(start, end, oStart, oEnd)
+                linesCrossAntimeridianAware(start, end, oStart, oEnd)
             } || other.contains(start)
             is Geometry.MultiPolygon -> other.coordinates?.any { poly ->
                 poly.first().zipWithNextCompat().any { (oStart, oEnd) ->
-                    GeoGeometry.linesCross(start, end, oStart, oEnd)
+                    linesCrossAntimeridianAware(start, end, oStart, oEnd)
                 } || GeoGeometry.polygonContains(start.latitude, start.longitude, poly)
             } == true
             is Geometry.GeometryCollection -> other.geometries.any { intersectsLine(line, it) }
@@ -137,4 +137,35 @@ private fun <T> Array<T>.zipWithNextCompat(): List<Pair<T, T>> {
         result.add(this[i] to this[i + 1])
     }
     return result
+}
+
+private fun normalizedLongitude(reference: Double, longitude: Double): Double {
+    var adjusted = longitude
+    var diff = adjusted - reference
+    while (diff > 180) {
+        adjusted -= 360
+        diff = adjusted - reference
+    }
+    while (diff < -180) {
+        adjusted += 360
+        diff = adjusted - reference
+    }
+    return adjusted
+}
+
+private fun normalizePoint(reference: Double, point: PointCoordinates): PointCoordinates =
+    doubleArrayOf(normalizedLongitude(reference, point.longitude), point.latitude)
+
+private fun linesCrossAntimeridianAware(
+    l1p1: PointCoordinates,
+    l1p2: PointCoordinates,
+    l2p1: PointCoordinates,
+    l2p2: PointCoordinates
+): Boolean {
+    val reference = l1p1.longitude
+    val p1 = normalizePoint(reference, l1p1)
+    val p2 = normalizePoint(reference, l1p2)
+    val o1 = normalizePoint(reference, l2p1)
+    val o2 = normalizePoint(reference, l2p2)
+    return GeoGeometry.linesCross(p1, p2, o1, o2)
 }
