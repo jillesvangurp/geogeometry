@@ -24,6 +24,8 @@ GeoGeometry is a Kotlin Multiplatform geospatial library. The codebase prioritiz
 
 3. Build and test expectations
    - Use the Gradle wrapper: `./gradlew`.
+   - Test JVM first (`./gradlew jvmTest`) because it is usually the fastest high-signal check during development.
+   - Rely on pull request CI for full multiplatform build/test coverage to catch platform-specific regressions.
    - Prefer small, targeted checks first; run a broader build before finalizing significant changes.
    - Some test tasks are intentionally disabled in `build.gradle.kts` (iOS simulator and wasm test tasks); do not re-enable unless asked.
    - Prefer Kotlin `@Test` with Kotest assertions style already used in `commonTest`.
