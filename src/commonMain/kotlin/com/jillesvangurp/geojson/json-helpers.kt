@@ -13,8 +13,10 @@ val FeatureCollection.geoJsonIOUrl: Any
 val Geometry.geoJsonIOUrl get() = this.asFeatureCollection.geoJsonIOUrl
 
 private const val HEX = "0123456789ABCDEF"
+
 /** Percent-encode according to RFC 3986 (UTF-8) */
 fun String.urlEncode(): String = buildString {
+    // including this to avoid adding more library dependencies; use something proper if this causes you grief.
     for (byte in encodeToByteArray()) {          // UTF-8 bytes
         val b = byte.toInt() and 0xFF            // 0-255, no sign
         val c = b.toChar()
