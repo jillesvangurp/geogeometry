@@ -231,13 +231,16 @@ data class KalmanGeoSample(
 class KalmanGeoTracker(
     val config: KalmanGeoTrackerConfig = KalmanGeoTrackerConfig(),
 ) {
+    // Fixed state layout for this tracker:
+    // [0]=x (east meters), [1]=y (north meters), [2]=vx (m/s), [3]=vy (m/s).
+    // This is why matrix helpers below are specialized to 4x4 operations.
     private data class TrackState(
         val origin: PointCoordinates,
         val state: DoubleArray,
         val covariance: Array<DoubleArray>,
         var lastTimestampMillis: Long,
         var aggressivePruneUntilMillis: Long,
-        val samples: MutableList<KalmanGeoSample>,
+        val samples: ArrayDeque<KalmanGeoSample>,
     )
 
     private val tracks = mutableMapOf<String, TrackState>()
@@ -277,13 +280,14 @@ class KalmanGeoTracker(
                 ),
                 lastTimestampMillis = timestampMillis,
                 aggressivePruneUntilMillis = Long.MIN_VALUE,
-                samples = mutableListOf(),
+                samples = ArrayDeque(),
             )
         }
         require(timestampMillis >= track.lastTimestampMillis) {
             "timestampMillis must be monotonic per id. id=$id last=${track.lastTimestampMillis} got=$timestampMillis"
         }
 
+        // 1) Predict forward to the sample timestamp.
         val deltaMillis = timestampMillis - track.lastTimestampMillis
         if (deltaMillis > 0) {
             predict(track, deltaMillis / 1000.0)
@@ -292,11 +296,14 @@ class KalmanGeoTracker(
             track.lastTimestampMillis = timestampMillis
         }
 
+        // 2) Convert geodetic input to local tangent-plane meters around a fixed track origin.
         val (measurementX, measurementY) = toLocalMeters(track.origin, normalizedPosition)
+        // 3) Measurement update with adaptive noise and outlier rejection.
         update(track, measurementX, measurementY, measurementVariance(measurementAccuracyMeters, measurementProfile), measurementProfile)
 
+        // 4) Build estimate in lat/lon and keep the sample for diagnostics/retention rules.
         val estimate = estimateAt(track, timestampMillis)
-        track.samples.add(
+        track.samples.addLast(
             KalmanGeoSample(
                 timestampMillis = timestampMillis,
                 measuredPosition = latLon(normalizedPosition.latitude, normalizedPosition.longitude),
@@ -304,6 +311,7 @@ class KalmanGeoTracker(
                 estimate = estimate,
             )
         )
+        // 5) Prune retained history window (normal or aggressive).
         prune(track, timestampMillis)
         return estimate
     }
@@ -332,9 +340,11 @@ class KalmanGeoTracker(
 
     private fun predict(track: TrackState, dtSeconds: Double) {
         val s = track.state
+        // State prediction: x(t+dt)=x+v*dt, y(t+dt)=y+v*dt.
         s[0] += s[2] * dtSeconds
         s[1] += s[3] * dtSeconds
 
+        // F for constant-velocity model in 2D local tangent coordinates.
         val f = arrayOf(
             doubleArrayOf(1.0, 0.0, dtSeconds, 0.0),
             doubleArrayOf(0.0, 1.0, 0.0, dtSeconds),
@@ -347,7 +357,9 @@ class KalmanGeoTracker(
         val dt4 = dt2 * dt2
         val accelerationStdDev = config.processNoiseSpeedMetersPerSecond
         val accelerationVar = accelerationStdDev * accelerationStdDev
+        // Position random-walk term keeps uncertainty growth realistic when process noise is present.
         val randomWalkPositionVar = config.processNoisePositionMeters.pow(2) * dt
+        // Standard CV process noise matrix derived from white-acceleration model.
         val q = arrayOf(
             doubleArrayOf(dt4 * accelerationVar / 4.0 + randomWalkPositionVar, 0.0, dt3 * accelerationVar / 2.0, 0.0),
             doubleArrayOf(0.0, dt4 * accelerationVar / 4.0 + randomWalkPositionVar, 0.0, dt3 * accelerationVar / 2.0),
@@ -356,6 +368,7 @@ class KalmanGeoTracker(
         )
 
         val p = track.covariance
+        // Covariance prediction: P = F P F^T + Q.
         val predicted = add4(multiply4(multiply4(f, p), transpose4(f)), q)
         copyInto(p, predicted)
     }
@@ -370,6 +383,7 @@ class KalmanGeoTracker(
         val p = track.covariance
         val x = track.state
 
+        // Innovation covariance S = HPH^T + R for 2D position measurement.
         var s00 = p[0][0] + baseMeasurementVariance
         val s01 = p[0][1]
         val s10 = p[1][0]
@@ -387,6 +401,7 @@ class KalmanGeoTracker(
 
         val innovationX = measurementX - x[0]
         val innovationY = measurementY - x[1]
+        // Innovation distance gate rejects implausible jumps before state update.
         val d2 = innovationX * (invS00 * innovationX + invS01 * innovationY) +
             innovationY * (invS10 * innovationX + invS11 * innovationY)
         val outlierThreshold = measurementProfile?.outlierMahalanobisThreshold ?: config.outlierMahalanobisThreshold
@@ -394,6 +409,7 @@ class KalmanGeoTracker(
             return
         }
 
+        // Increase R for large (but not rejected) innovations to reduce over-trusting jitter.
         val adaptiveScale = 1.0 + config.innovationVarianceScale * d2.coerceAtLeast(0.0)
         val measurementVariance = baseMeasurementVariance * adaptiveScale
         if (adaptiveScale != 1.0) {
@@ -410,6 +426,7 @@ class KalmanGeoTracker(
         }
 
         val k = Array(4) { DoubleArray(2) }
+        // Kalman gain K = P H^T S^-1.
         for (i in 0 until 4) {
             val pi0 = p[i][0]
             val pi1 = p[i][1]
@@ -421,6 +438,7 @@ class KalmanGeoTracker(
             x[i] += k[i][0] * innovationX + k[i][1] * innovationY
         }
 
+        // Joseph form keeps covariance numerically stable and symmetric after measurement update.
         val iKh = arrayOf(
             doubleArrayOf(1.0 - k[0][0], -k[0][1], 0.0, 0.0),
             doubleArrayOf(-k[1][0], 1.0 - k[1][1], 0.0, 0.0),
@@ -445,6 +463,7 @@ class KalmanGeoTracker(
         } else {
             ((atan2(horizontal, vertical) * GeoGeometry.RADIANS_TO_DEGREES) + 360.0) % 360.0
         }
+        // Convert local tangent-plane estimate back to normalized [lon,lat].
         val position = toCoordinate(track.origin, x[0], x[1])
         return KalmanGeoEstimate(
             timestampMillis = timestampMillis,
@@ -459,6 +478,7 @@ class KalmanGeoTracker(
     private fun prune(track: TrackState, nowMillis: Long) {
         val latest = track.samples.lastOrNull() ?: return
         val oldest = track.samples.firstOrNull() ?: return
+        // Trigger aggressive retention window if filtered movement or filtered speed is high.
         val movement = GeoGeometry.distance(oldest.estimate.position, latest.estimate.position)
         val highMovement = movement >= config.substantialMovementMeters
         val highSpeed = latest.estimate.speedMetersPerSecond >= config.highSpeedThresholdMetersPerSecond
@@ -474,8 +494,9 @@ class KalmanGeoTracker(
             config.timeWindowMillis
         }
         val minTimestamp = nowMillis - window
-        while (track.samples.size > 1 && track.samples.first().timestampMillis < minTimestamp) {
-            track.samples.removeAt(0)
+        // ArrayDeque gives O(1) front removals under sustained pruning loads.
+        while (track.samples.size > 1 && (track.samples.firstOrNull()?.timestampMillis ?: Long.MAX_VALUE) < minTimestamp) {
+            track.samples.removeFirst()
         }
     }
 
@@ -483,11 +504,13 @@ class KalmanGeoTracker(
         val base = measurementProfile?.baseMeasurementNoiseMeters ?: config.baseMeasurementNoiseMeters
         val min = measurementProfile?.minMeasurementNoiseMeters ?: config.minMeasurementNoiseMeters
         val max = measurementProfile?.maxMeasurementNoiseMeters ?: config.maxMeasurementNoiseMeters
+        // Incoming accuracy is interpreted as 1-sigma meters and clamped to profile/config bounds.
         val stddev = (measurementAccuracyMeters ?: base).coerceIn(min, max)
         return stddev * stddev
     }
 
     private fun toLocalMeters(origin: PointCoordinates, point: PointCoordinates): Pair<Double, Double> {
+        // Equirectangular local projection around origin; suitable for short tracking distances.
         val averageLatitudeRadians = ((origin.latitude + point.latitude) / 2.0) * GeoGeometry.DEGREES_TO_RADIANS
         val longitudeDeltaDegrees = wrapLongitudeDelta(point.longitude - origin.longitude)
         val deltaLongitudeRadians = longitudeDeltaDegrees * GeoGeometry.DEGREES_TO_RADIANS
@@ -510,6 +533,8 @@ class KalmanGeoTracker(
         }
     }
 
+    // Fixed-size 4x4 helpers for the [x,y,vx,vy] state model.
+    // We keep these local and specialized instead of introducing a matrix dependency.
     private fun diagonal4(v0: Double, v1: Double, v2: Double, v3: Double): Array<DoubleArray> {
         return arrayOf(
             doubleArrayOf(v0, 0.0, 0.0, 0.0),
