@@ -14,6 +14,8 @@ import kotlin.test.Test
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class GeojsonKtTest {
 
@@ -104,6 +106,33 @@ class GeojsonKtTest {
         println(
             json
         )
+    }
+
+    @Test
+    fun shouldSerializeGeometryTypeField() {
+        val feature = Feature(
+            geometry = Geometry.Point(coordinates = lonLat(5.6, 51.9))
+        )
+        val json = DEFAULT_JSON.encodeToString(Feature.serializer(), feature)
+        val geometryType = Json.parseToJsonElement(json).jsonObject["geometry"]
+            ?.jsonObject?.get("type")?.jsonPrimitive?.content
+
+        geometryType shouldBe GeometryType.Point.name
+
+        val roundTrippedFeature = DEFAULT_JSON.decodeFromString(Feature.serializer(), json)
+        roundTrippedFeature.geometry?.type shouldBe GeometryType.Point
+    }
+
+    @Test
+    fun shouldSerializeConcreteGeometryTypeField() {
+        val point = Geometry.Point(coordinates = lonLat(5.6, 51.9))
+        val json = DEFAULT_JSON.encodeToString(Geometry.Point.serializer(), point)
+        val type = Json.parseToJsonElement(json).jsonObject["type"]?.jsonPrimitive?.content
+
+        type shouldBe GeometryType.Point.name
+
+        val parsedGeometry = DEFAULT_JSON.decodeFromString(Geometry.serializer(), json)
+        parsedGeometry.type shouldBe GeometryType.Point
     }
 
     @Test

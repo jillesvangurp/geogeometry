@@ -7,10 +7,15 @@ import com.jillesvangurp.geo.GeoGeometry.Companion.ensureFollowsRightHandSideRul
 import com.jillesvangurp.geo.GeoGeometry.Companion.roundToDecimals
 import com.jillesvangurp.geo.GeoHashUtils
 import com.jillesvangurp.geojson.Geometry.Polygon
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import kotlin.math.*
 
@@ -478,27 +483,18 @@ operator fun Geometry.GeometryCollection.plus(other: Geometry.GeometryCollection
     Geometry.GeometryCollection(this.geometries + other.geometries)
 
 @OptIn(ExperimentalSerializationApi::class)
-@Serializable
-@JsonClassDiscriminator("type") //TODO: add this in once upgrading kotlinx-serialization to 1.3.x
+@Serializable(with = GeometrySerializer::class)
 sealed class Geometry {
 
-    val type: GeometryType by lazy {
-        when (this) {
-            is Point -> GeometryType.Point
-            is MultiPoint -> GeometryType.MultiPoint
-            is LineString -> GeometryType.LineString
-            is MultiLineString -> GeometryType.MultiLineString
-            is Polygon -> GeometryType.Polygon
-            is MultiPolygon -> GeometryType.MultiPolygon
-            is GeometryCollection -> GeometryType.GeometryCollection
-        }
-    }
+    abstract val type: GeometryType
 
     @Serializable
     @SerialName("Point")
     data class Point(
         val coordinates: PointCoordinates?,
         val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.Point,
     ) : Geometry() {
         override fun equals(other: Any?): Boolean {
             return when {
@@ -523,7 +519,7 @@ sealed class Geometry {
 
             fun featureOf(lon: Double, lat: Double) = of(lon, lat).asFeature()
 
-            fun of(lon: Double, lat: Double) = Point(doubleArrayOf(lon, lat))
+            fun of(lon: Double, lat: Double) = Point(coordinates = doubleArrayOf(lon, lat))
         }
     }
 
@@ -532,6 +528,8 @@ sealed class Geometry {
     data class MultiPoint(
         val coordinates: MultiPointCoordinates?,
         val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.MultiPoint,
     ) : Geometry() {
         override fun equals(other: Any?): Boolean {
             return when {
@@ -553,7 +551,9 @@ sealed class Geometry {
     @SerialName("LineString")
     data class LineString(
         val coordinates: LineStringCoordinates? = null,
-        val bbox: BoundingBox? = null
+        val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.LineString,
     ) : Geometry() {
         override fun equals(other: Any?): Boolean {
             return when {
@@ -575,7 +575,9 @@ sealed class Geometry {
     @SerialName("MultiLineString")
     data class MultiLineString(
         val coordinates: MultiLineStringCoordinates? = null,
-        val bbox: BoundingBox? = null
+        val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.MultiLineString,
     ) : Geometry() {
         override fun equals(other: Any?): Boolean {
             return when {
@@ -599,7 +601,9 @@ sealed class Geometry {
         // work around for a bug in kotlinx serialization with multi dimensional arrays
         @SerialName("coordinates")
         val coordinates: PolygonCoordinates? = null,
-        val bbox: BoundingBox? = null
+        val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.Polygon,
     ) : Geometry() {
 
         override fun equals(other: Any?): Boolean {
@@ -624,7 +628,9 @@ sealed class Geometry {
     data class MultiPolygon(
         // work around for a bug in kotlinx serialization with multi dimensional arrays
         val coordinates: MultiPolygonCoordinates? = null,
-        val bbox: BoundingBox? = null
+        val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.MultiPolygon,
     ) : Geometry() {
 
         override fun equals(other: Any?): Boolean {
@@ -648,6 +654,8 @@ sealed class Geometry {
     data class GeometryCollection(
         val geometries: Array<Geometry>,
         val bbox: BoundingBox? = null,
+        @Required
+        override val type: GeometryType = GeometryType.GeometryCollection,
     ) : Geometry() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -667,6 +675,55 @@ sealed class Geometry {
         override fun hashCode(): Int = geometries.hashCode() + bbox.hashCode()
 
         override fun toString(): String = Json.encodeToString(Geometry.serializer(), this)
+    }
+}
+
+object GeometrySerializer : KSerializer<Geometry> {
+    override val descriptor = buildClassSerialDescriptor("Geometry")
+
+    override fun serialize(encoder: Encoder, value: Geometry) {
+        if (encoder !is JsonEncoder) {
+            encoder.encodeString(Json.encodeToString(this, value))
+            return
+        }
+
+        val element = when (value) {
+            is Geometry.Point -> encoder.json.encodeToJsonElement(Geometry.Point.serializer(), value)
+            is Geometry.MultiPoint -> encoder.json.encodeToJsonElement(Geometry.MultiPoint.serializer(), value)
+            is Geometry.LineString -> encoder.json.encodeToJsonElement(Geometry.LineString.serializer(), value)
+            is Geometry.MultiLineString -> encoder.json.encodeToJsonElement(Geometry.MultiLineString.serializer(), value)
+            is Geometry.Polygon -> encoder.json.encodeToJsonElement(Geometry.Polygon.serializer(), value)
+            is Geometry.MultiPolygon -> encoder.json.encodeToJsonElement(Geometry.MultiPolygon.serializer(), value)
+            is Geometry.GeometryCollection ->
+                encoder.json.encodeToJsonElement(Geometry.GeometryCollection.serializer(), value)
+        }
+        encoder.encodeJsonElement(element)
+    }
+
+    override fun deserialize(decoder: Decoder): Geometry {
+        if (decoder !is JsonDecoder) {
+            return Json.decodeFromString(this, decoder.decodeString())
+        }
+        val element = decoder.decodeJsonElement()
+        val type = element.jsonObject["type"]?.jsonPrimitive?.content
+            ?: throw SerializationException("Missing geometry type")
+
+        return when (type) {
+            GeometryType.Point.name -> decoder.json.decodeFromJsonElement(Geometry.Point.serializer(), element)
+            GeometryType.MultiPoint.name -> decoder.json.decodeFromJsonElement(Geometry.MultiPoint.serializer(), element)
+            GeometryType.LineString.name -> decoder.json.decodeFromJsonElement(Geometry.LineString.serializer(), element)
+            GeometryType.MultiLineString.name ->
+                decoder.json.decodeFromJsonElement(Geometry.MultiLineString.serializer(), element)
+
+            GeometryType.Polygon.name -> decoder.json.decodeFromJsonElement(Geometry.Polygon.serializer(), element)
+            GeometryType.MultiPolygon.name ->
+                decoder.json.decodeFromJsonElement(Geometry.MultiPolygon.serializer(), element)
+
+            GeometryType.GeometryCollection.name ->
+                decoder.json.decodeFromJsonElement(Geometry.GeometryCollection.serializer(), element)
+
+            else -> throw SerializationException("Unsupported geometry type: $type")
+        }
     }
 }
 
@@ -880,4 +937,3 @@ enum class GeometryType {
     MultiPolygon,
     GeometryCollection;
 }
-
