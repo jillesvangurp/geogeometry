@@ -27,7 +27,7 @@ kotlin {
             jvmTarget = JvmTarget.JVM_11
         }
     }
-    js(IR) {
+    js {
         nodejs {
             testTask {
                 useMocha {
@@ -40,6 +40,7 @@ kotlin {
     linuxX64()
     linuxArm64()
     mingwX64()
+    @Suppress("DEPRECATION")
     macosX64()
     macosArm64()
     iosArm64()
@@ -123,9 +124,8 @@ kotlin {
         all {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
-                // 2.0 and below is deprecated as of 2.3
-                languageVersion = "2.1"
-                apiVersion = "2.1"
+                languageVersion = "2.2"
+                apiVersion = "2.2"
             }
         }
     }

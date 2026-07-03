@@ -99,7 +99,6 @@ fun <T: Geometry> T.scaleX(percent: Double): T {
         is Geometry.Polygon -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
         is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.scaleX(percent)) as T
         is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.scaleX(percent) }.toTypedArray()) as T
-        else -> error("shouldn't happen")
     }
 }
 
@@ -149,7 +148,6 @@ fun <T: Geometry> T.scaleY(percent: Double): T {
         is Geometry.Polygon -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
         is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.scaleY(percent)) as T
         is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.scaleY(percent) }.toTypedArray()) as T
-        else -> error("shouldn't happen")
     }
 }
 
@@ -197,7 +195,6 @@ fun <T: Geometry> T.rotate(degrees: Double, around: PointCoordinates?=null): T {
         is Geometry.Polygon -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
         is Geometry.MultiPolygon -> this.copy(coordinates = coordinates?.rotate(degrees,around)) as T
         is Geometry.GeometryCollection -> this.copy(geometries = geometries.map { it.rotate(degrees,around) }.toTypedArray()) as T
-        else -> error("shouldn't happen")
     }
 }
 
