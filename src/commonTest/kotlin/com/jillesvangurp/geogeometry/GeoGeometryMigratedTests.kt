@@ -139,6 +139,40 @@ class GeoGeometryMigratedTests {
     }
 
     @Test
+    fun shouldDistinguishDiagonalBoundaryFromItsBoundingBox() {
+        for (size in listOf(1.0, 0.000001)) {
+            val triangle = arrayOf(lonLat(0.0, 0.0), lonLat(size, 0.0), lonLat(0.0, size))
+            for (ring in listOf(triangle, triangle.reversedArray(), triangle + triangle.first())) {
+                polygonContains(size / 4, size / 2, *ring) shouldBe true
+                polygonContains(size / 2, size / 2, *ring) shouldBe true
+                polygonContains(0.0, size / 2, *ring) shouldBe true
+                polygonContains(size, 0.0, *ring) shouldBe true
+                polygonContains(size * 0.75, size / 2, *ring) shouldBe false
+            }
+        }
+    }
+
+    @Test
+    fun shouldDistinguishDiagonalBoundaryAcrossTheAntimeridian() {
+        val triangle = arrayOf(lonLat(179.0, 0.0), lonLat(-179.0, 0.0), lonLat(179.0, 2.0))
+        polygonContains(0.5, -180.0, *triangle) shouldBe true
+        polygonContains(1.0, -180.0, *triangle) shouldBe true
+        polygonContains(1.5, -180.0, *triangle) shouldBe false
+    }
+
+    @Test
+    fun shouldCountNearlyHorizontalRayCrossings() {
+        val ring = arrayOf(
+            lonLat(-2.0, -1.0),
+            lonLat(2.0, -1.0),
+            lonLat(2.0, 0.0000000004),
+            lonLat(1.0, -0.0000000004),
+            lonLat(-2.0, 1.0)
+        )
+        polygonContains(0.0, 0.0, *ring) shouldBe true
+    }
+
+    @Test
     fun shouldBboxContainPoint() {
         val bbox = bbox(
             westLongitude = -2.0,
