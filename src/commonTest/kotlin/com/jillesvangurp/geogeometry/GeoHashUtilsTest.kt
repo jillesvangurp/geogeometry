@@ -15,6 +15,7 @@ import com.jillesvangurp.geojson.southLatitude
 import com.jillesvangurp.geojson.westLongitude
 import com.jillesvangurp.serializationext.DEFAULT_JSON
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.doubles.shouldBeLessThan
@@ -69,6 +70,62 @@ class GeoHashUtilsTest {
         val hashes = GeoHashUtils.geoHashesForPolygon(p.coordinates!!, maxLength = 5, includePartial = true)
 //        println(hashes.joinToString(","))
         hashes.size shouldBeLessThan 5
+    }
+
+    @Test
+    fun shouldReturnOnlyIntersectingCellsForIssue57() {
+        val ring = arrayOf(
+            lonLat(5.334213051796137, 51.72096949433859),
+            lonLat(5.354997958204612, 51.70054385545882),
+            lonLat(5.376453952946887, 51.69809364593932),
+            lonLat(5.401006825411268, 51.70703791237309),
+            lonLat(5.489598425058357, 51.72989928402469),
+            lonLat(5.476545540068459, 51.75456816536278),
+            lonLat(5.451306218895217, 51.77028930444002),
+            lonLat(5.335249003051184, 51.73893998916162),
+            lonLat(5.334213051796137, 51.72096949433859),
+        )
+        // Expected six-character coverage reported in issue #57.
+        val expected = """
+            u15ys0 u15y4k u15y4j u15y4h u15y61 u15y4n u15y60 u15y4m u15y4s u15y65 u15y4r u15y64
+            u15y4q u15y63 u15y4p u15y62 u15y3f u15y3e u15y3d u15y3c u15y3g u15yeb u15y47 u15y45
+            u15y3b u15y1t u15y36 u15y1r u15y33 u15y1x u15y1w u15y39 u15y1v u15y38 u15y1u u15y1z
+            u15y1y u15y1g u15y32 u15y7z u15y7y u15y7x u15y7w u15yk2 u15yk1 u15yk0 u15yk6 u15yk5
+            u15yk4 u15yk3 u15yk9 u15yk8 u15yk7 u15y7j u15y7h u15y7g u15y7n u15y7m u15y7k u15y7q
+            u15y7v u15y7u u15y7t u15y7s u15y6v u15y7b u15yhp u15y7f u15y7e u15y7d u15y7c u15y6h
+            u15y6g u15y6f u15y6k u15y6u u15y6t u15y6s u15y5x u15y5w u15y79 u15y78 u15y77 u15y5z
+            u15y6e u15y6d u15y6c u15y6b u15y5j u15y5p u15y72 u15y71 u15y5n u15y70 u15y76 u15y75
+            u15y5r u15y74 u15y5q u15y73 u15y4w u15y69 u15y4v u15y68 u15y4u u15y67 u15y4t u15y66
+            u15y4z u15y4y u15y4x u15ykn u15ykm u15ykk u15ykr u15ykq u15ykp u15ykt u15yks u15ykf
+            u15yke u15ykd u15ykc u15ykj u15ykh u15y1q u15y5y u15y3u u15ykb u15y4e u15y6y u15y7r
+            u15yhr u15y5m u15y6m u15y1s u15ykg u15ykw
+        """.trimIndent().split(Regex("\\s+")).toSet()
+
+        val actual = GeoHashUtils.geoHashesForLinearRing(6, ring, includePartial = true)
+
+        assertSoftly {
+            withClue("Unexpected cells") { (actual - expected) shouldBe emptySet<String>() }
+            withClue("Missing cells") { (expected - actual) shouldBe emptySet<String>() }
+        }
+    }
+
+    @Test
+    fun shouldRejectPolarRingsByLatitude() {
+        for (longitude in listOf(-120.0, 120.0)) {
+            val ring = arrayOf(
+                lonLat(longitude, 20.0),
+                lonLat(longitude + 1.0, 20.0),
+                lonLat(longitude + 1.0, 21.0),
+                lonLat(longitude, 21.0),
+                lonLat(longitude, 20.0)
+            )
+            val hashes = GeoHashUtils.geoHashesForLinearRing(4, ring)
+            hashes.any { GeoHashUtils.contains(it, 20.5, longitude + 0.5) } shouldBe true
+        }
+        for (latitude in listOf(-89.75, 89.75)) {
+            val ring = arrayOf(lonLat(0.0, latitude), lonLat(1.0, latitude), lonLat(0.0, latitude / 2))
+            shouldThrow<IllegalArgumentException> { GeoHashUtils.geoHashesForLinearRing(4, ring) }
+        }
     }
 
     @Test

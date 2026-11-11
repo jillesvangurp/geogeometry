@@ -184,8 +184,7 @@ class GeoGeometry {
         }
 
         /**
-         * Determine whether a point is contained in a polygon. Note, technically
-         * the points that make up the polygon are not contained by it.
+         * Determine whether a point is inside a polygon or on its boundary.
          *
          * @param pointCoordinates point
          * @param polygonCoordinatesPoints 3d array representing a geojson polygon. Note. the polygon holes are ignored currently.
@@ -205,8 +204,7 @@ class GeoGeometry {
         }
 
         /**
-         * Determine whether a point is contained in a polygon. Note, technically
-         * the points that make up the polygon are not contained by it.
+         * Determine whether a point is inside a polygon or on its boundary.
          *
          * @param latitude latitude
          * @param longitude longitude
@@ -224,8 +222,7 @@ class GeoGeometry {
 
 
         /**
-         * Determine whether a point is contained in a polygon. Note, technically
-         * the points that make up the polygon are not contained by it.
+         * Determine whether a point is inside a polygon or on its boundary.
          *
          * @param latitude latitude
          * @param longitude longitude
@@ -268,7 +265,14 @@ class GeoGeometry {
             for (i in norm.indices) {
                 val (x1, y1) = norm[i]
                 val (x2, y2) = norm[(i + 1) % norm.size]
-                if ((x1 != x2 || y1 != y2) && onSegment(0.0, latitude, x1, y1, x2, y2)) {
+                val dx = x2 - x1
+                val dy = y2 - y1
+                // Scale the cross product tolerance by the edge's largest coordinate difference.
+                val edgeScale = max(abs(dx), abs(dy))
+                val cross = dx * (latitude - y1) + dy * x1
+                if (edgeScale > 0.0 && abs(cross) <= epsilon * edgeScale &&
+                    onSegment(0.0, latitude, x1, y1, x2, y2)
+                ) {
                     return true
                 }
             }
@@ -280,7 +284,7 @@ class GeoGeometry {
                 val (x2, y2) = norm[(i + 1) % norm.size]
 
                 // Ignore horizontal segments
-                if (abs(y1 - y2) < epsilon) continue
+                if (y1 == y2) continue
 
                 // Handle crossing the horizontal ray
                 val lower = if (y1 < y2) y1 else y2
