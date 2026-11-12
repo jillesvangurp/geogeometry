@@ -20,7 +20,7 @@ GeoGeometry is a Kotlin Multiplatform geospatial library. The codebase prioritiz
 
 2. Dependency policy (strict)
    - Do **not** add new library dependencies, Gradle plugins, or repositories without explicit prior permission.
-   - When changing existing dependencies, prefer existing patterns (e.g. refreshVersions `_` notation).
+   - Manage dependency and plugin versions in `gradle/libs.versions.toml`.
 
 3. Build and test expectations
    - Use the Gradle wrapper: `./gradlew`.

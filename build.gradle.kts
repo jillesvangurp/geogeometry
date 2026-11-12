@@ -6,8 +6,8 @@ import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
     `maven-publish`
 }
 
@@ -72,8 +72,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
-                implementation("com.jillesvangurp:kotlinx-serialization-extensions:_")
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.serialization.extensions)
 
             }
         }
@@ -83,21 +83,21 @@ kotlin {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
                 // yay kotest does multiplatform
-                implementation("io.kotest:kotest-assertions-core:_")
+                implementation(libs.kotest.assertions.core)
 
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:_")
+                implementation(libs.kotlinx.serialization.cbor)
             }
         }
 
         jvmMain {
             dependencies {
                 implementation(kotlin("stdlib-jdk8"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+                implementation(libs.kotlinx.serialization.json)
             }
         }
         jvmTest {
             dependencies {
-                runtimeOnly("org.junit.jupiter:junit-jupiter:_")
+                runtimeOnly(libs.junit.jupiter)
                 implementation(kotlin("test-junit"))
             }
         }
@@ -105,7 +105,7 @@ kotlin {
         jsMain {
             dependencies {
                 implementation(kotlin("stdlib-js"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:_")
+                implementation(libs.kotlinx.serialization.json)
             }
         }
 
